@@ -5,6 +5,8 @@ namespace InfernoWow.Modules
     public class ProtectionPaladinRotation : Rotation
     {
         private List<string> UtilitySpells = new List<string> { "Devotion Aura" };
+
+        private Environment _environment;
         
         public override void LoadSettings()
         {
@@ -43,10 +45,21 @@ namespace InfernoWow.Modules
         {
             if (!Inferno.HasBuff("Devotion Aura") && Inferno.CanCast("Devotion Aura"))
             {
+                _environment = new Environment(GetOldBosses());
+
+                Inferno.PrintMessage("Map ID: " + _environment.MapId);
+                
                 Inferno.Cast("Devotion Aura");
                 return true;
             }
             return false;
         }
+        
+        private List<Boss> GetOldBosses()
+        {
+            if (_environment == null) return new List<Boss>();
+            return _environment.Bosses;
+        }
+
     }
 }
