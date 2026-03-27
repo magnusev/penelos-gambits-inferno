@@ -1,8 +1,6 @@
 // This file is for development/IntelliSense only - NOT included in builds
 // The actual Inferno implementation is provided by the Inferno framework at runtime
 
-using System;
-using System.Collections.Generic;
 using System.Drawing;
 
 public static class Inferno
@@ -54,11 +52,13 @@ public static class Inferno
     public static bool PlayerIsMounted() { return false; }
     public static bool IsVisible(string Unit) { return false; }
     public static int GetLevel(string Unit) { return 0; }
+    public static string GetSpec(string Unit) { return ""; }
     public static string UnitName(string Unit) { return ""; }
     
-    // Casting Detection
+    // CastingCasting Detection
     public static bool IsInterruptable(string Unit) { return false; }
     public static bool IsChanneling(string Unit) { return false; }
+    public static int CastingID(string Unit) { return 0; }
     public static string CastingName(string Unit) { return ""; }
     public static int CastingRemaining(string Unit) { return 0; }
     
