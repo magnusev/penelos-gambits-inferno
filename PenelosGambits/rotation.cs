@@ -28,6 +28,11 @@ namespace InfernoWow.Modules
             {
                 Spellbook.Add(s);
             }
+            
+            foreach (var macro in TargetingMacros.macros)
+            {
+                Macros.Add(macro.Key, macro.Value);
+            }
         }
 
         public override void OnStop()
