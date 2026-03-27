@@ -7,10 +7,10 @@ namespace InfernoWow.Modules
         
         public override void LoadSettings()
         {
-            WebSocket.Port = 8080;
+            WebSocket.Port = 8082;
             WebSocket.OnMessageReceived += OnWebSocketMessage;
             WebSocket.Start();
-            Inferno.PrintMessage("WebSocket server started on ws://localhost:8080/");
+            Inferno.PrintMessage("WebSocket server started on ws://localhost:8082/");
         }
 
         private void OnWebSocketMessage(string message)
@@ -24,9 +24,14 @@ namespace InfernoWow.Modules
             foreach (string s in UtilitySpells) Spellbook.Add(s);
         }
 
+        public override void OnStop()
+        {
+            WebSocket.Stop();
+        }
+
         public override bool CombatTick()
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         public override bool OutOfCombatTick()

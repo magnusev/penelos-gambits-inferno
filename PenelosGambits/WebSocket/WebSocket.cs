@@ -23,10 +23,6 @@ public static class WebSocket
         get { return _listener != null && _listener.IsListening; } 
     }
 
-    /// <summary>
-    /// Starts the WebSocket server on the configured port.
-    /// Call this once during initialization (e.g. LoadSettings).
-    /// </summary>
     public static void Start()
     {
         if (IsRunning) return;
@@ -36,13 +32,9 @@ public static class WebSocket
         _listener.Prefixes.Add("http://localhost:" + Port + "/");
         _listener.Start();
 
-        // Run the accept loop on a background thread so it doesn't block the rotation
         Task.Run(() => AcceptLoopAsync(_cts.Token));
     }
 
-    /// <summary>
-    /// Gracefully shuts down the WebSocket server.
-    /// </summary>
     public static void Stop()
     {
         if (_cts != null)
@@ -73,9 +65,6 @@ public static class WebSocket
         }
     }
 
-    /// <summary>
-    /// Sends a text message to every connected WebSocket client.
-    /// </summary>
     public static async Task BroadcastAsync(string message)
     {
         var data = Encoding.UTF8.GetBytes(message);
@@ -103,7 +92,7 @@ public static class WebSocket
     /// </summary>
     public static void Broadcast(string message)
     {
-        _ = Task.Run(() => BroadcastAsync(message));
+        Task.Run(() => BroadcastAsync(message));
     }
 
     /// <summary>
@@ -123,7 +112,7 @@ public static class WebSocket
 
                 if (ctx.Request.IsWebSocketRequest)
                 {
-                    _ = Task.Run(() => HandleClientAsync(ctx, ct), ct);
+                    Task.Run(() => HandleClientAsync(ctx, ct), ct);
                 }
                 else
                 {
@@ -131,9 +120,12 @@ public static class WebSocket
                     ctx.Response.Close();
                 }
             }
-            catch (HttpListenerException) when (ct.IsCancellationRequested)
+            catch (HttpListenerException ex)
             {
-                break; // listener was stopped
+                if (ct.IsCancellationRequested)
+                {
+                    break;
+                }
             }
             catch
             {
@@ -170,7 +162,6 @@ public static class WebSocket
                         OnMessageReceived(text);
                     }
 
-                    // Echo the message back to the sender
                     await ws.SendAsync(new ArraySegment<byte>(buf, 0, result.Count),
                         WebSocketMessageType.Text, true, CancellationToken.None);
                 }
