@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
@@ -165,9 +165,6 @@ public static class WebSocket
                     {
                         OnMessageReceived(text);
                     }
-
-                    await ws.SendAsync(new ArraySegment<byte>(buf, 0, result.Count),
-                        WebSocketMessageType.Text, true, CancellationToken.None);
                 }
             }
         }

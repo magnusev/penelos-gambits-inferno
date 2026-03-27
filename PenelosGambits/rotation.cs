@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿﻿using System.Collections.Generic;
 
 namespace InfernoWow.Modules
 {
@@ -7,18 +7,40 @@ namespace InfernoWow.Modules
         private List<string> UtilitySpells = new List<string> { "Devotion Aura" };
 
         private Environment _environment;
+        private MessageRouter _messageRouter;
+        private bool _logMessages = true;
         
         public override void LoadSettings()
         {
+            _messageRouter = new MessageRouter();
+
             WebSocket.Port = 8082;
             WebSocket.OnMessageReceived += OnWebSocketMessage;
             WebSocket.Start();
             Inferno.PrintMessage("WebSocket server started on ws://localhost:8082/");
+
+            _messageRouter.OnCommandReceived += OnCommandReceived;
+            _messageRouter.OnQueryReceived += OnQueryReceived;
         }
 
         private void OnWebSocketMessage(string message)
         {
-            Inferno.PrintMessage("[WS] " + message);
+            if (_logMessages)
+            {
+                Inferno.PrintMessage("[WS Raw] " + message);
+            }
+
+            _messageRouter.HandleRawMessage(message);
+        }
+
+        private void OnCommandReceived(CommandMessage command)
+        {
+            Inferno.PrintMessage("[WS CMD] " + command.Action + " - " + (command.Spell != null ? command.Spell : command.Macro != null ? command.Macro : "NONE"));
+        }
+
+        private void OnQueryReceived(QueryMessage query)
+        {
+            Inferno.PrintMessage("[WS QUERY] " + query.Method + " (id: " + query.QueryId + ")");
         }
 
         public override void Initialize()
@@ -37,12 +59,27 @@ namespace InfernoWow.Modules
 
         public override void OnStop()
         {
+            _messageRouter.ClearQueues();
             WebSocket.Stop();
             Inferno.PrintMessage("WebSocket server stopped");
         }
 
         public override bool CombatTick()
         {
+            SendStateUpdate();
+
+            if (_messageRouter.HasPendingCommands())
+            {
+                var command = _messageRouter.DequeueCommand();
+                if (command != null)
+                {
+                    Inferno.PrintMessage("[Phase1] Received command: " + command.Action);
+                    var result = new ExecutionResultMessage(command.CommandId, true, null);
+                    _messageRouter.SendExecutionResult(result);
+                    return true;
+                }
+            }
+
             return false;
         }
 
@@ -57,7 +94,22 @@ namespace InfernoWow.Modules
                 Inferno.Cast("Devotion Aura");
                 return true;
             }
+
+            SendStateUpdate();
             return false;
+        }
+
+        private void SendStateUpdate()
+        {
+            if (_environment == null) return;
+
+            var stateUpdate = new StateUpdateMessage(_environment);
+            _messageRouter.SendStateUpdate(stateUpdate);
+        }
+
+        private void RefreshEnvironment()
+        {
+            _environment = new Environment(GetOldBosses());
         }
         
         private List<Boss> GetOldBosses()

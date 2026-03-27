@@ -1,4 +1,4 @@
-﻿. ".\Scripts\CommonFiles.ps1"
+. ".\Scripts\CommonFiles.ps1"
 . ".\Scripts\LinesToExclude.ps1"
 . ".\Scripts\AddToStart.ps1"
 
@@ -7,6 +7,7 @@ $buildName = "PaladinHolyPvE"
 
 $filesToInclude = $commonFiles + @(
     "WebSocket/WebSocket.cs"
+    "WebSocket/Messages/MessageRouter.cs"
     "rotation.cs"
 )
 
