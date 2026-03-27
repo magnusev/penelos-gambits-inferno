@@ -80,6 +80,7 @@ public static class Inferno
     // Misc
     public static void PrintMessage(string text, Color color = default(Color), bool clear = false) { }
     public static int CombatTime() { return 0; }
+    public static int GetMapID() { return 0; }
     public static bool IsOn() { return false; }
     public static bool IsCustomCodeOn(string Code) { return false; }
 }

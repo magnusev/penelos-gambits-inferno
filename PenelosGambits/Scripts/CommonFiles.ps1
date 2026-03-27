@@ -10,5 +10,8 @@ $commonFiles = @(
     "Common/unit/PartyUnit.cs",
     "Common/unit/RaidUnit.cs",
     "Common/unit/PlayerUnit.cs",
-    "Common/unit/Unit.cs"
+    "Common/unit/Unit.cs",
+    "Common/Boss.cs",
+    "Common/Environment.cs",
+    "Common/Target.cs"
 )
