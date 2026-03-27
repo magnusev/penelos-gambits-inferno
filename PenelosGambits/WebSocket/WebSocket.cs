@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -22,6 +24,8 @@ public static class WebSocket
     { 
         get { return _listener != null && _listener.IsListening; } 
     }
+
+    public static event Action<string> OnMessageReceived;
 
     public static void Start()
     {
@@ -49,10 +53,12 @@ public static class WebSocket
                 try
                 {
                     if (ws.State == WebSocketState.Open)
+                    {
                         ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Server shutting down", CancellationToken.None)
-                           .GetAwaiter().GetResult();
+                          .GetAwaiter().GetResult();
+                    }
                 }
-                catch { /* best-effort */ }
+                catch { }
             }
             _clients.Clear();
         }
@@ -65,20 +71,30 @@ public static class WebSocket
         }
     }
 
+    public static void Broadcast(string message)
+    {
+        Task.Run(() => BroadcastAsync(message));
+    }
+
     public static async Task BroadcastAsync(string message)
     {
         var data = Encoding.UTF8.GetBytes(message);
         var segment = new ArraySegment<byte>(data);
 
         List<System.Net.WebSockets.WebSocket> snapshot;
-        lock (_lock) { snapshot = new List<System.Net.WebSockets.WebSocket>(_clients); }
+        lock (_lock)
+        {
+            snapshot = new List<System.Net.WebSockets.WebSocket>(_clients);
+        }
 
         foreach (var ws in snapshot)
         {
             try
             {
                 if (ws.State == WebSocketState.Open)
+                {
                     await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+                }
             }
             catch
             {
@@ -86,21 +102,6 @@ public static class WebSocket
             }
         }
     }
-
-    /// <summary>
-    /// Fire-and-forget convenience wrapper for broadcast.
-    /// </summary>
-    public static void Broadcast(string message)
-    {
-        Task.Run(() => BroadcastAsync(message));
-    }
-
-    /// <summary>
-    /// Event raised when a text message is received from any client.
-    /// </summary>
-    public static event Action<string> OnMessageReceived;
-
-    // ─── internals ───────────────────────────────────────────
 
     private static async Task AcceptLoopAsync(CancellationToken ct)
     {
@@ -120,7 +121,7 @@ public static class WebSocket
                     ctx.Response.Close();
                 }
             }
-            catch (HttpListenerException ex)
+            catch (HttpListenerException)
             {
                 if (ct.IsCancellationRequested)
                 {
@@ -129,7 +130,6 @@ public static class WebSocket
             }
             catch
             {
-                // transient error – keep accepting
             }
         }
     }
@@ -142,7 +142,10 @@ public static class WebSocket
             var wsCtx = await ctx.AcceptWebSocketAsync(null);
             ws = wsCtx.WebSocket;
 
-            lock (_lock) { _clients.Add(ws); }
+            lock (_lock)
+            {
+                _clients.Add(ws);
+            }
 
             var buf = new byte[4096];
 
@@ -157,6 +160,7 @@ public static class WebSocket
                 else if (result.MessageType == WebSocketMessageType.Text)
                 {
                     var text = Encoding.UTF8.GetString(buf, 0, result.Count);
+                    
                     if (OnMessageReceived != null)
                     {
                         OnMessageReceived(text);
@@ -167,16 +171,31 @@ public static class WebSocket
                 }
             }
         }
-        catch { /* client disconnected */ }
+        catch
+        {
+        }
         finally
         {
-            if (ws != null) RemoveClient(ws);
+            if (ws != null)
+            {
+                RemoveClient(ws);
+            }
         }
     }
 
     private static void RemoveClient(System.Net.WebSockets.WebSocket ws)
     {
-        lock (_lock) { _clients.Remove(ws); }
-        try { ws.Dispose(); } catch { }
+        lock (_lock)
+        {
+            _clients.Remove(ws);
+        }
+        
+        try
+        {
+            ws.Dispose();
+        }
+        catch
+        {
+        }
     }
 }

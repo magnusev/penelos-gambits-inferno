@@ -1,9 +1,10 @@
-﻿
+﻿using System.Collections.Generic;
+
 namespace InfernoWow.Modules
 {
     public class ProtectionPaladinRotation : Rotation
     {
-        List<string> UtilitySpells = new List<string> { "Devotion Aura" };
+        private List<string> UtilitySpells = new List<string> { "Devotion Aura" };
         
         public override void LoadSettings()
         {
@@ -21,12 +22,16 @@ namespace InfernoWow.Modules
         public override void Initialize()
         {
             Inferno.PrintMessage("Penelos Gambits Loader");
-            foreach (string s in UtilitySpells) Spellbook.Add(s);
+            foreach (string s in UtilitySpells)
+            {
+                Spellbook.Add(s);
+            }
         }
 
         public override void OnStop()
         {
             WebSocket.Stop();
+            Inferno.PrintMessage("WebSocket server stopped");
         }
 
         public override bool CombatTick()
@@ -37,7 +42,10 @@ namespace InfernoWow.Modules
         public override bool OutOfCombatTick()
         {
             if (!Inferno.HasBuff("Devotion Aura") && Inferno.CanCast("Devotion Aura"))
-            { Inferno.Cast("Devotion Aura"); return true; }
+            {
+                Inferno.Cast("Devotion Aura");
+                return true;
+            }
             return false;
         }
     }
