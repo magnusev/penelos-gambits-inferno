@@ -5,12 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="66b86b35-0104-469e-8fc7-dd48e29c2206" name="Changes" comment="uyg">
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/gambit/EvaluationResult.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/gambit/GambitEvaluator.kt" beforeDir="false" afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/gambit/GambitEvaluator.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/test/kotlin/com/penelosgambits/domain/condition/ConditionEvaluatorTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/test/kotlin/com/penelosgambits/domain/condition/ConditionEvaluatorTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/test/kotlin/com/penelosgambits/domain/gambit/GambitEvaluatorTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/test/kotlin/com/penelosgambits/domain/gambit/GambitEvaluatorTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/backend/penelos-gambits-service/src/main/kotlin/com/penelosgambits/api/websocket/BotConnection.kt" beforeDir="false" afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-service/src/main/kotlin/com/penelosgambits/api/websocket/BotConnection.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/gambit/GambitSets.kt" beforeDir="false" afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/gambit/GambitSets.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,7 +25,7 @@
     </selectedModels>
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="2106" />
+    <option name="cachedIndexableFilesCount" value="2119" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="GOROOT" url="file:///opt/homebrew/opt/go/libexec" />
@@ -107,6 +103,7 @@
       <workItem from="1774693035834" duration="6825000" />
       <workItem from="1774716432583" duration="1425000" />
       <workItem from="1774721070014" duration="597000" />
+      <workItem from="1774722569566" duration="597000" />
     </task>
     <task id="LOCAL-00001" summary="uyg">
       <option name="closed" value="true" />
