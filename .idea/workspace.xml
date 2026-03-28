@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="66b86b35-0104-469e-8fc7-dd48e29c2206" name="Changes" comment="uyg">
+      <change afterPath="$PROJECT_DIR$/dokumentasjon/gambit-holy-shock-2-charges-lowest-health.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/gambit/GambitSets.kt" beforeDir="false" afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/gambit/GambitSets.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,7 +103,7 @@
       <workItem from="1774693035834" duration="6825000" />
       <workItem from="1774716432583" duration="1425000" />
       <workItem from="1774721070014" duration="597000" />
-      <workItem from="1774722569566" duration="597000" />
+      <workItem from="1774722569566" duration="2578000" />
     </task>
     <task id="LOCAL-00001" summary="uyg">
       <option name="closed" value="true" />
