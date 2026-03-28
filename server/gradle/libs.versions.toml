@@ -1,0 +1,140 @@
+[versions]
+kotlin = "2.3.20"
+ktor = "3.4.1"
+kotlinxSerialization = "1.10.0"
+logback = "1.5.32"
+jib = "3.5.3"
+jackson = "2.21.2"
+
+exposed = "1.1.1"
+h2 = "2.4.240"
+mssqlJdbc = "13.4.0.jre11"
+hikaricp = "7.0.2"
+flyway = "12.1.1"
+
+kotest = "6.1.9"
+mockk = "1.14.9"
+
+jibGradle = "3.5.3"
+ktlintGradle = "14.2.0"
+detektGradle = "1.23.8"
+dependencyAnalysisGradle = "3.6.1"
+
+[libraries]
+
+# Ktor Server
+ktor-server-core-jvm = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
+ktor-server-netty-jvm = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
+ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
+ktor-server-call-id = { module = "io.ktor:ktor-server-call-id", version.ref = "ktor" }
+ktor-server-serialization = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
+ktor-server-auth-jwt = { module = "io.ktor:ktor-server-auth-jwt", version.ref = "ktor" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
+ktor-server-caching-headers = { module = "io.ktor:ktor-server-caching-headers", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation-jvm", version.ref = "ktor" }
+ktor-server-openapi = { module = "io.ktor:ktor-server-openapi", version.ref = "ktor" }
+
+# Ktor Client
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+# Database
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-sqlserver = { module = "org.flywaydb:flyway-sqlserver", version.ref = "flyway" }
+
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+h2-database = { module = "com.h2database:h2", version.ref = "h2" }
+mssql-jdbc = { module = "com.microsoft.sqlserver:mssql-jdbc", version.ref = "mssqlJdbc" }
+
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
+exposed-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
+
+# Logging and Metrics
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logstash-logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
+
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+kotlin-serialization = {module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
+
+# Plugins for testing
+kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+ktor-server-testHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+
+# Plugin definitions for convention plugins
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+jib-gradle-plugin = { module = "com.google.cloud.tools:jib-gradle-plugin", version.ref = "jibGradle" }
+ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintGradle" }
+detekt-gradle-plugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detektGradle" }
+dependency-analysis-gradle-plugin = { module = "com.autonomousapps:dependency-analysis-gradle-plugin", version.ref = "dependencyAnalysisGradle" }
+openapi-generator-gradle-plugin = { module = "org.openapitools:openapi-generator-gradle-plugin", version = "7.21.0" }
+
+[plugins]
+convention-ktor-service = { id = "no.politiet.avhor.ktor-service" }
+convention-feature = { id = "no.politiet.avhor.feature" }
+convention-library = { id = "no.politiet.avhor.library" }
+convention-openapi-generator = { id = "no.politiet.avhor.openapi-generator" }
+
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+jib = { id = "com.google.cloud.tools.jib", version.ref = "jib" }
+ktor-plugin = { id = "io.ktor.plugin", version.ref = "ktor" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+openapi-generator = { id = "org.openapi.generator", version = "7.21.0" }
+
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version = "14.2.0" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.23.8" }
+dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version = "3.6.1" }
+
+[bundles]
+
+kotest = ["kotest-runner-junit5", "kotest-assertions-core"]
+jackson = ["jackson-module-kotlin", "jackson-datatype-jsr310", "jackson-databind"]
+
+ktor-server = [
+    "ktor-server-core-jvm",
+    "ktor-server-netty-jvm",
+    "ktor-server-status-pages",
+    "ktor-server-call-logging",
+    "ktor-server-call-id",
+    "ktor-server-auth",
+    "ktor-server-auth-jwt",
+    "ktor-server-cors",
+    "ktor-server-content-negotiation",
+    "ktor-server-openapi"
+]
+
+ktor-client = [
+    "ktor-client-core",
+    "ktor-client-content-negotiation",
+    "ktor-serialization-kotlinx-json",
+    "ktor-client-auth",
+    "ktor-client-logging",
+    "ktor-client-okhttp"
+]
+
+database = [
+    "flyway-core",
+    "flyway-sqlserver",
+    "h2-database",
+    "mssql-jdbc",
+    "hikaricp",
+    "exposed-core",
+    "exposed-jdbc",
+    "exposed-dao",
+    "exposed-datetime"
+]
