@@ -17,9 +17,17 @@ public class MessageRouter
         try
         {
             string msgType = MessageBase.ParseType(json);
+
+            // If type field is missing, infer from other fields
             if (msgType == null)
             {
-                Inferno.PrintMessage("[MessageRouter] Unknown message - no type field");
+                msgType = InferMessageType(json);
+            }
+
+            if (msgType == null)
+            {
+                string preview = json.Length > 80 ? json.Substring(0, 80) + "..." : json;
+                Inferno.PrintMessage("[MessageRouter] No type field in: " + preview);
                 return;
             }
 
@@ -28,6 +36,12 @@ public class MessageRouter
                 var command = CommandMessage.FromJson(json);
                 if (command != null)
                 {
+                    // Don't queue NONE commands — just ack them
+                    if (command.IsNone())
+                    {
+                        return;
+                    }
+
                     lock (_lock)
                     {
                         _commandQueue.Enqueue(command);
@@ -59,15 +73,28 @@ public class MessageRouter
             {
                 SendPong();
             }
-            else
-            {
-                Inferno.PrintMessage("[MessageRouter] Unhandled message type: " + msgType);
-            }
         }
         catch (Exception ex)
         {
             Inferno.PrintMessage("[MessageRouter] Error parsing message: " + ex.Message);
         }
+    }
+
+    private static string InferMessageType(string json)
+    {
+        if (json.Contains("\"commandId\"") && json.Contains("\"action\""))
+        {
+            return MessageType.Command;
+        }
+        if (json.Contains("\"queryId\"") && json.Contains("\"method\""))
+        {
+            return MessageType.Query;
+        }
+        if (json.Contains("\"PING\""))
+        {
+            return MessageType.Ping;
+        }
+        return null;
     }
 
     public CommandMessage DequeueCommand()

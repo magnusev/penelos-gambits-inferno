@@ -16,8 +16,6 @@ public class QueryMessage : MessageBase
 
     public static QueryMessage FromJson(string json)
     {
-        string msgType = JsonParser.GetString(json, "type");
-        if (msgType != MessageType.Query) return null;
 
         string queryId = JsonParser.GetString(json, "queryId");
         string method = JsonParser.GetString(json, "method");

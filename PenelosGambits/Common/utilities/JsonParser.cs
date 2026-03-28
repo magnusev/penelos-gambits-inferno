@@ -13,7 +13,7 @@ public static class JsonParser
         if (colonIndex < 0) return null;
 
         int afterColon = colonIndex + 1;
-        while (afterColon < json.Length && json[afterColon] == ' ')
+        while (afterColon < json.Length && IsWhitespace(json[afterColon]))
         {
             afterColon++;
         }
@@ -100,7 +100,7 @@ public static class JsonParser
     private static string GetRawValue(string json, int startIndex)
     {
         int afterColon = startIndex;
-        while (afterColon < json.Length && json[afterColon] == ' ')
+        while (afterColon < json.Length && IsWhitespace(json[afterColon]))
         {
             afterColon++;
         }
@@ -168,7 +168,7 @@ public static class JsonParser
         if (colonIndex < 0) return null;
 
         int afterColon = colonIndex + 1;
-        while (afterColon < json.Length && json[afterColon] == ' ')
+        while (afterColon < json.Length && IsWhitespace(json[afterColon]))
         {
             afterColon++;
         }
@@ -198,7 +198,7 @@ public static class JsonParser
         if (colonIndex < 0) return new List<string>();
 
         int afterColon = colonIndex + 1;
-        while (afterColon < json.Length && json[afterColon] == ' ')
+        while (afterColon < json.Length && IsWhitespace(json[afterColon]))
         {
             afterColon++;
         }
@@ -270,5 +270,10 @@ public static class JsonParser
             .Replace("\\n", "\n")
             .Replace("\\r", "\r")
             .Replace("\\t", "\t");
+    }
+
+    private static bool IsWhitespace(char c)
+    {
+        return c == ' ' || c == '\t' || c == '\r' || c == '\n';
     }
 }

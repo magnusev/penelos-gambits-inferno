@@ -159,7 +159,8 @@ public static class WebSocket
                 OnClientConnected();
             }
 
-            var buf = new byte[4096];
+            var buf = new byte[8192];
+            var messageBuffer = new StringBuilder();
 
             while (ws.State == WebSocketState.Open && !ct.IsCancellationRequested)
             {
@@ -171,11 +172,17 @@ public static class WebSocket
                 }
                 else if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    var text = Encoding.UTF8.GetString(buf, 0, result.Count);
-                    
-                    if (OnMessageReceived != null)
+                    messageBuffer.Append(Encoding.UTF8.GetString(buf, 0, result.Count));
+
+                    if (result.EndOfMessage)
                     {
-                        OnMessageReceived(text);
+                        var text = messageBuffer.ToString();
+                        messageBuffer.Clear();
+
+                        if (OnMessageReceived != null)
+                        {
+                            OnMessageReceived(text);
+                        }
                     }
                 }
             }

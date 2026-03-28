@@ -20,8 +20,6 @@ public class CommandMessage : MessageBase
 
     public static CommandMessage FromJson(string json)
     {
-        string msgType = JsonParser.GetString(json, "type");
-        if (msgType != MessageType.Command) return null;
 
         string commandId = JsonParser.GetString(json, "commandId");
         string action = JsonParser.GetString(json, "action");

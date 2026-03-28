@@ -64,19 +64,21 @@ public class CommandExecutor
         }
 
         string target = command.Target;
+        string castUnit = (target != null) ? target : "target";
 
-        // If a target unit is specified, focus it first so the cast lands on it
+        if (!Inferno.CanCast(spell, castUnit))
+        {
+            SendResult(command, false, "Cannot cast " + spell + " on " + castUnit);
+            return false;
+        }
+
+        // If targeting a specific unit (not current target), focus it first
         if (target != null && target != "target")
         {
             string macroName = "focus_" + target;
             Inferno.Cast(macroName);
         }
 
-        if (!Inferno.CanCast(spell, target != null ? target : "target"))
-        {
-            SendResult(command, false, "Cannot cast " + spell);
-            return false;
-        }
 
         Inferno.Cast(spell);
         Inferno.PrintMessage("[CMD] Cast: " + spell + (target != null ? " -> " + target : ""));
