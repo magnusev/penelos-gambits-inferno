@@ -85,10 +85,10 @@ dependency-analysis-gradle-plugin = { module = "com.autonomousapps:dependency-an
 openapi-generator-gradle-plugin = { module = "org.openapitools:openapi-generator-gradle-plugin", version = "7.21.0" }
 
 [plugins]
-convention-ktor-service = { id = "no.politiet.avhor.ktor-service" }
-convention-feature = { id = "no.politiet.avhor.feature" }
-convention-library = { id = "no.politiet.avhor.library" }
-convention-openapi-generator = { id = "no.politiet.avhor.openapi-generator" }
+convention-ktor-service = { id = "com.penelosgambits.ktor-service" }
+convention-feature = { id = "com.penelosgambits.feature" }
+convention-library = { id = "com.penelosgambits.library" }
+convention-openapi-generator = { id = "com.penelosgambits.openapi-generator" }
 
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 jib = { id = "com.google.cloud.tools.jib", version.ref = "jib" }

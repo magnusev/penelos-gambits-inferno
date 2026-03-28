@@ -549,7 +549,4 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
-backend/bff-avhor-web/service/src/main/resources/static/*
-!backend/bff-avhor-web/service/src/main/resources/static/.gitkeep
-
 # End of https://www.toptal.com/developers/gitignore/api/latex,macos,react,gradle,kotlin,intellij+all,nextjs,pulumi+stacks

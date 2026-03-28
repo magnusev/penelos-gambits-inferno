@@ -2,11 +2,11 @@ plugins {
     alias(libs.plugins.convention.ktor.service)
 }
 
-group = "no.politiet.avhor"
+group = "com.penelosgambits"
 version = "0.1.0"
 
 ktorService {
-    mainClass = "no.politiet.avhor.service.dokument.DokumentServiceApplicationKt"
+    mainClass = "com.penelosgambits.service.dokument.DokumentServiceApplicationKt"
     dockerImageName = "localhost/dokument-service"
     dockerImageVersion = version as String
 }

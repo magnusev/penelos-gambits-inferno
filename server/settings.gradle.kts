@@ -1,4 +1,4 @@
-rootProject.name = "avhor"
+rootProject.name = "penelos-gambits"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 

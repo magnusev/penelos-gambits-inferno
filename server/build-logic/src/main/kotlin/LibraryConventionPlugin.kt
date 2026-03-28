@@ -1,9 +1,9 @@
-import no.politiet.convention.addCompilerArguments
-import no.politiet.convention.applyDetektConfiguration
-import no.politiet.convention.applyKtlintConfiguration
-import no.politiet.convention.applyTestConfiguration
-import no.politiet.convention.extentions.FeatureExtention
-import no.politiet.convention.extentions.collectSettings
+import com.penelosgambits.convention.addCompilerArguments
+import com.penelosgambits.convention.applyDetektConfiguration
+import com.penelosgambits.convention.applyKtlintConfiguration
+import com.penelosgambits.convention.applyTestConfiguration
+import com.penelosgambits.convention.extentions.FeatureExtention
+import com.penelosgambits.convention.extentions.collectSettings
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePluginExtension

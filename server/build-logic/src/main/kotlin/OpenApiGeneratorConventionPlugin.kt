@@ -1,5 +1,5 @@
-import no.politiet.convention.extentions.OpenApiGeneratorExtension
-import no.politiet.convention.extentions.collectSettings
+import com.penelosgambits.convention.extentions.OpenApiGeneratorExtension
+import com.penelosgambits.convention.extentions.collectSettings
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
