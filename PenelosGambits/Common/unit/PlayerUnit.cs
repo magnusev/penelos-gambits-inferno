@@ -1,7 +1,7 @@
 ﻿public class PlayerUnit : Unit
 {
-    public PlayerUnit(string Id, string UnitType, string Role, int CastingSpell, int HealthPercentage)
-        : base(Id, UnitType, Role, CastingSpell, HealthPercentage)
+    public PlayerUnit(string Id, string UnitType, string Role, int CastingSpell, int Health, int MaxHealth)
+        : base(Id, UnitType, Role, CastingSpell, Health, MaxHealth)
     {
     }
 

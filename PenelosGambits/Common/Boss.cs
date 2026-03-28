@@ -2,14 +2,18 @@
 {
     public readonly string Name;
     public readonly string UnitName;
+    public readonly int Health;
+    public readonly int MaxHealth;
     public readonly int HealthPercentage;
     public readonly int CurrentlyCastingSpellId;
     
-    public Boss(string name, string unitName, int healthPercentage, int currentlyCastingSpellId)
+    public Boss(string name, string unitName, int health, int maxHealth, int currentlyCastingSpellId)
     {
         Name = name;
         UnitName = unitName;
-        HealthPercentage = healthPercentage;
+        Health = health;
+        MaxHealth = maxHealth;
+        HealthPercentage = maxHealth > 0 ? (health * 100) / maxHealth : 0;
         CurrentlyCastingSpellId = currentlyCastingSpellId;
     }
 }

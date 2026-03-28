@@ -28,7 +28,8 @@
             "player",
             Inferno.GetSpec("player"),
             Inferno.CastingID("player"),
-            Inferno.Health("player")
+            Inferno.Health("player"),
+            Inferno.MaxHealth("player")
         );
     }
 
@@ -54,7 +55,8 @@
         return new Target(
             Inferno.UnitName("target"),
             Inferno.CastingID("target"),
-            Inferno.Health("target")
+            Inferno.Health("target"),
+            Inferno.MaxHealth("target")
         );
     }
 
@@ -74,7 +76,7 @@
         var bossId = Inferno.UnitName(name);
         var bossName = name + " (" + bossId + ")";
 
-        return new Boss(name, bossId, Inferno.Health(name), Inferno.CastingID(name));
+        return new Boss(name, bossId, Inferno.Health(name), Inferno.MaxHealth(name), Inferno.CastingID(name));
     }
 
     private static bool UnitExists(string unitId)

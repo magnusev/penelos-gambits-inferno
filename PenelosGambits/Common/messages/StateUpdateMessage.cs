@@ -98,6 +98,8 @@ public class StateUpdateMessage : MessageBase
 public class PlayerState
 {
     public int Health { get; private set; }
+    public int MaxHealth { get; private set; }
+    public int HealthPct { get; private set; }
     public string Spec { get; private set; }
     public int CastingSpellId { get; private set; }
     public bool InCombat { get; private set; }
@@ -105,7 +107,9 @@ public class PlayerState
 
     public PlayerState(PlayerUnit player)
     {
-        Health = player.HealthPercentage;
+        Health = player.Health;
+        MaxHealth = player.MaxHealth;
+        HealthPct = player.HealthPercentage;
         Spec = player.Role;
         CastingSpellId = player.CastingSpell;
         InCombat = Inferno.InCombat("player");
@@ -117,6 +121,8 @@ public class PlayerState
         var sb = new StringBuilder();
         sb.Append("{");
         sb.Append("\"health\":" + Health + ",");
+        sb.Append("\"maxHealth\":" + MaxHealth + ",");
+        sb.Append("\"healthPct\":" + HealthPct + ",");
         sb.Append("\"spec\":" + MessageBase.EscapeJson(Spec) + ",");
         sb.Append("\"castingSpellId\":" + CastingSpellId + ",");
         sb.Append("\"inCombat\":" + MessageBase.BoolToJson(InCombat) + ",");
@@ -131,6 +137,8 @@ public class TargetState
     public bool Exists { get; private set; }
     public string Name { get; private set; }
     public int Health { get; private set; }
+    public int MaxHealth { get; private set; }
+    public int HealthPct { get; private set; }
     public int CastingSpellId { get; private set; }
 
     public TargetState(Target target)
@@ -139,7 +147,9 @@ public class TargetState
         if (target != null)
         {
             Name = target.name;
-            Health = target.healthPercentage;
+            Health = target.health;
+            MaxHealth = target.maxHealth;
+            HealthPct = target.healthPercentage;
             CastingSpellId = target.castingSpell;
         }
     }
@@ -151,6 +161,8 @@ public class TargetState
         sb.Append("\"exists\":" + MessageBase.BoolToJson(Exists) + ",");
         sb.Append("\"name\":" + MessageBase.EscapeJson(Name) + ",");
         sb.Append("\"health\":" + Health + ",");
+        sb.Append("\"maxHealth\":" + MaxHealth + ",");
+        sb.Append("\"healthPct\":" + HealthPct + ",");
         sb.Append("\"castingSpellId\":" + CastingSpellId);
         sb.Append("}");
         return sb.ToString();
@@ -161,6 +173,7 @@ public class GroupState
 {
     public string GroupType { get; private set; }
     public int Size { get; private set; }
+    public List<MemberState> Members { get; private set; }
 
     public GroupState(Group group)
     {
@@ -177,6 +190,12 @@ public class GroupState
             GroupType = "solo";
         }
         Size = Inferno.GroupSize();
+
+        Members = new List<MemberState>();
+        foreach (var member in group.GetMembers())
+        {
+            Members.Add(new MemberState(member));
+        }
     }
 
     public string ToJson()
@@ -184,7 +203,47 @@ public class GroupState
         var sb = new StringBuilder();
         sb.Append("{");
         sb.Append("\"type\":" + MessageBase.EscapeJson(GroupType) + ",");
-        sb.Append("\"size\":" + Size);
+        sb.Append("\"size\":" + Size + ",");
+
+        sb.Append("\"members\":[");
+        for (int i = 0; i < Members.Count; i++)
+        {
+            if (i > 0) sb.Append(",");
+            sb.Append(Members[i].ToJson());
+        }
+        sb.Append("]");
+
+        sb.Append("}");
+        return sb.ToString();
+    }
+}
+
+public class MemberState
+{
+    public string UnitId { get; private set; }
+    public int Health { get; private set; }
+    public int MaxHealth { get; private set; }
+    public int HealthPct { get; private set; }
+    public bool IsDead { get; private set; }
+
+    public MemberState(Unit member)
+    {
+        UnitId = member.Id;
+        Health = member.Health;
+        MaxHealth = member.MaxHealth;
+        HealthPct = member.HealthPercentage;
+        IsDead = member.Health == 0;
+    }
+
+    public string ToJson()
+    {
+        var sb = new StringBuilder();
+        sb.Append("{");
+        sb.Append("\"unitId\":" + MessageBase.EscapeJson(UnitId) + ",");
+        sb.Append("\"health\":" + Health + ",");
+        sb.Append("\"maxHealth\":" + MaxHealth + ",");
+        sb.Append("\"healthPct\":" + HealthPct + ",");
+        sb.Append("\"isDead\":" + MessageBase.BoolToJson(IsDead));
         sb.Append("}");
         return sb.ToString();
     }
@@ -195,13 +254,17 @@ public class BossState
     public string UnitId { get; private set; }
     public string Name { get; private set; }
     public int Health { get; private set; }
+    public int MaxHealth { get; private set; }
+    public int HealthPct { get; private set; }
     public int CastingSpellId { get; private set; }
 
     public BossState(Boss boss)
     {
         UnitId = boss.Name;
         Name = boss.UnitName;
-        Health = boss.HealthPercentage;
+        Health = boss.Health;
+        MaxHealth = boss.MaxHealth;
+        HealthPct = boss.HealthPercentage;
         CastingSpellId = boss.CurrentlyCastingSpellId;
     }
 
@@ -212,6 +275,8 @@ public class BossState
         sb.Append("\"unitId\":" + MessageBase.EscapeJson(UnitId) + ",");
         sb.Append("\"name\":" + MessageBase.EscapeJson(Name) + ",");
         sb.Append("\"health\":" + Health + ",");
+        sb.Append("\"maxHealth\":" + MaxHealth + ",");
+        sb.Append("\"healthPct\":" + HealthPct + ",");
         sb.Append("\"castingSpellId\":" + CastingSpellId);
         sb.Append("}");
         return sb.ToString();

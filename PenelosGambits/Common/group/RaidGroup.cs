@@ -37,7 +37,8 @@
             name,
             Inferno.GetSpec(name),
             Inferno.CastingID(name),
-            Inferno.Health(name)
+            Inferno.Health(name),
+            Inferno.MaxHealth(name)
         );
     }
 }

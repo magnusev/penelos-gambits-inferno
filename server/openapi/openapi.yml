@@ -435,6 +435,8 @@ components:
       type: object
       required:
         - health
+        - maxHealth
+        - healthPct
         - spec
         - castingSpellId
         - inCombat
@@ -443,8 +445,18 @@ components:
         health:
           type: integer
           minimum: 0
+          description: Current raw HP value
+          example: 475000
+        maxHealth:
+          type: integer
+          minimum: 0
+          description: Maximum raw HP value
+          example: 500000
+        healthPct:
+          type: integer
+          minimum: 0
           maximum: 100
-          description: Player health as a percentage (0-100)
+          description: Health as a percentage (0-100), computed as (health * 100) / maxHealth
           example: 95
         spec:
           type: string
@@ -470,6 +482,8 @@ components:
         - exists
         - name
         - health
+        - maxHealth
+        - healthPct
         - castingSpellId
       properties:
         exists:
@@ -483,8 +497,18 @@ components:
         health:
           type: integer
           minimum: 0
+          description: Current raw HP value
+          example: 7200000
+        maxHealth:
+          type: integer
+          minimum: 0
+          description: Maximum raw HP value
+          example: 10000000
+        healthPct:
+          type: integer
+          minimum: 0
           maximum: 100
-          description: Target health as a percentage (0-100)
+          description: Health as a percentage (0-100), computed as (health * 100) / maxHealth
           example: 72
         castingSpellId:
           type: integer
@@ -492,11 +516,12 @@ components:
           example: 0
 
     GroupState:
-      description: Current group composition
+      description: Current group composition and per-member health data
       type: object
       required:
         - type
         - size
+        - members
       properties:
         type:
           type: string
@@ -508,6 +533,46 @@ components:
           minimum: 0
           description: Number of group members (0 if solo)
           example: 20
+        members:
+          type: array
+          description: Per-member health snapshot. Empty for solo.
+          items:
+            $ref: "#/components/schemas/MemberState"
+
+    MemberState:
+      description: Health snapshot of a single group/raid member
+      type: object
+      required:
+        - unitId
+        - health
+        - maxHealth
+        - healthPct
+        - isDead
+      properties:
+        unitId:
+          type: string
+          description: The unit frame identifier (e.g. "party1", "raid5")
+          example: "party1"
+        health:
+          type: integer
+          minimum: 0
+          description: Current raw HP value
+          example: 400000
+        maxHealth:
+          type: integer
+          minimum: 0
+          description: Maximum raw HP value
+          example: 500000
+        healthPct:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Health as a percentage (0-100), computed as (health * 100) / maxHealth
+          example: 80
+        isDead:
+          type: boolean
+          description: Whether the member is dead (health == 0)
+          example: false
 
     BossState:
       description: State of an active boss unit
@@ -516,6 +581,8 @@ components:
         - unitId
         - name
         - health
+        - maxHealth
+        - healthPct
         - castingSpellId
       properties:
         unitId:
@@ -529,8 +596,18 @@ components:
         health:
           type: integer
           minimum: 0
+          description: Current raw HP value
+          example: 7200000
+        maxHealth:
+          type: integer
+          minimum: 0
+          description: Maximum raw HP value
+          example: 10000000
+        healthPct:
+          type: integer
+          minimum: 0
           maximum: 100
-          description: Boss health as a percentage (0-100)
+          description: Health as a percentage (0-100), computed as (health * 100) / maxHealth
           example: 72
         castingSpellId:
           type: integer
@@ -558,7 +635,9 @@ components:
         globalCooldown: 0
         combatTime: 45000
         player:
-          health: 95
+          health: 475000
+          maxHealth: 500000
+          healthPct: 95
           spec: "Holy"
           castingSpellId: 0
           inCombat: true
@@ -566,15 +645,35 @@ components:
         target:
           exists: true
           name: "Ragnaros"
-          health: 72
+          health: 7200000
+          maxHealth: 10000000
+          healthPct: 72
           castingSpellId: 0
         group:
           type: "raid"
           size: 20
+          members:
+            - unitId: "raid1"
+              health: 475000
+              maxHealth: 500000
+              healthPct: 95
+              isDead: false
+            - unitId: "raid2"
+              health: 320000
+              maxHealth: 400000
+              healthPct: 80
+              isDead: false
+            - unitId: "raid3"
+              health: 0
+              maxHealth: 450000
+              healthPct: 0
+              isDead: true
         bosses:
           - unitId: "boss1"
             name: "Ragnaros"
-            health: 72
+            health: 7200000
+            maxHealth: 10000000
+            healthPct: 72
             castingSpellId: 0
 
     StateUpdateNoTargetExample:
@@ -586,7 +685,9 @@ components:
         globalCooldown: 1200
         combatTime: 0
         player:
-          health: 100
+          health: 500000
+          maxHealth: 500000
+          healthPct: 100
           spec: "Holy"
           castingSpellId: 0
           inCombat: false
@@ -595,6 +696,7 @@ components:
         group:
           type: "solo"
           size: 0
+          members: []
         bosses: []
 
     CastCommandExample:
