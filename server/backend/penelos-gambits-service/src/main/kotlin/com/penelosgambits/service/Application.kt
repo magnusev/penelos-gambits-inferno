@@ -7,7 +7,7 @@ import com.penelosgambits.api.websocket.TickStateManager
 import com.penelosgambits.data.gamequery.WebSocketGameQueryPort
 import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
+fun main(): Unit = runBlocking {
     val tickStateManager = TickStateManager()
     val messageRouter = MessageRouter(tickStateManager)
     val connection = BotConnection(messageRouter)
