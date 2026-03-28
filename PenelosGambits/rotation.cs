@@ -66,6 +66,7 @@ namespace InfernoWow.Modules
 
         public override bool CombatTick()
         {
+            RefreshEnvironment();
             SendStateUpdate();
 
             if (_messageRouter.HasPendingCommands())
@@ -85,12 +86,10 @@ namespace InfernoWow.Modules
 
         public override bool OutOfCombatTick()
         {
+            RefreshEnvironment();
+
             if (!Inferno.HasBuff("Devotion Aura") && Inferno.CanCast("Devotion Aura"))
             {
-                _environment = new Environment(GetOldBosses());
-
-                Inferno.PrintMessage("Map ID: " + _environment.MapId);
-                
                 Inferno.Cast("Devotion Aura");
                 return true;
             }
@@ -102,6 +101,14 @@ namespace InfernoWow.Modules
         private void SendStateUpdate()
         {
             if (_environment == null) return;
+            
+            Inferno.PrintMessage("MapId: " + _environment.MapId);
+            Inferno.PrintMessage("IsMoving: " + _environment.IsMoving);
+            
+            if(_environment.Target != null)
+            {
+                Inferno.PrintMessage("Target: " + _environment.Target.name + " (HP: " + _environment.Target.healthPercentage + "%)");
+            }
 
             var stateUpdate = new StateUpdateMessage(_environment);
             _messageRouter.SendStateUpdate(stateUpdate);

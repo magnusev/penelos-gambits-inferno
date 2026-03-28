@@ -7,6 +7,7 @@
     public Target Target { get; private set; }
 
     public int MapId { get; private set; }
+    public bool IsMoving { get; private set; }
 
     public Environment(List<Boss> OldBosses)
     {
@@ -15,6 +16,7 @@
         Target = CreateTarget();
         Bosses = CreateBosses();
         MapId = Inferno.GetMapID();
+        IsMoving = Inferno.IsMoving("player");
 
         LogBossChanges(OldBosses);
     }
