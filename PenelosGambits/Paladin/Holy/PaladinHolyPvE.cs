@@ -2,10 +2,12 @@ namespace InfernoWow.Modules
 {
     public class HolyPaladinPvE : Rotation
     {
+        private PaladinHolyActionBook ActionBook;
         private PeneloRotation PeneloRotation;
 
         public HolyPaladinPvE()
         {
+            ActionBook = new PaladinHolyActionBook();
             PeneloRotation = new PeneloRotation();
         }
 
@@ -26,10 +28,11 @@ namespace InfernoWow.Modules
         {
             Inferno.PrintMessage("Penelos Gambits Loader");
 
-            foreach (string s in Spells)
-            {
-                Spellbook.Add(s);
-            }
+            ActionBook.GetDefaultActions().ForEach(Spellbook.Add);
+            ActionBook.GetDebuffActions().ForEach(Debuffs.Add);
+            ActionBook.GetBuffActions().ForEach(Buffs.Add);
+            ActionBook.GetCommands().ForEach(CustomCommands.Add);
+
 
             foreach (var macro in TargetingMacros.macros)
             {

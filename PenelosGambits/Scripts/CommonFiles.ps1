@@ -3,6 +3,8 @@
 # DO NOT include inferno/* files - they are only for development/IntelliSense
 
 $commonFiles = @(
+    "Common/Action/Action.cs",
+    "Common/Action/FriendlyTargetedAction.cs",
     "Common/group/Group.cs",
     "Common/group/PartyGroup.cs",
     "Common/group/RaidGroup.cs",
@@ -15,14 +17,7 @@ $commonFiles = @(
     "Common/utilities/JsonParser.cs",
     "Common/utilities/TargetingMacros.cs",
     "Common/utilities/Throttler.cs",
-    "Common/messages/MessageType.cs",
-    "Common/messages/MessageBase.cs",
-    "Common/messages/StateUpdateMessage.cs",
-    "Common/messages/CommandMessage.cs",
-    "Common/messages/QueryMessage.cs",
-    "Common/messages/QueryResponseMessage.cs",
-    "Common/messages/ExecutionResultMessage.cs",
-    "Common/messages/ConnectMessage.cs",
+    "Common/ActionBook.cs",
     "Common/Boss.cs",
     "Common/Environment.cs",
     "Common/PeneloRotation.cs",

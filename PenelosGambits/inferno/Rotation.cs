@@ -5,6 +5,8 @@ using System.Collections.Generic;
 public abstract class Rotation
 {
     public List<string> Spellbook = new List<string>();
+    public List<string> Debuffs = new List<string>();
+    public List<string> Buffs = new List<string>();
     public List<string> CustomCommands = new List<string>();
     public Dictionary<string, string> Macros = new Dictionary<string, string>();
     public Dictionary<string, string> CustomFunctions = new Dictionary<string, string>();

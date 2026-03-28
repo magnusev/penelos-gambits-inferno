@@ -6,6 +6,8 @@ $outputFile = "C:\libs\Live\Rotations\Retail\PenelosGambitsPalaHoly\rotation.cs"
 $buildName = "PaladinHolyPvE"
 
 $filesToInclude = $commonFiles + @(
+    "Paladin/Actions/Holy/HolyShockDefensiveAction.cs"
+    "Paladin/Holy/PaladinHolyActionBook.cs"
     "Paladin/Holy/PaladinHolyPvE.cs"
 )
 
