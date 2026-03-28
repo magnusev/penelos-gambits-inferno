@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory
 
 class BotConnection(
     private val messageRouter: MessageRouter,
-    private val url: String = "ws://DESKTOP-A5OGBKM:8082/",
+    private val host: String = "DESKTOP-A5OGBKM",
+    private val port: Int = 8082,
+    private val path: String = "/",
 ) {
     private val client = HttpClient { install(WebSockets) }
     private val logger = LoggerFactory.getLogger(BotConnection::class.java)
@@ -19,8 +21,8 @@ class BotConnection(
         var backoff = 1000L
         while (true) {
             try {
-                client.webSocket(url) {
-                    logger.info("Connected to bot at {}", url)
+                client.webSocket(host = host, port = port, path = path) {
+                    logger.info("Connected to bot at ws://{}:{}{}", host, port, path)
                     backoff = 1000L
                     for (frame in incoming) {
                         if (frame is Frame.Text) {

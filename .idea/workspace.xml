@@ -5,28 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="66b86b35-0104-469e-8fc7-dd48e29c2206" name="Changes" comment="uyg">
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-data/build.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-data/src/main/kotlin/com/penelosgambits/data/dto/InboundMessages.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-data/src/main/kotlin/com/penelosgambits/data/dto/MessageType.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-data/src/main/kotlin/com/penelosgambits/data/dto/OutboundMessages.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-data/src/main/kotlin/com/penelosgambits/data/mapper/StateMapper.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-data/src/test/kotlin/com/penelosgambits/data/dto/MessageTypeTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-data/src/test/kotlin/com/penelosgambits/data/dto/StateUpdateDtoTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-data/src/test/kotlin/com/penelosgambits/data/mapper/StateMapperTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/build.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/model/ConnectionInfo.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/model/TickContext.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/model/TickState.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/model/UnitState.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/main/kotlin/com/penelosgambits/domain/port/GameQueryPort.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-domain/src/test/kotlin/com/penelosgambits/domain/model/TickContextTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-service/src/main/kotlin/com/penelosgambits/api/websocket/BotConnection.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-service/src/main/kotlin/com/penelosgambits/service/Application.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-service/src/main/resources/logback.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/backend/penelos-gambits-service/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-service/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/gradle/libs.versions.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/gradle/libs.versions.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/server/settings.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/backend/penelos-gambits-service/src/main/kotlin/com/penelosgambits/api/websocket/BotConnection.kt" beforeDir="false" afterPath="$PROJECT_DIR$/server/backend/penelos-gambits-service/src/main/kotlin/com/penelosgambits/api/websocket/BotConnection.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -121,7 +101,7 @@
       <option name="presentableId" value="Default" />
       <updated>1774693034834</updated>
       <workItem from="1774693035834" duration="6825000" />
-      <workItem from="1774716432583" duration="822000" />
+      <workItem from="1774716432583" duration="1425000" />
     </task>
     <task id="LOCAL-00001" summary="uyg">
       <option name="closed" value="true" />
