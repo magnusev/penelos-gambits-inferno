@@ -7,6 +7,7 @@ import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.websocket.DefaultWebSocketSession
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -57,7 +58,9 @@ class BotConnection(
                         sessionMutex.withLock { activeSession = null }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: java.io.IOException) {
                 logger.warn("Connection lost: {}. Retrying in {}ms", e.message, backoff)
             }
             delay(backoff)

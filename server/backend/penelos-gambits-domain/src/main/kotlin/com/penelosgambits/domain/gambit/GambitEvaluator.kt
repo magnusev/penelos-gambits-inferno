@@ -1,20 +1,6 @@
 package com.penelosgambits.domain.gambit
 
 import com.penelosgambits.domain.model.TickContext
-import com.penelosgambits.domain.model.UnitState
-
-/**
- * Result of evaluating a gambit set against a tick context.
- */
-data class EvaluationResult(
-    val gambitName: String?,
-    val action: ActionIntent,
-    val target: UnitState?,
-) {
-    companion object {
-        val NONE = EvaluationResult(gambitName = null, action = ActionIntent.None, target = null)
-    }
-}
 
 /**
  * Evaluates a [GambitSet] against a [TickContext] and returns the first matching gambit's action.
@@ -33,22 +19,8 @@ suspend fun evaluate(gambitSet: GambitSet, context: TickContext): EvaluationResu
     }
 
     // 2. This set's gambits, sorted by priority (lower = higher priority)
-    for (gambit in gambitSet.gambits.sortedBy { it.priority }) {
-        val conditionsMet = gambit.conditions.all { it.isMet(context) }
-        if (!conditionsMet) continue
-
-        val target = gambit.selector.select(context) ?: continue
-
-        if (gambit.canExecuteCheck != null && !gambit.canExecuteCheck.invoke(context, target)) {
-            continue
-        }
-
-        return EvaluationResult(
-            gambitName = gambit.name,
-            action = gambit.action,
-            target = target,
-        )
-    }
+    val matched = findFirstMatchingGambit(gambitSet, context)
+    if (matched != null) return matched
 
     // 3. Fallback-chain
     gambitSet.fallback?.let { fallback ->
@@ -58,5 +30,35 @@ suspend fun evaluate(gambitSet: GambitSet, context: TickContext): EvaluationResu
 
     // 4. Nothing matched
     return EvaluationResult.NONE
+}
+
+private suspend fun findFirstMatchingGambit(
+    gambitSet: GambitSet,
+    context: TickContext,
+): EvaluationResult? {
+    for (gambit in gambitSet.gambits.sortedBy { it.priority }) {
+        val result = tryEvaluateGambit(gambit, context)
+        if (result != null) return result
+    }
+    return null
+}
+
+private suspend fun tryEvaluateGambit(
+    gambit: GambitRule,
+    context: TickContext,
+): EvaluationResult? {
+    val conditionsMet = gambit.conditions.all { it.isMet(context) }
+    if (!conditionsMet) return null
+
+    val target = gambit.selector.select(context) ?: return null
+
+    val blocked = gambit.canExecuteCheck?.invoke(context, target) == false
+    if (blocked) return null
+
+    return EvaluationResult(
+        gambitName = gambit.name,
+        action = gambit.action,
+        target = target,
+    )
 }
 
