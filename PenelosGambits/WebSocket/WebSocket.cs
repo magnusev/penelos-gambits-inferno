@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
@@ -12,6 +12,7 @@ public static class WebSocket
     private static CancellationTokenSource _cts;
     private static readonly List<System.Net.WebSockets.WebSocket> _clients = new List<System.Net.WebSockets.WebSocket>();
     private static readonly object _lock = new object();
+    private static readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
     private static int _port = 8080;
 
     public static int Port 
@@ -94,19 +95,27 @@ public static class WebSocket
             snapshot = new List<System.Net.WebSockets.WebSocket>(_clients);
         }
 
-        foreach (var ws in snapshot)
+        await _sendLock.WaitAsync();
+        try
         {
-            try
+            foreach (var ws in snapshot)
             {
-                if (ws.State == WebSocketState.Open)
+                try
                 {
-                    await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+                    if (ws.State == WebSocketState.Open)
+                    {
+                        await ws.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
+                    }
+                }
+                catch
+                {
+                    RemoveClient(ws);
                 }
             }
-            catch
-            {
-                RemoveClient(ws);
-            }
+        }
+        finally
+        {
+            _sendLock.Release();
         }
     }
 

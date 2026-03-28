@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
-
-namespace InfernoWow.Modules
+﻿namespace InfernoWow.Modules
 {
     public class ProtectionPaladinRotation : Rotation
     {
-        private List<string> UtilitySpells = new List<string> { "Devotion Aura" };
+        private List<string> Spells = new List<string>
+        {
+            "Devotion Aura",
+            "Holy Shock"
+        };
 
         private Environment _environment;
         private RemoteEngineClient _engine;
@@ -19,7 +21,7 @@ namespace InfernoWow.Modules
         {
             Inferno.PrintMessage("Penelos Gambits Loader");
 
-            foreach (string s in UtilitySpells)
+            foreach (string s in Spells)
             {
                 Spellbook.Add(s);
             }
@@ -32,11 +34,14 @@ namespace InfernoWow.Modules
 
         public override void OnStop()
         {
+            ActionQueuer.Clear();
             _engine.Stop();
         }
 
         public override bool CombatTick()
         {
+            if (ActionQueuer.CastQueuedActionIfExists()) return true;
+
             RefreshEnvironment();
             _engine.ProcessPendingQueries();
             _engine.SendStateUpdate(_environment);
@@ -46,6 +51,8 @@ namespace InfernoWow.Modules
 
         public override bool OutOfCombatTick()
         {
+            if (ActionQueuer.CastQueuedActionIfExists()) return true;
+
             RefreshEnvironment();
             _engine.ProcessPendingQueries();
 
@@ -69,6 +76,5 @@ namespace InfernoWow.Modules
             if (_environment == null) return new List<Boss>();
             return _environment.Bosses;
         }
-
     }
 }

@@ -23,5 +23,6 @@ $commonFiles = @(
     "Common/messages/ConnectMessage.cs",
     "Common/Boss.cs",
     "Common/Environment.cs",
-    "Common/Target.cs"
+    "Common/Target.cs",
+    "Common/ActionQueuer.cs"
 )

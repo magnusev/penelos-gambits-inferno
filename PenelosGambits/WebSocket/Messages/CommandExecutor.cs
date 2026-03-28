@@ -72,16 +72,18 @@ public class CommandExecutor
             return false;
         }
 
-        // If targeting a specific unit (not current target), focus it first
+        // Two-tick cast: focus the unit this tick, queue the spell for next tick
         if (target != null && target != "target")
         {
-            string macroName = "focus_" + target;
-            Inferno.Cast(macroName);
+            string focusMacro = "focus_" + target;
+            Inferno.Cast(focusMacro);
+            ActionQueuer.QueueAction(spell);
+            SendResult(command, true, null);
+            return true;
         }
 
-
+        // Direct cast on current target or self
         Inferno.Cast(spell);
-        Inferno.PrintMessage("[CMD] Cast: " + spell + (target != null ? " -> " + target : ""));
         SendResult(command, true, null);
         return true;
     }
