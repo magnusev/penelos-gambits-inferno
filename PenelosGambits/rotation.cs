@@ -1,11 +1,23 @@
-﻿namespace InfernoWow.Modules
+﻿using System.Collections.Generic;
+
+namespace InfernoWow.Modules
 {
     public class ProtectionPaladinRotation : Rotation
     {
         private List<string> Spells = new List<string>
         {
             "Devotion Aura",
-            "Holy Shock"
+            "Holy Shock",
+            "Word of Glory",
+            "Holy Light",
+            "Beacon of Virtue",
+            "Divine Toll",
+            "Crusader Strike",
+            "Holy Prism",
+            "Judgment",
+            "Shield of the Righteous",
+            "Hammer of Wrath",
+            "Consecration"
         };
 
         private Environment _environment;
@@ -26,7 +38,18 @@
                 Spellbook.Add(s);
             }
 
+            // Register targeting macros (focus_party1, focus_raid5, etc.)
             foreach (var macro in TargetingMacros.macros)
+            {
+                Macros.Add(macro.Key, macro.Value);
+            }
+
+            // Register @focus cast macros for friendly-targeted spells
+            SpellMacroRegistry.Register("Holy Shock", "cast_holy_shock", "/cast [@focus] Holy Shock");
+            SpellMacroRegistry.Register("Word of Glory", "cast_word_of_glory", "/cast [@focus] Word of Glory");
+            SpellMacroRegistry.Register("Holy Light", "cast_holy_light", "/cast [@focus] Holy Light");
+
+            foreach (var macro in SpellMacroRegistry.GetAllMacros())
             {
                 Macros.Add(macro.Key, macro.Value);
             }

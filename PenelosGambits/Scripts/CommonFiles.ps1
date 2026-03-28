@@ -24,5 +24,6 @@ $commonFiles = @(
     "Common/Boss.cs",
     "Common/Environment.cs",
     "Common/Target.cs",
-    "Common/ActionQueuer.cs"
+    "Common/ActionQueuer.cs",
+    "Common/SpellMacroRegistry.cs"
 )

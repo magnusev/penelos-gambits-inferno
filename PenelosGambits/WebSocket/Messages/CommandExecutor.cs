@@ -72,12 +72,17 @@ public class CommandExecutor
             return false;
         }
 
-        // Two-tick cast: focus the unit this tick, queue the spell for next tick
+        // Targeted cast on a specific unit (not current target):
+        // Tick 1: focus the unit, queue the @focus macro for next tick
+        // Tick 2: ActionQueuer fires the "/cast [@focus] Spell" macro
         if (target != null && target != "target")
         {
-            string focusMacro = "focus_" + target;
-            Inferno.Cast(focusMacro);
-            ActionQueuer.QueueAction(spell);
+            Inferno.Cast("focus_" + target);
+
+            // Use the registered @focus macro if available, otherwise queue the raw spell
+            string macroName = SpellMacroRegistry.GetMacroName(spell);
+            ActionQueuer.QueueAction(macroName != null ? macroName : spell);
+
             SendResult(command, true, null);
             return true;
         }
