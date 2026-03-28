@@ -111,6 +111,7 @@ To match your preference and keep most logic in Kotlin:
 
 - **Server (Kotlin) owns decision logic**: gambit evaluation, condition composition, selector resolution, priority ordering, and fallback strategy.
 - **Client (C#) stays thin**: publish `STATE_UPDATE`, answer `QUERY`/`BATCH_QUERY`, execute `COMMAND`, send `EXECUTION_RESULT`.
+- **Bot-hosted WebSocket is intentional**: keep the game integration process stable while allowing Kotlin decision engine restarts without restarting the bot.
 - **No rule logic in C#**: avoid embedding selector/condition heuristics in the integration layer.
 - **Treat query methods as ports**: game queries are data access adapters into Kotlin domain logic, not where decisions are made.
 
@@ -416,6 +417,15 @@ Implementation note: preserve selector traceability by logging filter steps and 
    Client: If disconnected → Reconnect with exponential backoff
    ```
 
+4. Backend restart / temporary downtime behavior:
+   ```
+   Kotlin engine restarts or is temporarily unavailable
+   Bot process remains running (no restart of game integration)
+   Bot executes no remote commands while disconnected (safe idle / wait mode)
+   Kotlin reconnects to bot websocket endpoint
+   Normal tick processing and command execution resumes automatically
+   ```
+
 #### 1.4 Error Handling
 
 **Implementation**:
@@ -438,6 +448,12 @@ Implementation note: preserve selector traceability by logging filter steps and 
    - Parse error → log + ignore (don't crash)
    - Unknown message type → log + ignore
    - Missing required fields → send error response
+
+5. **Backend Downtime (Kotlin unavailable)**:
+   - Bot must keep running and keep game integration alive while decision engine is down
+   - While disconnected, bot waits for backend reconnect and does not execute remote decisions
+   - Kotlin side should retry reconnect with backoff until session is restored
+   - On reconnect, resume normal command loop without requiring bot restart
 
 #### 1.5 Testing Strategy
 
@@ -498,6 +514,11 @@ Will include:
 
 **Note**: Currently bot runs WebSocket **server** and remote runs **client** (unusual but valid)
 
+Operational rationale:
+- Bot is the long-running, hard-to-restart process (game integration lifecycle)
+- Kotlin engine is the easy-to-restart process (fast deployment/iteration)
+- This topology allows Kotlin restarts and upgrades without interrupting game integration
+
 ### 5.2 Message Size Constraints
 
 Based on OpenAPI spec:
@@ -545,6 +566,7 @@ Recommendation: Start with in-memory, migrate to PostgreSQL in Phase 3
 | Client/server sync issues | Wrong command sent | Low | Message IDs, sequence numbers |
 | Gambit parsing errors | Rotation breaks | Medium | Extensive validation, fallback to NONE |
 | WebSocket connection drop mid-combat | Bot frozen | Low | Reconnection + local fallback |
+| Kotlin engine restart window | No decisions available briefly | High | Bot waits in safe idle until backend reconnects |
 | Decision engine takes >200ms | Action queues up | Medium | Timeout + NONE action, async processing |
 | Query response slow | Blocking decision loop | Medium | Parallel queries, cache common queries |
 | Wrong cache key normalization | Incorrect reused result | Medium | Canonical key builder + tests for param ordering |
@@ -564,6 +586,9 @@ Recommendation: Start with in-memory, migrate to PostgreSQL in Phase 3
 - [ ] Combined condition (`health + debuff`) executes as one batch query round-trip
 - [ ] Connection survives 5+ minute session
 - [ ] Graceful reconnection on disconnect
+- [ ] Kotlin engine can be restarted while bot stays running (no game integration restart)
+- [ ] During backend downtime bot enters safe idle/wait mode and executes no remote commands
+- [ ] After Kotlin reconnect, command flow resumes automatically
 - [ ] Logging shows all message types flowing
 
 ### Phase 2 (Gambit System)
