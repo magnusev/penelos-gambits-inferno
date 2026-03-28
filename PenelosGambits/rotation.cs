@@ -1,4 +1,5 @@
-﻿﻿﻿using System.Collections.Generic;
+﻿﻿using System.Collections.Generic;
+using System.Drawing;
 
 namespace InfernoWow.Modules
 {
@@ -8,46 +9,38 @@ namespace InfernoWow.Modules
 
         private Environment _environment;
         private MessageRouter _messageRouter;
-        private bool _logMessages = true;
+        private CommandExecutor _commandExecutor;
+        private QueryHandler _queryHandler;
         
         public override void LoadSettings()
         {
             _messageRouter = new MessageRouter();
+            _commandExecutor = new CommandExecutor(_messageRouter);
+            _queryHandler = new QueryHandler(_messageRouter);
 
             WebSocket.Port = 8082;
             WebSocket.OnMessageReceived += OnWebSocketMessage;
+            WebSocket.OnClientConnected += OnClientConnected;
+            WebSocket.OnClientDisconnected += OnClientDisconnected;
             WebSocket.Start();
-            Inferno.PrintMessage("WebSocket server started on ws://localhost:8082/");
-
-            _messageRouter.OnCommandReceived += OnCommandReceived;
-            _messageRouter.OnQueryReceived += OnQueryReceived;
+            Inferno.PrintMessage("[WS] Server started on ws://localhost:8082/", Color.Green);
         }
 
         private void OnWebSocketMessage(string message)
         {
-            if (_logMessages)
-            {
-                Inferno.PrintMessage("[WS Raw] " + message);
-            }
-
             _messageRouter.HandleRawMessage(message);
         }
 
         private void OnClientConnected()
         {
+            Inferno.PrintMessage("[WS] Engine connected (clients: " + WebSocket.ClientCount + ")", Color.Green);
             var connect = new ConnectMessage(Inferno.UnitName("player"), Inferno.GetSpec("player"));
             _messageRouter.SendConnect(connect);
-            Inferno.PrintMessage("[WS] Client connected — sent CONNECT");
         }
 
-        private void OnCommandReceived(CommandMessage command)
+        private void OnClientDisconnected()
         {
-            Inferno.PrintMessage("[WS CMD] " + command.Action + " - " + (command.Spell != null ? command.Spell : command.Macro != null ? command.Macro : "NONE"));
-        }
-
-        private void OnQueryReceived(QueryMessage query)
-        {
-            Inferno.PrintMessage("[WS QUERY] " + query.Method + " (id: " + query.QueryId + ")");
+            Inferno.PrintMessage("[WS] Engine disconnected (clients: " + WebSocket.ClientCount + ")", Color.Orange);
         }
 
         public override void Initialize()
@@ -68,12 +61,13 @@ namespace InfernoWow.Modules
         {
             _messageRouter.ClearQueues();
             WebSocket.Stop();
-            Inferno.PrintMessage("WebSocket server stopped");
+            Inferno.PrintMessage("[WS] Server stopped", Color.Yellow);
         }
 
         public override bool CombatTick()
         {
             RefreshEnvironment();
+            ProcessPendingQueries();
             SendStateUpdate();
 
             if (_messageRouter.HasPendingCommands())
@@ -81,10 +75,7 @@ namespace InfernoWow.Modules
                 var command = _messageRouter.DequeueCommand();
                 if (command != null)
                 {
-                    Inferno.PrintMessage("[Phase1] Received command: " + command.Action);
-                    var result = new ExecutionResultMessage(command.CommandId, true, null);
-                    _messageRouter.SendExecutionResult(result);
-                    return true;
+                    return _commandExecutor.Execute(command);
                 }
             }
 
@@ -94,6 +85,7 @@ namespace InfernoWow.Modules
         public override bool OutOfCombatTick()
         {
             RefreshEnvironment();
+            ProcessPendingQueries();
 
             if (!Inferno.HasBuff("Devotion Aura") && Inferno.CanCast("Devotion Aura"))
             {
@@ -105,10 +97,22 @@ namespace InfernoWow.Modules
             return false;
         }
 
+        private void ProcessPendingQueries()
+        {
+            while (_messageRouter.HasPendingQueries())
+            {
+                var query = _messageRouter.DequeueQuery();
+                if (query != null)
+                {
+                    _queryHandler.HandleQuery(query);
+                }
+            }
+        }
+
         private void SendStateUpdate()
         {
             if (_environment == null) return;
-            
+
             var stateUpdate = new StateUpdateMessage(_environment);
             _messageRouter.SendStateUpdate(stateUpdate);
         }

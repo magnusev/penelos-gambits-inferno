@@ -8,6 +8,8 @@ $buildName = "PaladinHolyPvE"
 $filesToInclude = $commonFiles + @(
     "WebSocket/WebSocket.cs"
     "WebSocket/Messages/MessageRouter.cs"
+    "WebSocket/Messages/CommandExecutor.cs"
+    "WebSocket/Messages/QueryHandler.cs"
     "rotation.cs"
 )
 

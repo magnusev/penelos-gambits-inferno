@@ -27,6 +27,12 @@ public static class WebSocket
 
     public static event Action<string> OnMessageReceived;
     public static event Action OnClientConnected;
+    public static event Action OnClientDisconnected;
+
+    public static int ClientCount
+    {
+        get { lock (_lock) { return _clients.Count; } }
+    }
 
     public static void Start()
     {
@@ -191,6 +197,11 @@ public static class WebSocket
         lock (_lock)
         {
             _clients.Remove(ws);
+        }
+
+        if (OnClientDisconnected != null)
+        {
+            OnClientDisconnected();
         }
         
         try

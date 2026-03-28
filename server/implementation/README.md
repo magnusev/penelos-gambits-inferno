@@ -17,8 +17,8 @@ Goal: Engine connects, receives `STATE_UPDATE` every tick, can send `COMMAND` ba
 | 04 | Engine | WebSocket client with retry loop | ✅ Manual | ✅ Done |
 | 05 | Engine | Message DTOs (`kotlinx.serialization`) | | ✅ Done |
 | 06 | Engine | MessageRouter + TickStateManager | ✅ Manual | ✅ Done |
-| 07 | Bot | Execute commands (CAST/MACRO) | | |
-| 08 | Bot | Query handler (answer QUERY) | ✅ Manual | |
+| 07 | Bot | Execute commands (CAST/MACRO) | | ✅ Done |
+| 08 | Bot | Query handler (answer QUERY) | ✅ Manual | ✅ Done |
 
 ## Phase 2: Gambit System — Decision Engine in Kotlin
 
