@@ -1,4 +1,4 @@
-﻿﻿using System.Collections.Generic;
+﻿﻿﻿using System.Collections.Generic;
 
 namespace InfernoWow.Modules
 {
@@ -31,6 +31,13 @@ namespace InfernoWow.Modules
             }
 
             _messageRouter.HandleRawMessage(message);
+        }
+
+        private void OnClientConnected()
+        {
+            var connect = new ConnectMessage(Inferno.UnitName("player"), Inferno.GetSpec("player"));
+            _messageRouter.SendConnect(connect);
+            Inferno.PrintMessage("[WS] Client connected — sent CONNECT");
         }
 
         private void OnCommandReceived(CommandMessage command)

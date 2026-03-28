@@ -26,6 +26,7 @@ public static class WebSocket
     }
 
     public static event Action<string> OnMessageReceived;
+    public static event Action OnClientConnected;
 
     public static void Start()
     {
@@ -145,6 +146,11 @@ public static class WebSocket
             lock (_lock)
             {
                 _clients.Add(ws);
+            }
+
+            if (OnClientConnected != null)
+            {
+                OnClientConnected();
             }
 
             var buf = new byte[4096];
