@@ -9,4 +9,5 @@ $linesToAddAtStart = @(
     "using System.Collections.Generic;"
     "using System.Drawing;"
     "using InfernoWow.API;"
+    "using System.Diagnostics;"
 ) 

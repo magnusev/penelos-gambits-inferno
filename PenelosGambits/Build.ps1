@@ -2,16 +2,11 @@
 . ".\Scripts\LinesToExclude.ps1"
 . ".\Scripts\AddToStart.ps1"
 
-$outputFile = "C:\libs\Live\Rotations\Retail\PenelosGambits\rotation.cs"
+$outputFile = "C:\libs\Live\Rotations\Retail\PenelosGambitsPalaHoly\rotation.cs"
 $buildName = "PaladinHolyPvE"
 
 $filesToInclude = $commonFiles + @(
-    "WebSocket/WebSocket.cs"
-    "WebSocket/Messages/MessageRouter.cs"
-    "WebSocket/Messages/CommandExecutor.cs"
-    "WebSocket/Messages/QueryHandler.cs"
-    "WebSocket/RemoteEngineClient.cs"
-    "rotation.cs"
+    "Paladin/Holy/PaladinHolyPvE.cs"
 )
 
 . ".\Scripts\BuildFile.ps1" -outputFile $outputFile -buildName $buildName -filesToInclude $filesToInclude -linesToAddAtStart $linesToAddAtStart -linesToExclude $linesToExclude

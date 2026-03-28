@@ -9,4 +9,6 @@ $linesToExclude = @(
     "using System.Threading.Tasks;"
     "using System.Drawing;"
     "using InfernoWow.API;"
+    "using System.Diagnostics;"
+
 )

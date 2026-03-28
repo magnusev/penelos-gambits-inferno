@@ -16,6 +16,7 @@ public static class Inferno
     public static int SpellCooldown(string SpellName) { return 0; }
     public static int SpellCooldown(int SpellId) { return 0; }
     public static int SpellCharges(string SpellName) { return 0; }
+    public static int MaxCharges(string SpellName) { return 0; }
     public static int SpellCharges(int SpellId) { return 0; }
     public static bool SpellUsable(string SpellName) { return false; }
     public static bool SpellUsable(int SpellId) { return false; }

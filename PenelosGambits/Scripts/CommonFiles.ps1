@@ -11,8 +11,10 @@ $commonFiles = @(
     "Common/unit/RaidUnit.cs",
     "Common/unit/PlayerUnit.cs",
     "Common/unit/Unit.cs",
-    "Common/utilities/TargetingMacros.cs",
+    "Common/utilities/ActionQueuer.cs",
     "Common/utilities/JsonParser.cs",
+    "Common/utilities/TargetingMacros.cs",
+    "Common/utilities/Throttler.cs",
     "Common/messages/MessageType.cs",
     "Common/messages/MessageBase.cs",
     "Common/messages/StateUpdateMessage.cs",
@@ -23,7 +25,7 @@ $commonFiles = @(
     "Common/messages/ConnectMessage.cs",
     "Common/Boss.cs",
     "Common/Environment.cs",
+    "Common/PeneloRotation.cs",
     "Common/Target.cs",
-    "Common/ActionQueuer.cs",
     "Common/SpellMacroRegistry.cs"
 )
