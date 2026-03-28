@@ -1,0 +1,723 @@
+openapi: 3.1.0
+info:
+  title: Penelos Gambits Rotation Server API
+  version: 1.0.0
+  description: |
+    WebSocket-based API for the Penelos Gambits WoW rotation client-server architecture.
+
+    ## Connection
+    The client (Inferno WoW bot) hosts a WebSocket server at `ws://localhost:8082/`.
+    The remote server connects as a WebSocket client.
+
+    ## Protocol
+    All messages are JSON text frames over a single persistent WebSocket connection.
+    Every message has a `type` field that determines the schema.
+
+    ## Message Flow
+    ```
+    Remote Server                          WoW Client (Inferno)
+        |                                        |
+        |-------- connects to ws://...:8082/ ---->|
+        |                                        |
+        |<------- CONNECT (handshake) -----------|
+        |<------- STATE_UPDATE (every tick) -----|
+        |                                        |
+        |-------- COMMAND (cast/macro/none) ---->|
+        |<------- EXECUTION_RESULT --------------|
+        |                                        |
+        |-------- QUERY (request info) --------->|
+        |<------- QUERY_RESPONSE ----------------|
+        |                                        |
+        |-------- PING ------------------------->|
+        |<------- PONG --------------------------|
+    ```
+
+    ## Direction Legend
+    - **Client → Server**: Messages sent FROM the WoW client TO the remote server
+    - **Server → Client**: Messages sent FROM the remote server TO the WoW client
+
+    ## Tick Rate
+    - State updates are sent 2-3 times per second (every ~333ms)
+    - Commands should be responded within 200ms for optimal rotation performance
+    - If no command is received within 5 seconds, the client falls back to local logic
+
+paths:
+  /ws:
+    get:
+      summary: WebSocket Connection Endpoint
+      description: |
+        Connect to the WoW client's WebSocket server.
+        The client listens at `ws://localhost:8082/`.
+        After connection, the client sends a CONNECT message followed by periodic STATE_UPDATE messages.
+      responses:
+        "101":
+          description: WebSocket connection upgraded successfully
+
+components:
+  schemas:
+
+    # ─────────────────────────────────────────────
+    #  Discriminator: Every message has a "type"
+    # ─────────────────────────────────────────────
+    WebSocketMessage:
+      description: Base envelope for all WebSocket messages. Discriminate on the `type` field.
+      oneOf:
+        - $ref: "#/components/schemas/ConnectMessage"
+        - $ref: "#/components/schemas/StateUpdateMessage"
+        - $ref: "#/components/schemas/CommandMessage"
+        - $ref: "#/components/schemas/QueryMessage"
+        - $ref: "#/components/schemas/QueryResponseMessage"
+        - $ref: "#/components/schemas/ExecutionResultMessage"
+        - $ref: "#/components/schemas/PingMessage"
+        - $ref: "#/components/schemas/PongMessage"
+      discriminator:
+        propertyName: type
+        mapping:
+          CONNECT: "#/components/schemas/ConnectMessage"
+          STATE_UPDATE: "#/components/schemas/StateUpdateMessage"
+          COMMAND: "#/components/schemas/CommandMessage"
+          QUERY: "#/components/schemas/QueryMessage"
+          QUERY_RESPONSE: "#/components/schemas/QueryResponseMessage"
+          EXECUTION_RESULT: "#/components/schemas/ExecutionResultMessage"
+          PING: "#/components/schemas/PingMessage"
+          PONG: "#/components/schemas/PongMessage"
+
+    # ─────────────────────────────────────────────
+    #  CLIENT → SERVER messages
+    # ─────────────────────────────────────────────
+
+    ConnectMessage:
+      description: |
+        **Direction: Client → Server**
+
+        Sent once immediately after a remote server connects to the WebSocket.
+        Contains character identification so the server knows which character it is controlling.
+      type: object
+      required:
+        - type
+        - character
+        - spec
+      properties:
+        type:
+          type: string
+          enum: [CONNECT]
+          description: Message type identifier
+        character:
+          type: string
+          description: The in-game character name
+          example: "Penelo"
+        spec:
+          type: string
+          description: The player's current specialization
+          example: "Holy Paladin"
+
+    StateUpdateMessage:
+      description: |
+        **Direction: Client → Server**
+
+        Sent every tick (~2-3 times per second) with the current game state.
+        This is the primary message the server uses to make rotation decisions.
+      type: object
+      required:
+        - type
+        - timestamp
+        - mapId
+        - globalCooldown
+        - combatTime
+        - bosses
+      properties:
+        type:
+          type: string
+          enum: [STATE_UPDATE]
+          description: Message type identifier
+        timestamp:
+          type: integer
+          format: int64
+          description: UTC timestamp in .NET ticks (100-nanosecond intervals since 0001-01-01)
+          example: 638789012345678901
+        mapId:
+          type: integer
+          description: Current WoW map/zone ID
+          example: 2549
+        globalCooldown:
+          type: integer
+          description: Remaining global cooldown in milliseconds. 0 means GCD is ready.
+          example: 0
+        combatTime:
+          type: integer
+          description: Time in combat in milliseconds. 0 if not in combat.
+          example: 45000
+        player:
+          oneOf:
+            - $ref: "#/components/schemas/PlayerState"
+            - type: "null"
+          description: Current player state. Null if unavailable.
+        target:
+          oneOf:
+            - $ref: "#/components/schemas/TargetState"
+            - type: "null"
+          description: Current target state. Null if no target.
+        group:
+          oneOf:
+            - $ref: "#/components/schemas/GroupState"
+            - type: "null"
+          description: Current group/raid state. Null if unavailable.
+        bosses:
+          type: array
+          description: List of currently active boss units (boss1-boss4). Empty array if no bosses.
+          items:
+            $ref: "#/components/schemas/BossState"
+          example: []
+
+    QueryResponseMessage:
+      description: |
+        **Direction: Client → Server**
+
+        Sent in response to a QUERY message from the server.
+        Contains the result of the queried game data.
+      type: object
+      required:
+        - type
+        - queryId
+        - result
+      properties:
+        type:
+          type: string
+          enum: [QUERY_RESPONSE]
+          description: Message type identifier
+        queryId:
+          type: string
+          description: Must match the queryId from the corresponding QUERY message
+          example: "q-abc-123"
+        result:
+          type: boolean
+          description: Whether the query returned a truthy result
+          example: true
+        data:
+          description: |
+            Additional data for the query result. Structure depends on the query method.
+            Omitted if no extra data is needed beyond the boolean result.
+          example: {"stacks": 3, "remaining": 12000}
+
+    ExecutionResultMessage:
+      description: |
+        **Direction: Client → Server**
+
+        Sent after the client attempts to execute a COMMAND from the server.
+        Reports whether the command was successfully executed.
+      type: object
+      required:
+        - type
+        - commandId
+        - success
+        - error
+      properties:
+        type:
+          type: string
+          enum: [EXECUTION_RESULT]
+          description: Message type identifier
+        commandId:
+          type: string
+          description: Must match the commandId from the corresponding COMMAND message
+          example: "cmd-456"
+        success:
+          type: boolean
+          description: Whether the command was executed successfully
+          example: true
+        error:
+          type:
+            - string
+            - "null"
+          description: Error message if the command failed, null on success
+          example: null
+
+    PongMessage:
+      description: |
+        **Direction: Client → Server**
+
+        Sent in response to a PING from the server. Used for keep-alive / latency measurement.
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [PONG]
+          description: Message type identifier
+
+    # ─────────────────────────────────────────────
+    #  SERVER → CLIENT messages
+    # ─────────────────────────────────────────────
+
+    CommandMessage:
+      description: |
+        **Direction: Server → Client**
+
+        Sent by the server to instruct the client to perform an action.
+        The client should execute the action and reply with an EXECUTION_RESULT.
+
+        **Action types:**
+        - `CAST` — Cast a spell (by name) on an optional target unit
+        - `MACRO` — Execute a registered macro by name
+        - `NONE` — Explicitly do nothing this tick
+      type: object
+      required:
+        - type
+        - commandId
+        - action
+      properties:
+        type:
+          type: string
+          enum: [COMMAND]
+          description: Message type identifier
+        commandId:
+          type: string
+          description: Unique identifier for this command. Used to correlate with EXECUTION_RESULT.
+          example: "cmd-456"
+        action:
+          type: string
+          enum: [CAST, MACRO, NONE]
+          description: The type of action to perform
+          example: "CAST"
+        spell:
+          type: string
+          description: |
+            **Required when action = CAST.**
+            The spell name to cast. Must be a spell registered in the rotation's Spellbook.
+          example: "Holy Shock"
+        target:
+          type: string
+          description: |
+            **Optional. Used with action = CAST.**
+            The unit ID to target for the spell (e.g. "boss1", "player", "party1", "raid5").
+            If omitted, casts on current target.
+          example: "boss1"
+        macro:
+          type: string
+          description: |
+            **Required when action = MACRO.**
+            The macro name to execute. Must be a macro registered in the rotation's Macros dictionary.
+          example: "focus_raid5"
+
+    QueryMessage:
+      description: |
+        **Direction: Server → Client**
+
+        Sent by the server to request specific game data not included in STATE_UPDATE.
+        The client will respond with a QUERY_RESPONSE matching the queryId.
+
+        ## Available Query Methods
+
+        ### Buff/Debuff Queries
+        | Method | Params | Response data |
+        |--------|--------|---------------|
+        | `HasBuff` | `unit`, `buff`, `byPlayer` | `{remaining, stacks}` |
+        | `HasDebuff` | `unit`, `debuff`, `byPlayer` | `{remaining, stacks}` |
+        | `BuffRemaining` | `unit`, `buff`, `byPlayer` | `{remaining}` |
+        | `DebuffRemaining` | `unit`, `debuff`, `byPlayer` | `{remaining}` |
+        | `BuffStacks` | `unit`, `buff`, `byPlayer` | `{stacks}` |
+        | `DebuffStacks` | `unit`, `debuff`, `byPlayer` | `{stacks}` |
+
+        ### Spell Queries
+        | Method | Params | Response data |
+        |--------|--------|---------------|
+        | `CanCast` | `spell`, `unit` | `{reason}` |
+        | `SpellCooldown` | `spell` | `{cooldown}` |
+        | `SpellCharges` | `spell` | `{charges}` |
+        | `SpellUsable` | `spell` | — |
+        | `SpellInRange` | `spell`, `unit` | — |
+        | `IsSpellKnown` | `spell` | — |
+        | `GCD` | — | `{remaining}` |
+
+        ### Unit State Queries
+        | Method | Params | Response data |
+        |--------|--------|---------------|
+        | `Health` | `unit` | `{health}` |
+        | `MaxHealth` | `unit` | `{maxHealth}` |
+        | `Power` | `unit`, `powerType` | `{power}` |
+        | `MaxPower` | `unit`, `powerType` | `{maxPower}` |
+        | `InCombat` | `unit` | — |
+        | `IsDead` | `unit` | — |
+        | `IsMoving` | `unit` | — |
+        | `IsVisible` | `unit` | — |
+        | `UnitName` | `unit` | `{name}` |
+
+        ### Casting Detection Queries
+        | Method | Params | Response data |
+        |--------|--------|---------------|
+        | `IsInterruptable` | `unit` | — |
+        | `IsChanneling` | `unit` | — |
+        | `CastingID` | `unit` | `{spellId}` |
+        | `CastingName` | `unit` | `{name}` |
+        | `CastingRemaining` | `unit` | `{remaining}` |
+
+        ### Distance/AoE Queries
+        | Method | Params | Response data |
+        |--------|--------|---------------|
+        | `DistanceBetween` | `unit1`, `unit2` | `{distance}` |
+        | `EnemiesNearUnit` | `distance`, `unit` | `{count}` |
+        | `FriendsNearUnit` | `distance`, `unit` | `{count}` |
+
+        ### Item Queries
+        | Method | Params | Response data |
+        |--------|--------|---------------|
+        | `CanUseEquippedItem` | `slot` | — |
+        | `InventoryItemID` | `slot` | `{itemId}` |
+        | `ItemCooldown` | `itemId` | `{cooldown}` |
+
+        ### Misc Queries
+        | Method | Params | Response data |
+        |--------|--------|---------------|
+        | `PlayerIsMounted` | — | — |
+        | `CombatTime` | — | `{combatTime}` |
+        | `GroupSize` | — | `{size}` |
+        | `InParty` | — | — |
+        | `InRaid` | — | — |
+        | `IsCustomCodeOn` | `code` | — |
+      type: object
+      required:
+        - type
+        - queryId
+        - method
+      properties:
+        type:
+          type: string
+          enum: [QUERY]
+          description: Message type identifier
+        queryId:
+          type: string
+          description: Unique identifier for this query. The client will echo it back in QUERY_RESPONSE.
+          example: "q-abc-123"
+        method:
+          type: string
+          description: The query method to invoke. See the method table above.
+          example: "HasDebuff"
+        params:
+          type: object
+          description: |
+            Parameters for the query method. Keys depend on the method.
+            Common parameter keys:
+            - `unit` — Unit ID string (e.g. "player", "target", "boss1", "party1", "raid5")
+            - `spell` / `buff` / `debuff` — Spell or aura name (string)
+            - `byPlayer` — Whether to filter by player-applied only (boolean, default true)
+            - `powerType` — Power type integer (0=Mana, 1=Rage, 2=Focus, 3=Energy, etc.)
+            - `distance` — Distance in yards (number)
+            - `slot` — Inventory slot number (integer)
+            - `itemId` — Item ID (integer)
+            - `code` — Custom command code (string)
+          additionalProperties: true
+          example:
+            unit: "boss1"
+            debuff: "Flame Shock"
+            byPlayer: true
+
+    PingMessage:
+      description: |
+        **Direction: Server → Client**
+
+        Keep-alive / health check message. The client will respond with PONG.
+        Recommended interval: every 5 seconds.
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [PING]
+          description: Message type identifier
+
+    # ─────────────────────────────────────────────
+    #  Nested data objects (used in STATE_UPDATE)
+    # ─────────────────────────────────────────────
+
+    PlayerState:
+      description: Current state of the player character
+      type: object
+      required:
+        - health
+        - spec
+        - castingSpellId
+        - inCombat
+        - isMoving
+      properties:
+        health:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Player health as a percentage (0-100)
+          example: 95
+        spec:
+          type: string
+          description: Player specialization / role string
+          example: "Holy"
+        castingSpellId:
+          type: integer
+          description: Spell ID currently being cast. 0 if not casting.
+          example: 0
+        inCombat:
+          type: boolean
+          description: Whether the player is currently in combat
+          example: true
+        isMoving:
+          type: boolean
+          description: Whether the player is currently moving
+          example: false
+
+    TargetState:
+      description: Current state of the player's target
+      type: object
+      required:
+        - exists
+        - name
+        - health
+        - castingSpellId
+      properties:
+        exists:
+          type: boolean
+          description: Whether the target exists
+          example: true
+        name:
+          type: string
+          description: Target unit name
+          example: "Ragnaros"
+        health:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Target health as a percentage (0-100)
+          example: 72
+        castingSpellId:
+          type: integer
+          description: Spell ID the target is currently casting. 0 if not casting.
+          example: 0
+
+    GroupState:
+      description: Current group composition
+      type: object
+      required:
+        - type
+        - size
+      properties:
+        type:
+          type: string
+          enum: [solo, party, raid]
+          description: The group type
+          example: "raid"
+        size:
+          type: integer
+          minimum: 0
+          description: Number of group members (0 if solo)
+          example: 20
+
+    BossState:
+      description: State of an active boss unit
+      type: object
+      required:
+        - unitId
+        - name
+        - health
+        - castingSpellId
+      properties:
+        unitId:
+          type: string
+          description: The boss unit frame identifier (boss1, boss2, boss3, boss4)
+          example: "boss1"
+        name:
+          type: string
+          description: The boss NPC name
+          example: "Ragnaros"
+        health:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Boss health as a percentage (0-100)
+          example: 72
+        castingSpellId:
+          type: integer
+          description: Spell ID the boss is currently casting. 0 if not casting.
+          example: 12345
+
+  # ─────────────────────────────────────────────
+  #  Example message payloads
+  # ─────────────────────────────────────────────
+  examples:
+
+    ConnectExample:
+      summary: Client sends character info on connect
+      value:
+        type: "CONNECT"
+        character: "Penelo"
+        spec: "Holy Paladin"
+
+    StateUpdateExample:
+      summary: Full state update from client
+      value:
+        type: "STATE_UPDATE"
+        timestamp: 638789012345678901
+        mapId: 2549
+        globalCooldown: 0
+        combatTime: 45000
+        player:
+          health: 95
+          spec: "Holy"
+          castingSpellId: 0
+          inCombat: true
+          isMoving: false
+        target:
+          exists: true
+          name: "Ragnaros"
+          health: 72
+          castingSpellId: 0
+        group:
+          type: "raid"
+          size: 20
+        bosses:
+          - unitId: "boss1"
+            name: "Ragnaros"
+            health: 72
+            castingSpellId: 0
+
+    StateUpdateNoTargetExample:
+      summary: State update with no target and no bosses
+      value:
+        type: "STATE_UPDATE"
+        timestamp: 638789012345678901
+        mapId: 2549
+        globalCooldown: 1200
+        combatTime: 0
+        player:
+          health: 100
+          spec: "Holy"
+          castingSpellId: 0
+          inCombat: false
+          isMoving: true
+        target: null
+        group:
+          type: "solo"
+          size: 0
+        bosses: []
+
+    CastCommandExample:
+      summary: Server tells client to cast a spell
+      value:
+        type: "COMMAND"
+        commandId: "cmd-001"
+        action: "CAST"
+        spell: "Holy Shock"
+        target: "boss1"
+
+    MacroCommandExample:
+      summary: Server tells client to run a macro
+      value:
+        type: "COMMAND"
+        commandId: "cmd-002"
+        action: "MACRO"
+        macro: "focus_raid5"
+
+    NoneCommandExample:
+      summary: Server tells client to do nothing
+      value:
+        type: "COMMAND"
+        commandId: "cmd-003"
+        action: "NONE"
+
+    QueryHasDebuffExample:
+      summary: Server queries for a debuff on a boss
+      value:
+        type: "QUERY"
+        queryId: "q-101"
+        method: "HasDebuff"
+        params:
+          unit: "boss1"
+          debuff: "Flame Shock"
+          byPlayer: true
+
+    QuerySpellCooldownExample:
+      summary: Server queries a spell cooldown
+      value:
+        type: "QUERY"
+        queryId: "q-102"
+        method: "SpellCooldown"
+        params:
+          spell: "Avenging Wrath"
+
+    QueryDistanceExample:
+      summary: Server queries distance between two units
+      value:
+        type: "QUERY"
+        queryId: "q-103"
+        method: "DistanceBetween"
+        params:
+          unit1: "player"
+          unit2: "boss1"
+
+    QueryEnemiesNearExample:
+      summary: Server queries enemy count near a unit
+      value:
+        type: "QUERY"
+        queryId: "q-104"
+        method: "EnemiesNearUnit"
+        params:
+          distance: 8.0
+          unit: "player"
+
+    QueryResponseBoolExample:
+      summary: Client responds to HasDebuff query (true with data)
+      value:
+        type: "QUERY_RESPONSE"
+        queryId: "q-101"
+        result: true
+        data:
+          remaining: 12000
+          stacks: 1
+
+    QueryResponseCooldownExample:
+      summary: Client responds to SpellCooldown query
+      value:
+        type: "QUERY_RESPONSE"
+        queryId: "q-102"
+        result: true
+        data:
+          cooldown: 45000
+
+    QueryResponseDistanceExample:
+      summary: Client responds to DistanceBetween query
+      value:
+        type: "QUERY_RESPONSE"
+        queryId: "q-103"
+        result: true
+        data:
+          distance: 12.5
+
+    QueryResponseFalseExample:
+      summary: Client responds to a query with false result
+      value:
+        type: "QUERY_RESPONSE"
+        queryId: "q-101"
+        result: false
+
+    ExecutionResultSuccessExample:
+      summary: Client confirms successful command execution
+      value:
+        type: "EXECUTION_RESULT"
+        commandId: "cmd-001"
+        success: true
+        error: null
+
+    ExecutionResultFailureExample:
+      summary: Client reports command execution failure
+      value:
+        type: "EXECUTION_RESULT"
+        commandId: "cmd-001"
+        success: false
+        error: "Spell not in range"
+
+    PingExample:
+      summary: Server sends keep-alive ping
+      value:
+        type: "PING"
+
+    PongExample:
+      summary: Client responds to ping
+      value:
+        type: "PONG"
