@@ -23,4 +23,6 @@ dependencyResolutionManagement {
 include(":backend:libs:ktor-common")
 include(":backend:libs:ulid")
 
+include(":backend:penelos-gambits-domain")
+include(":backend:penelos-gambits-data")
 include(":backend:penelos-gambits-service")

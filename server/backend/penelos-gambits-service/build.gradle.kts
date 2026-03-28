@@ -6,12 +6,15 @@ group = "com.penelosgambits"
 version = "0.1.0"
 
 ktorService {
-    mainClass = "com.penelosgambits.service.dokument.DokumentServiceApplicationKt"
+    mainClass = "com.penelosgambits.service.ApplicationKt"
     dockerImageName = "localhost/dokument-service"
     dockerImageVersion = version as String
 }
 
 dependencies {
+    implementation(project(":backend:penelos-gambits-domain"))
+    implementation(project(":backend:penelos-gambits-data"))
+
     implementation(libs.ktor.server.serialization)
 
     testImplementation(libs.bundles.kotest)
