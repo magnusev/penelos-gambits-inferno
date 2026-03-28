@@ -10,6 +10,7 @@ $filesToInclude = $commonFiles + @(
     "WebSocket/Messages/MessageRouter.cs"
     "WebSocket/Messages/CommandExecutor.cs"
     "WebSocket/Messages/QueryHandler.cs"
+    "WebSocket/RemoteEngineClient.cs"
     "rotation.cs"
 )
 
