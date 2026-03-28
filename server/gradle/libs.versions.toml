@@ -2,6 +2,7 @@
 kotlin = "2.3.20"
 ktor = "3.4.1"
 kotlinxSerialization = "1.10.0"
+kotlinxCoroutines = "1.10.2"
 logback = "1.5.32"
 jib = "3.5.3"
 jackson = "2.21.2"
@@ -67,6 +68,7 @@ jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 kotlin-serialization = {module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
 

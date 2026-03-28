@@ -14,6 +14,9 @@ class TickStateManager {
 
     val currentState: TickState? get() = _currentState.get()
 
+    /** Set after construction once the tick processor is available. */
+    var tickProcessor: TickProcessor? = null
+
     fun update(state: TickState) {
         _currentState.set(state)
         logger.info(
@@ -23,6 +26,14 @@ class TickStateManager {
             state.target?.name ?: "none",
             state.bosses.size,
         )
+    }
+
+    /**
+     * Called from the coroutine scope to process the latest tick through the gambit system.
+     */
+    suspend fun processLatestTick() {
+        val state = currentState ?: return
+        tickProcessor?.processTick(state)
     }
 }
 

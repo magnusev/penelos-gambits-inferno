@@ -27,9 +27,9 @@ Goal: Engine evaluates gambit rules and sends the right `COMMAND` each tick.
 | # | Side | Task | Checkpoint? | Status |
 |---|------|------|-------------|--------|
 | 01 | Engine | Domain model (`TickContext`, `UnitState`, ports) | | ✅ Done |
-| 02 | Engine | Condition evaluators | | |
-| 03 | Engine | Selectors + UnitFilter pipeline | | |
-| 04 | Engine | GambitRule + GambitSet + evaluation loop | ✅ Unit tests | |
-| 05 | Engine | `GameQueryPort` WebSocket impl + cache | ✅ Manual | |
-| 06 | Engine | Wire it all together — first live gambit | ✅ Manual (full loop) | |
+| 02 | Engine | Condition evaluators | | ✅ Done |
+| 03 | Engine | Selectors + UnitFilter pipeline | | ✅ Done |
+| 04 | Engine | GambitRule + GambitSet + evaluation loop | ✅ Unit tests | ✅ Done |
+| 05 | Engine | `GameQueryPort` WebSocket impl + cache | ✅ Manual | ✅ Done |
+| 06 | Engine | Wire it all together — first live gambit | ✅ Manual (full loop) | ✅ Done |
 

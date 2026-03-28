@@ -5,6 +5,7 @@ import com.penelosgambits.data.dto.ExecutionResultDto
 import com.penelosgambits.data.dto.QueryResponseDto
 import com.penelosgambits.data.dto.StateUpdateDto
 import com.penelosgambits.data.dto.extractType
+import com.penelosgambits.data.gamequery.WebSocketGameQueryPort
 import com.penelosgambits.data.mapper.toDomain
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
@@ -20,21 +21,40 @@ class MessageRouter(
 ) {
     private val logger = LoggerFactory.getLogger(MessageRouter::class.java)
 
-    fun route(rawJson: String) {
+    /** Set after construction once the query port is available (avoids circular init). */
+    var queryPort: WebSocketGameQueryPort? = null
+
+    /** Set after construction once the tick processor is available. */
+    var tickProcessor: TickProcessor? = null
+
+    /**
+     * Routes a raw JSON message to the appropriate handler.
+     * @return true if this was a STATE_UPDATE (caller should launch tick processing).
+     */
+    fun route(rawJson: String): Boolean {
         val type = extractType(rawJson)
         if (type == null) {
             logger.warn("Could not extract type from message: {}", rawJson.take(200))
-            return
+            return false
         }
 
-        when (type) {
-            "CONNECT" -> handleConnect(rawJson)
-            "STATE_UPDATE" -> handleStateUpdate(rawJson)
-            "QUERY_RESPONSE" -> handleQueryResponse(rawJson)
-            "EXECUTION_RESULT" -> handleExecutionResult(rawJson)
-            "PONG" -> { /* keep-alive ack, nothing to do */ }
-            else -> logger.warn("Unknown message type: {}", type)
+        return when (type) {
+            "CONNECT" -> { handleConnect(rawJson); false }
+            "STATE_UPDATE" -> { handleStateUpdate(rawJson); true }
+            "QUERY_RESPONSE" -> { handleQueryResponse(rawJson); false }
+            "EXECUTION_RESULT" -> { handleExecutionResult(rawJson); false }
+            "PONG" -> false
+            else -> { logger.warn("Unknown message type: {}", type); false }
         }
+    }
+
+    /**
+     * Processes the latest tick state through the gambit system.
+     * Called from a separate coroutine to avoid blocking the receive loop.
+     */
+    suspend fun processLatestTick() {
+        val state = tickStateManager.currentState ?: return
+        tickProcessor?.processTick(state)
     }
 
     private fun handleConnect(rawJson: String) {
@@ -51,8 +71,8 @@ class MessageRouter(
 
     private fun handleQueryResponse(rawJson: String) {
         val dto = json.decodeFromString<QueryResponseDto>(rawJson)
-        logger.debug("Query response: queryId={}, result={}", dto.queryId, dto.result)
-        // Will be wired to WebSocketGameQueryPort in phase 2
+        queryPort?.handleResponse(dto)
+            ?: logger.warn("Query response received but no queryPort is wired: queryId={}", dto.queryId)
     }
 
     private fun handleExecutionResult(rawJson: String) {
@@ -63,7 +83,6 @@ class MessageRouter(
             dto.success,
             dto.error,
         )
-        // Will be wired to command tracking in phase 2
     }
 }
 

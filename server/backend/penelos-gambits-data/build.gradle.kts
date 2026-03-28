@@ -6,5 +6,6 @@ plugins {
 dependencies {
     implementation(project(":backend:penelos-gambits-domain"))
     implementation(libs.kotlin.serialization)
+    implementation(libs.kotlinx.coroutines.core)
 }
 
