@@ -109,14 +109,6 @@ namespace InfernoWow.Modules
         {
             if (_environment == null) return;
             
-            Inferno.PrintMessage("MapId: " + _environment.MapId);
-            Inferno.PrintMessage("IsMoving: " + _environment.IsMoving);
-            
-            if(_environment.Target != null)
-            {
-                Inferno.PrintMessage("Target: " + _environment.Target.name + " (HP: " + _environment.Target.healthPercentage + "%)");
-            }
-
             var stateUpdate = new StateUpdateMessage(_environment);
             _messageRouter.SendStateUpdate(stateUpdate);
         }
