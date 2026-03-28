@@ -40,7 +40,7 @@ public static class WebSocket
 
         _cts = new CancellationTokenSource();
         _listener = new HttpListener();
-        _listener.Prefixes.Add("http://localhost:" + Port + "/");
+        _listener.Prefixes.Add("http://+:" + Port + "/");
         _listener.Start();
 
         Task.Run(() => AcceptLoopAsync(_cts.Token));

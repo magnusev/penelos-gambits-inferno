@@ -23,7 +23,7 @@ namespace InfernoWow.Modules
             WebSocket.OnClientConnected += OnClientConnected;
             WebSocket.OnClientDisconnected += OnClientDisconnected;
             WebSocket.Start();
-            Inferno.PrintMessage("[WS] Server started on ws://localhost:8082/", Color.Green);
+            Inferno.PrintMessage("[WS] Server started on http://+:8082/", Color.Green);
         }
 
         private void OnWebSocketMessage(string message)
