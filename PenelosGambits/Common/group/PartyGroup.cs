@@ -1,4 +1,4 @@
-﻿﻿public class PartyGroup : Group
+﻿public class PartyGroup : Group
 {
     private readonly List<Unit> _members = new List<Unit>();
 

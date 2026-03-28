@@ -1,4 +1,4 @@
-﻿﻿public abstract class Unit
+﻿public abstract class Unit
 {
     public string Id { get; private set; }
     public string UnitType { get; private set; }

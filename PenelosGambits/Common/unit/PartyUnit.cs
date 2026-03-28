@@ -1,4 +1,4 @@
-﻿﻿public class PartyUnit : Unit
+﻿public class PartyUnit : Unit
 {
     public PartyUnit(string Id, string UnitType, string Role, int CastingSpell, int Health, int MaxHealth)
         : base(Id, UnitType, Role, CastingSpell, Health, MaxHealth)

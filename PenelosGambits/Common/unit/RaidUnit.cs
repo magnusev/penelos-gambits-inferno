@@ -1,4 +1,4 @@
-﻿﻿public class RaidUnit : Unit
+﻿public class RaidUnit : Unit
 {
     public RaidUnit(string Id, string UnitType, string Role, int CastingSpell, int Health, int MaxHealth)
         : base(Id, UnitType, Role, CastingSpell, Health, MaxHealth)
