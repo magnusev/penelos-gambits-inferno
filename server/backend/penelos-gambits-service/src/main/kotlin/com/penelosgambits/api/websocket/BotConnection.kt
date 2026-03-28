@@ -8,7 +8,10 @@ import io.ktor.websocket.readText
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 
-class BotConnection(private val url: String = "ws://DESKTOP-A5OGBKM:8082/") {
+class BotConnection(
+    private val messageRouter: MessageRouter,
+    private val url: String = "ws://DESKTOP-A5OGBKM:8082/",
+) {
     private val client = HttpClient { install(WebSockets) }
     private val logger = LoggerFactory.getLogger(BotConnection::class.java)
 
@@ -18,11 +21,10 @@ class BotConnection(private val url: String = "ws://DESKTOP-A5OGBKM:8082/") {
             try {
                 client.webSocket(url) {
                     logger.info("Connected to bot at {}", url)
-                    backoff = 1000L // reset on successful connect
+                    backoff = 1000L
                     for (frame in incoming) {
                         if (frame is Frame.Text) {
-                            val text = frame.readText()
-                            logger.info("Received: {}", text)
+                            messageRouter.route(frame.readText())
                         }
                     }
                 }
