@@ -117,7 +117,10 @@ class StateConditionsTest : BehaviorSpec({
         val condition = TargetExistsCondition()
 
         When("target exists") {
-            val state = tickState(target = TargetState(exists = true, name = "Ragnaros", health = 72, castingSpellId = 0))
+            val target = TargetState(
+                exists = true, name = "Ragnaros", health = 72, castingSpellId = 0,
+            )
+            val state = tickState(target = target)
             val result = condition.isMet(context(state))
 
             Then("it returns true") {

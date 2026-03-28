@@ -6,7 +6,6 @@ import com.penelosgambits.domain.condition.InCombatCondition
 import com.penelosgambits.domain.model.PlayerState
 import com.penelosgambits.domain.model.TickContext
 import com.penelosgambits.domain.model.TickState
-import com.penelosgambits.domain.model.UnitState
 import com.penelosgambits.domain.port.GameQueryPort
 import com.penelosgambits.domain.selector.PlayerSelector
 import io.kotest.core.spec.style.BehaviorSpec
@@ -32,15 +31,22 @@ private class NeverCondition : ConditionEvaluator {
     override suspend fun isMet(context: TickContext): Boolean = false
 }
 
+private fun gambitRule(
+    priority: Int,
+    name: String,
+    action: ActionIntent = ActionIntent.None,
+    conditions: List<ConditionEvaluator> = listOf(AlwaysCondition()),
+) = GambitRule(priority, name, conditions, PlayerSelector(), action)
+
 class GambitEvaluatorTest : BehaviorSpec({
 
     Given("a gambit set with 3 gambits at priority 1, 2, 3") {
         val gambitSet = GambitSet(
             name = "Test",
             gambits = listOf(
-                GambitRule(1, "Priority1-Cast", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.Cast("Holy Shock")),
-                GambitRule(2, "Priority2-Cast", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.Cast("Flash of Light")),
-                GambitRule(3, "Priority3-None", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.None),
+                gambitRule(1, "Priority1-Cast", ActionIntent.Cast("Holy Shock")),
+                gambitRule(2, "Priority2-Cast", ActionIntent.Cast("Flash of Light")),
+                gambitRule(3, "Priority3-None", action = ActionIntent.None),
             ),
         )
 
@@ -90,8 +96,12 @@ class GambitEvaluatorTest : BehaviorSpec({
         val gambitSet = GambitSet(
             name = "Test",
             gambits = listOf(
-                GambitRule(1, "Priority1-NotMet", listOf(NeverCondition()), PlayerSelector(), ActionIntent.Cast("Holy Shock")),
-                GambitRule(2, "Priority2-Met", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.Cast("Flash of Light")),
+                gambitRule(
+                    1, "Priority1-NotMet",
+                    ActionIntent.Cast("Holy Shock"),
+                    conditions = listOf(NeverCondition()),
+                ),
+                gambitRule(2, "Priority2-Met", ActionIntent.Cast("Flash of Light")),
             ),
         )
 
@@ -109,14 +119,14 @@ class GambitEvaluatorTest : BehaviorSpec({
         val beforeSet = GambitSet(
             name = "Emergency",
             gambits = listOf(
-                GambitRule(1, "Emergency-Heal", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.Cast("Lay on Hands")),
+                gambitRule(1, "Emergency-Heal", ActionIntent.Cast("Lay on Hands")),
             ),
         )
 
         val mainSet = GambitSet(
             name = "Main",
             gambits = listOf(
-                GambitRule(1, "Main-Cast", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.Cast("Holy Shock")),
+                gambitRule(1, "Main-Cast", ActionIntent.Cast("Holy Shock")),
             ),
             before = beforeSet,
         )
@@ -135,14 +145,18 @@ class GambitEvaluatorTest : BehaviorSpec({
         val beforeSet = GambitSet(
             name = "Emergency",
             gambits = listOf(
-                GambitRule(1, "Emergency-NoMatch", listOf(NeverCondition()), PlayerSelector(), ActionIntent.Cast("Lay on Hands")),
+                gambitRule(
+                    1, "Emergency-NoMatch",
+                    ActionIntent.Cast("Lay on Hands"),
+                    conditions = listOf(NeverCondition()),
+                ),
             ),
         )
 
         val mainSet = GambitSet(
             name = "Main",
             gambits = listOf(
-                GambitRule(1, "Main-Cast", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.Cast("Holy Shock")),
+                gambitRule(1, "Main-Cast", ActionIntent.Cast("Holy Shock")),
             ),
             before = beforeSet,
         )
@@ -161,14 +175,18 @@ class GambitEvaluatorTest : BehaviorSpec({
         val fallbackSet = GambitSet(
             name = "Fallback",
             gambits = listOf(
-                GambitRule(1, "Fallback-Idle", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.None),
+                gambitRule(1, "Fallback-Idle"),
             ),
         )
 
         val mainSet = GambitSet(
             name = "Main",
             gambits = listOf(
-                GambitRule(1, "Main-NoMatch", listOf(NeverCondition()), PlayerSelector(), ActionIntent.Cast("Holy Shock")),
+                gambitRule(
+                    1, "Main-NoMatch",
+                    ActionIntent.Cast("Holy Shock"),
+                    conditions = listOf(NeverCondition()),
+                ),
             ),
             fallback = fallbackSet,
         )
@@ -187,7 +205,11 @@ class GambitEvaluatorTest : BehaviorSpec({
         val gambitSet = GambitSet(
             name = "Empty",
             gambits = listOf(
-                GambitRule(1, "NoMatch", listOf(NeverCondition()), PlayerSelector(), ActionIntent.Cast("Holy Shock")),
+                gambitRule(
+                    1, "NoMatch",
+                    ActionIntent.Cast("Holy Shock"),
+                    conditions = listOf(NeverCondition()),
+                ),
             ),
         )
 
@@ -204,9 +226,9 @@ class GambitEvaluatorTest : BehaviorSpec({
         val gambitSet = GambitSet(
             name = "Unordered",
             gambits = listOf(
-                GambitRule(3, "Third", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.Cast("Spell3")),
-                GambitRule(1, "First", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.Cast("Spell1")),
-                GambitRule(2, "Second", listOf(AlwaysCondition()), PlayerSelector(), ActionIntent.Cast("Spell2")),
+                gambitRule(3, "Third", ActionIntent.Cast("Spell3")),
+                gambitRule(1, "First", ActionIntent.Cast("Spell1")),
+                gambitRule(2, "Second", ActionIntent.Cast("Spell2")),
             ),
         )
 
