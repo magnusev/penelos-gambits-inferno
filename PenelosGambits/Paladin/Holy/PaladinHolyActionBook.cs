@@ -4,6 +4,7 @@
     {
         return new List<string>
         {
+            FlashOfLightAction.Name,
             HolyShockDefensiveAction.Name
         };
     }
@@ -12,6 +13,7 @@
     {
         return new Dictionary<string, string>
         {
+            { FlashOfLightAction.MacroName, FlashOfLightAction.Macro },
             { HolyShockDefensiveAction.MacroName, HolyShockDefensiveAction.Macro },
         };
     }

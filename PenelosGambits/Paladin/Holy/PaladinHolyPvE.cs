@@ -3,21 +3,16 @@ namespace InfernoWow.Modules
     public class HolyPaladinPvE : Rotation
     {
         private PaladinHolyActionBook ActionBook;
+        private GambitSetPicker GambitSetPicker;
         private PeneloRotation PeneloRotation;
 
         public HolyPaladinPvE()
         {
             ActionBook = new PaladinHolyActionBook();
-            PeneloRotation = new PeneloRotation();
+            GambitSetPicker = new PaladinHolyGambitPicker();
+            PeneloRotation = new PeneloRotation(GambitSetPicker);
         }
-
-        private List<string> Spells = new List<string>
-        {
-            "Holy Shock",
-            "Flash of Light",
-            "Devotion Aura"
-        };
-
+        
         private Environment _environment;
 
         public override void LoadSettings()
@@ -39,12 +34,7 @@ namespace InfernoWow.Modules
                 Macros.Add(macro.Key, macro.Value);
             }
 
-            SpellMacroRegistry.Register("Holy Shock", "cast_holy_shock", "/cast [@focus] Holy Shock");
-            SpellMacroRegistry.Register("Flash of Light", "cast_flash_of_light", "/cast [@focus] Flash of Light");
-            SpellMacroRegistry.Register("Word of Glory", "cast_word_of_glory", "/cast [@focus] Word of Glory");
-            SpellMacroRegistry.Register("Holy Light", "cast_holy_light", "/cast [@focus] Holy Light");
-
-            foreach (var macro in SpellMacroRegistry.GetAllMacros())
+            foreach (var macro in ActionBook.GetMacroActions())
             {
                 Macros.Add(macro.Key, macro.Value);
             }
@@ -57,13 +47,13 @@ namespace InfernoWow.Modules
         public override bool CombatTick()
         {
             RefreshEnvironment();
-            return PeneloRotation.Tick();
+            return PeneloRotation.Tick(_environment);
         }
 
         public override bool OutOfCombatTick()
         {
             RefreshEnvironment();
-            return PeneloRotation.Tick();
+            return PeneloRotation.Tick(_environment);
         }
 
         private void RefreshEnvironment()
