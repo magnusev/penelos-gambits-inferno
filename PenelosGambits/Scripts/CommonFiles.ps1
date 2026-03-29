@@ -22,6 +22,7 @@ $commonFiles = @(
     "Common/Conditions/TargetIsEnemyCondition.cs",
     "Common/Conditions/TargetIsNotEnemyCondition.cs",
     "Common/Conditions/ThrottledCondition.cs",
+    "Common/Conditions/UnitUnderThresholdCondition.cs",
     "Common/GambitSets/ProvingGroundGambitSet.cs",
     "Common/group/Group.cs",
     "Common/group/PartyGroup.cs",

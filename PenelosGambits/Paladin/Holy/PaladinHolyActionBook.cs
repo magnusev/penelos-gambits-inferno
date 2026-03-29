@@ -5,6 +5,7 @@
         return new List<string>
         {
             CleanseAction.Name,
+            DivineProtectionAction.Name,
             DivineTollAction.Name,
             FlashOfLightAction.Name,
             HolyShockDefensiveAction.Name,
