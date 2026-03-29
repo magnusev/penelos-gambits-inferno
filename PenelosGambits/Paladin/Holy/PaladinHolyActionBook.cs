@@ -4,6 +4,7 @@
     {
         return new List<string>
         {
+            AvengingWrathAction.Name,
             CleanseAction.Name,
             DivineProtectionAction.Name,
             DivineTollAction.Name,

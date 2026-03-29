@@ -41,6 +41,8 @@
                 nextGambit.LogSelector(environment);
                 Logger.Log("Next Gambit: " + nextGambit.ToString(environment));
                 Logger.Log("------------------");
+                Logger.Log("Debug Info: ");
+                Logger.Log("------------------");
             }
         }
 

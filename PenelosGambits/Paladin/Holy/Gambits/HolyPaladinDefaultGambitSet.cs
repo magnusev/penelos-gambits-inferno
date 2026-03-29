@@ -9,7 +9,7 @@
 
     private List<Gambit> gambitSet = new List<Gambit>
     {
-        new Gambit(1,
+        new Gambit(-2,
             "Divine Protection if player under 75% hp",
             new List<Condition>
             {
@@ -19,6 +19,17 @@
             },
             null,
             new DivineProtectionAction()
+        ),
+        new Gambit(-1,
+            "Cast Avenging Wrath if 3+ units under 60%",
+            new List<Condition>
+            {
+                new InCombatCondition(),
+                new IsSpellOffCooldownCondition(AvengingWrathAction.Name),
+                new MinimumGroupMembersUnderThreshold(60, 2),
+            },
+            null,
+            new AvengingWrathAction()
         ),
         new Gambit(0,
             "Cast Divine Toll",
@@ -37,17 +48,17 @@
             }),
             new DivineTollAction()
         ),
-        new Gambit(1,
-            "Light of Dawn if under 90% for 3+ units",
-            new List<Condition>
-            {
-                new InCombatCondition(),
-                new MinimumGroupMembersUnderThreshold(95, 5),
-                new PlayerSecondaryPowerAtLeast(4, 9)
-            },
-            null,
-            new LightOfDawnAction()
-        ),
+        // new Gambit(1,
+        //     "Light of Dawn if under 90% for 3+ units",
+        //     new List<Condition>
+        //     {
+        //         new InCombatCondition(),
+        //         new MinimumGroupMembersUnderThreshold(95, 5),
+        //         new PlayerSecondaryPowerAtLeast(4, 9)
+        //     },
+        //     null,
+        //     new LightOfDawnAction()
+        // ),
         new Gambit(2,
             "Word of Glory if under 90%",
             new List<Condition>
