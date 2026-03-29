@@ -6,9 +6,11 @@ $outputFile = "C:\libs\Live\Rotations\Retail\PenelosGambitsPalaHoly\rotation.cs"
 $buildName = "PaladinHolyPvE"
 
 $filesToInclude = $commonFiles + @(
+    "Paladin/Actions/Holy/CleanseAction.cs"
     "Paladin/Actions/Holy/DivineTollAction.cs"
     "Paladin/Actions/Holy/FlashOfLightAction.cs"
     "Paladin/Actions/Holy/HolyShockDefensiveAction.cs"
+    "Paladin/Actions/Holy/JudgmentAction.cs"
     "Paladin/Actions/Holy/WordOfGloryAction.cs"
     "Paladin/Holy/Gambits/HolyPaladinDamageGambitSet.cs"
     "Paladin/Holy/Gambits/HolyPaladinDefaultGambitSet.cs"

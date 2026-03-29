@@ -4,6 +4,13 @@
     
     protected override GambitSet SwapGambitSet(int mapId)
     {
-        return defaultGambitSet;
+        switch (mapId)
+        {
+            case 480: // Proving Grounds
+                return new ProvingGroundGambitSet(defaultGambitSet, new CleanseAction());
+            default:
+                return defaultGambitSet;
+            
+        }
     }
 }

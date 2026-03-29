@@ -9,6 +9,29 @@
 
     private List<Gambit> gambitSet = new List<Gambit>
     {
+        new Gambit(
+            -2,
+            "Target Enemy",
+            new List<Condition>
+            {
+                new InCombatCondition(),
+                new TargetIsNotEnemyCondition()
+            },
+            null,
+            new TargetEnemyAction()),
+        new Gambit(
+            -1,
+            "Casting Judgment",
+            new List<Condition>
+            {
+                new InCombatCondition(),
+                new TargetIsEnemyCondition(),
+                new PlayerSecondaryPowerLessThan(5, 9),
+                new IsSpellOffCooldownCondition(JudgmentAction.Name)
+            },
+            null,
+            new JudgmentAction()
+        ),
         new Gambit(0,
             "Cast Divine Toll",
             new List<Condition>

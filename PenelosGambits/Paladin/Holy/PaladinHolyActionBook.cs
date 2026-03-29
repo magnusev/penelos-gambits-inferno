@@ -4,9 +4,11 @@
     {
         return new List<string>
         {
+            CleanseAction.Name,
             DivineTollAction.Name,
             FlashOfLightAction.Name,
             HolyShockDefensiveAction.Name,
+            JudgmentAction.Name,
             WordOfGloryAction.Name,
         };
     }
@@ -15,6 +17,7 @@
     {
         return new Dictionary<string, string>
         {
+            { CleanseAction.MacroName, CleanseAction.Macro },
             { DivineTollAction.MacroName, DivineTollAction.Macro },
             { FlashOfLightAction.MacroName, FlashOfLightAction.Macro },
             { HolyShockDefensiveAction.MacroName, HolyShockDefensiveAction.Macro },

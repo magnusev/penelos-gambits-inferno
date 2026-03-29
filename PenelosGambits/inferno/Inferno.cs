@@ -50,6 +50,7 @@ public static class Inferno
     public static bool InCombat(string Unit) { return false; }
     public static bool IsDead(string Unit) { return false; }
     public static bool IsMoving(string Unit) { return false; }
+    public static bool UnitCanAttack(string Unit2, string Unit1) { return false; }
     public static bool PlayerIsMounted() { return false; }
     public static bool IsVisible(string Unit) { return false; }
     public static int GetLevel(string Unit) { return 0; }
