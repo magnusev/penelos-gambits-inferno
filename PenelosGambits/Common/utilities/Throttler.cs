@@ -22,7 +22,6 @@ public class Throttler
             return false;
         }
 
-        Logger.Log("Throttler [" + name + "] locked, time remaining: " + (throttleTimeMs - stopwatch.ElapsedMilliseconds) + "ms");
         return true;
     }
 
@@ -35,6 +34,5 @@ public class Throttler
     {
         hasStarted = true;
         stopwatch.Restart();
-        Logger.Log("Throttler [" + name + "] restarted");
     }
 }

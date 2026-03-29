@@ -9,35 +9,14 @@
 
     private List<Gambit> gambitSet = new List<Gambit>
     {
-        new Gambit(
-            -2,
-            "Target Enemy",
-            new List<Condition>
-            {
-                new InCombatCondition(),
-                new TargetIsNotEnemyCondition()
-            },
-            null,
-            new TargetEnemyAction()),
-        new Gambit(
-            -1,
-            "Casting Judgment",
-            new List<Condition>
-            {
-                new InCombatCondition(),
-                new TargetIsEnemyCondition(),
-                new PlayerSecondaryPowerLessThan(5, 9),
-                new IsSpellOffCooldownCondition(JudgmentAction.Name)
-            },
-            null,
-            new JudgmentAction()
-        ),
         new Gambit(0,
             "Cast Divine Toll",
             new List<Condition>
             {
                 new InCombatCondition(),
                 new IsSpellOffCooldownCondition(DivineTollAction.Name),
+                new MinimumGroupMembersUnderThreshold(80, 2),
+                new PlayerSecondaryPowerLessThan(3, 9)
             },
             new FilterChainSelector(new List<IUnitFilterChain>
             {
@@ -47,13 +26,24 @@
             }),
             new DivineTollAction()
         ),
+        new Gambit(0,
+            "Light of Dawn if under 90% for 3+ units",
+            new List<Condition>
+            {
+                new InCombatCondition(),
+                new MinimumGroupMembersUnderThreshold(95, 3),
+                new PlayerSecondaryPowerAtLeast(4, 9)
+            },
+            null,
+            new LightOfDawnAction()
+        ),
         new Gambit(1,
             "Word of Glory if under 90%",
             new List<Condition>
             {
                 new InCombatCondition(),
-                new LowestUnderHPThresholdCondition(85, WordOfGloryAction.Name),
-                new PlayerSecondaryPowerAtLeast(5, 9)
+                new LowestUnderHPThresholdCondition(95, WordOfGloryAction.Name),
+                new PlayerSecondaryPowerAtLeast(3, 9)
             },
             new FilterChainSelector(new List<IUnitFilterChain>
             {

@@ -9,6 +9,7 @@
             FlashOfLightAction.Name,
             HolyShockDefensiveAction.Name,
             JudgmentAction.Name,
+            LightOfDawnAction.Name,
             WordOfGloryAction.Name,
         };
     }

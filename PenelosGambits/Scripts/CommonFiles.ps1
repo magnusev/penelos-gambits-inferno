@@ -16,6 +16,7 @@ $commonFiles = @(
     "Common/Conditions/InCombatCondition.cs",
     "Common/Conditions/IsSpellOffCooldownCondition.cs",
     "Common/Conditions/LowestUnderHPThresholdCondition.cs",
+    "Common/Conditions/MinimumGroupMembersUnderThreshold.cs",
     "Common/Conditions/PlayerSecondaryPowerLessThan.cs",
     "Common/Conditions/PlayerSecondaryPowerAtLeast.cs",
     "Common/Conditions/TargetIsEnemyCondition.cs",
