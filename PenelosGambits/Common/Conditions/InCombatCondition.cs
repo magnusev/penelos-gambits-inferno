@@ -4,4 +4,6 @@
     {
         return Inferno.InCombat("player");
     }
+
+    public void Consume() { }
 }

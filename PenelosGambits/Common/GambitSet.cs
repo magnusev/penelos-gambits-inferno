@@ -1,6 +1,6 @@
 ﻿public abstract class GambitSet
 {
-    private Throttler logThrottler = new Throttler(1000);
+    private Throttler logThrottler = new Throttler(1000, "GambitSet-LogThrottler");
 
     public abstract string GetName();
     
@@ -31,6 +31,7 @@
         {
             if (logThrottler.IsOpen())
             {
+                logThrottler.Restart();
                 Logger.Log("Gambit Checker for GambitSet " + GetName());
                 Logger.Log("IsMoving: " + Inferno.IsMoving("player"));
                 Logger.Log("Secondary Power: " + Inferno.Power("player", 9));

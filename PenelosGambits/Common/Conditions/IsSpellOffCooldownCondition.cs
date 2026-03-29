@@ -11,4 +11,6 @@
     {
         return Inferno.SpellCooldown(_spellName) <= 200;
     }
+
+    public void Consume() { }
 }

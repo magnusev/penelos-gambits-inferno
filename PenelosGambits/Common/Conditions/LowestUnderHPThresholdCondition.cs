@@ -21,4 +21,6 @@
             .ToList()
             .Any();
     }
+
+    public void Consume() { }
 }

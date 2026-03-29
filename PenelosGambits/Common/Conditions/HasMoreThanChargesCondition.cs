@@ -16,4 +16,6 @@
         Logger.Log("ChargesFractional for " + _spellId + ": " +  Inferno.ChargesFractional(_spellId, 5200));
         return Inferno.SpellCharges(_spellId) > _charges;
     }
+
+    public void Consume() { }
 }

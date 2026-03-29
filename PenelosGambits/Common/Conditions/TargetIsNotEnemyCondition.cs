@@ -4,4 +4,6 @@
     {
         return !Inferno.UnitCanAttack("player", "target");
     }
+
+    public void Consume() { }
 }

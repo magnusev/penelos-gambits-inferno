@@ -12,4 +12,6 @@
         Logger.Log("Can cast " + _spellName + ": " + Inferno.CanCast(_spellName, "player"));
         return Inferno.CanCast(_spellName, "player");
     }
+
+    public void Consume() { }
 }

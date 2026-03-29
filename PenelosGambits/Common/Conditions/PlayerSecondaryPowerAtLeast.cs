@@ -13,4 +13,6 @@
     {
         return Inferno.Power("player", _type) >= _minimum;
     }
+
+    public void Consume() { }
 }

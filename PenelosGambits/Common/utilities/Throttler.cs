@@ -2,12 +2,14 @@
 
 public class Throttler
 {
+    private readonly string name;
     private readonly int throttleTimeMs;
     private Stopwatch stopwatch;
     private bool hasStarted;
 
-    public Throttler(int throttleTimeMs = 100)
+    public Throttler(int throttleTimeMs = 100, string name = "Unnamed")
     {
+        this.name = name;
         this.throttleTimeMs = throttleTimeMs;
         stopwatch = new Stopwatch();
         hasStarted = false;
@@ -17,17 +19,22 @@ public class Throttler
     {
         if (!hasStarted || stopwatch.ElapsedMilliseconds >= throttleTimeMs)
         {
-            hasStarted = true;
-            stopwatch.Restart();
             return false;
         }
 
-        Logger.Log("Throttler locked, time remaining: " + (throttleTimeMs - stopwatch.ElapsedMilliseconds) + "ms");
+        Logger.Log("Throttler [" + name + "] locked, time remaining: " + (throttleTimeMs - stopwatch.ElapsedMilliseconds) + "ms");
         return true;
     }
 
     public bool IsOpen()
     {
         return !IsLocked();
+    }
+
+    public void Restart()
+    {
+        hasStarted = true;
+        stopwatch.Restart();
+        Logger.Log("Throttler [" + name + "] restarted");
     }
 }

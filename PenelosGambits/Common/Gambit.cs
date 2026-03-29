@@ -47,12 +47,22 @@
 
     public bool DoAction(Environment environment)
     {
+        bool result;
         if (Action.IsTargetted())
         {
-            return Action.Cast(_selector.Select(environment));
+            result = Action.Cast(_selector.Select(environment));
+        }
+        else
+        {
+            result = Action.Cast();
         }
 
-        return Action.Cast();
+        if (result)
+        {
+            _conditions.ForEach(condition => condition.Consume());
+        }
+
+        return result;
     }
 
     public string ToString(Environment environment)

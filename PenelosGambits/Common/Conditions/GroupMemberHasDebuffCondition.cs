@@ -23,4 +23,6 @@
 
         return false;
     }
+
+    public void Consume() { }
 }

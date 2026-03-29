@@ -69,7 +69,7 @@
             new List<Condition>
             {
                 new InCombatCondition(),
-                new ThrottledCondition(4000)
+                new ThrottledCondition(2000)
             },
             new FilterChainSelector(new List<IUnitFilterChain>
             {
