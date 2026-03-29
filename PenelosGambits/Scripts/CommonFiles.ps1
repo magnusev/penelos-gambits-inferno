@@ -5,9 +5,13 @@
 $commonFiles = @(
     "Common/Action/Action.cs",
     "Common/Action/FriendlyTargetedAction.cs",
+    "Common/Conditions/CanCastCondition.cs",
     "Common/Conditions/Condition.cs",
+    "Common/Conditions/HasMoreThanChargesCondition.cs",
     "Common/Conditions/InCombatCondition.cs",
     "Common/Conditions/IsSpellOffCooldownCondition.cs",
+    "Common/Conditions/LowestUnderHPThresholdCondition.cs",
+    "Common/Conditions/PlayerSecondaryPowerAtLeast.cs",
     "Common/group/Group.cs",
     "Common/group/PartyGroup.cs",
     "Common/group/RaidGroup.cs",

@@ -27,4 +27,10 @@
 
         return units;
     }
+
+    public static int GCDMAX()
+    {
+        int g = (int)(1500f / (1f + Inferno.Haste("player") / 100f));
+        return g < 750 ? 750 : g;
+    }
 }

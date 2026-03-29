@@ -9,13 +9,46 @@
 
     private List<Gambit> gambitSet = new List<Gambit>
     {
-        new Gambit(
-            1,
-            "Cast Holy Light (Defensive)",
+        new Gambit(0,
+            "Cast Divine Toll",
             new List<Condition>
             {
                 new InCombatCondition(),
-                new IsSpellOffCooldownCondition(HolyShockDefensiveAction.Name)
+                new IsSpellOffCooldownCondition(DivineTollAction.Name),
+            },
+            new FilterChainSelector(new List<IUnitFilterChain>
+            {
+                new IsNotDead(),
+                new IsInRange(DivineTollAction.Name),
+                new GetLowestUnit()
+            }),
+            new DivineTollAction()
+        ),
+        new Gambit(1,
+            "Word of Glory if under 90%",
+            new List<Condition>
+            {
+                new InCombatCondition(),
+                new LowestUnderHPThresholdCondition(85, WordOfGloryAction.Name),
+                new PlayerSecondaryPowerAtLeast(5, 9)
+            },
+            new FilterChainSelector(new List<IUnitFilterChain>
+            {
+                new IsNotDead(),
+                new IsInRange(WordOfGloryAction.Name),
+                new GetLowestUnit()
+            }),
+            new WordOfGloryAction()
+        ),
+        new Gambit(
+            2,
+            "Cast Holy Shock (Defensive)",
+            new List<Condition>
+            {
+                new InCombatCondition(),
+                new IsSpellOffCooldownCondition(HolyShockDefensiveAction.Name),
+                new CanCastCondition(HolyShockDefensiveAction.Name),
+                new HasMoreThanChargesCondition(HolyShockDefensiveAction.Name, 1)
             },
             new FilterChainSelector(new List<IUnitFilterChain>
             {
@@ -24,7 +57,23 @@
                 new GetLowestUnit()
             }),
             new HolyShockDefensiveAction()
+        ),
+        new Gambit(
+            9999,
+            "Cast Flash of Light",
+            new List<Condition>
+            {
+                new InCombatCondition()
+            },
+            new FilterChainSelector(new List<IUnitFilterChain>
+            {
+                new IsNotDead(),
+                new IsInRange(FlashOfLightAction.Name),
+                new GetLowestUnit()
+            }),
+            new FlashOfLightAction()
         )
+
     };
 
 

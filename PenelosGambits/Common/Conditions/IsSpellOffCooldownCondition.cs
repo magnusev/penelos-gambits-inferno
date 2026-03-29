@@ -9,6 +9,7 @@
 
     public bool IsMet(Environment environment)
     {
-        return Inferno.SpellCooldown(_spellName) <= 2000;
+        Logger.Log("Spell cooldown for " + _spellName + ": " + Inferno.SpellCooldown(_spellName));
+        return Inferno.SpellCooldown(_spellName) <= 200;
     }
 }

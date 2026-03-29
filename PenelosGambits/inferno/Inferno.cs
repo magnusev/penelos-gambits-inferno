@@ -55,6 +55,7 @@ public static class Inferno
     public static int GetLevel(string Unit) { return 0; }
     public static string GetSpec(string Unit) { return ""; }
     public static string UnitName(string Unit) { return ""; }
+    public static float Haste (string Unit) { return 0.0f; }
     
     // CastingCasting Detection
     public static bool IsInterruptable(string Unit) { return false; }
