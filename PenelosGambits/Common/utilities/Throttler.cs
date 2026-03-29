@@ -4,21 +4,25 @@ public class Throttler
 {
     private readonly int throttleTimeMs;
     private Stopwatch stopwatch;
+    private bool hasStarted;
 
     public Throttler(int throttleTimeMs = 100)
     {
         this.throttleTimeMs = throttleTimeMs;
-        stopwatch = Stopwatch.StartNew();
+        stopwatch = new Stopwatch();
+        hasStarted = false;
     }
 
     public bool IsLocked()
     {
-        if (stopwatch.ElapsedMilliseconds >= throttleTimeMs)
+        if (!hasStarted || stopwatch.ElapsedMilliseconds >= throttleTimeMs)
         {
+            hasStarted = true;
             stopwatch.Restart();
             return false;
         }
 
+        Logger.Log("Throttler locked, time remaining: " + (throttleTimeMs - stopwatch.ElapsedMilliseconds) + "ms");
         return true;
     }
 
