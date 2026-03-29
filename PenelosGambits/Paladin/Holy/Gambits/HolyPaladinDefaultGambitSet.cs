@@ -69,9 +69,7 @@
             new List<Condition>
             {
                 new InCombatCondition(),
-                new IsSpellOffCooldownCondition(HolyShockDefensiveAction.Name),
-                new CanCastCondition(HolyShockDefensiveAction.Name),
-                new HasMoreThanChargesCondition(HolyShockDefensiveAction.Name, 1)
+                new ThrottledCondition(4000)
             },
             new FilterChainSelector(new List<IUnitFilterChain>
             {

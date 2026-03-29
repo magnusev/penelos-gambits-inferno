@@ -11,6 +11,9 @@
 
     public bool IsMet(Environment environment)
     {
+        Logger.Log("Charges for " + _spellId + ": " + Inferno.SpellCharges(_spellId));
+        Logger.Log("Max Charges for " + _spellId + ": " + Inferno.MaxCharges(_spellId));
+        Logger.Log("ChargesFractional for " + _spellId + ": " +  Inferno.ChargesFractional(_spellId, 5200));
         return Inferno.SpellCharges(_spellId) > _charges;
     }
 }

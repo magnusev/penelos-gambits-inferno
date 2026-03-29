@@ -9,6 +9,7 @@
 
     public bool IsMet(Environment environment)
     {
-        return Inferno.CanCast(_spellName);
+        Logger.Log("Can cast " + _spellName + ": " + Inferno.CanCast(_spellName, "player"));
+        return Inferno.CanCast(_spellName, "player");
     }
 }
