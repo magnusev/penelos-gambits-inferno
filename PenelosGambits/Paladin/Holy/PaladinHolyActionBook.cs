@@ -5,6 +5,7 @@
         return new List<string>
         {
             AvengingWrathAction.Name,
+            BlessingOfFreedomAction.Name,
             CleanseAction.Name,
             DivineProtectionAction.Name,
             DivineTollAction.Name,
@@ -20,6 +21,7 @@
     {
         return new Dictionary<string, string>
         {
+            { BlessingOfFreedomAction.MacroName, BlessingOfFreedomAction.Macro },
             { CleanseAction.MacroName, CleanseAction.Macro },
             { DivineTollAction.MacroName, DivineTollAction.Macro },
             { FlashOfLightAction.MacroName, FlashOfLightAction.Macro },

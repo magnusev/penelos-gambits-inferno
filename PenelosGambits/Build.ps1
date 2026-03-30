@@ -7,6 +7,7 @@ $buildName = "PaladinHolyPvE"
 
 $filesToInclude = $commonFiles + @(
     "Paladin/Actions/Holy/AvengingWrathAction.cs"
+    "Paladin/Actions/Holy/BlessingOfFreedomAction.cs"
     "Paladin/Actions/Holy/CleanseAction.cs"
     "Paladin/Actions/Holy/DivineProtectionAction.cs"
     "Paladin/Actions/Holy/DivineTollAction.cs"
