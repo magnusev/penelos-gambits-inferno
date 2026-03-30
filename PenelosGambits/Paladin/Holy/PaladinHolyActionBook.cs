@@ -10,9 +10,11 @@
             DivineProtectionAction.Name,
             DivineTollAction.Name,
             FlashOfLightAction.Name,
+            HolyLightAction.Name,
             HolyShockDefensiveAction.Name,
             JudgmentAction.Name,
             LightOfDawnAction.Name,
+            ShieldOfTheRighteousAction.Name,
             WordOfGloryAction.Name,
         };
     }
@@ -25,6 +27,7 @@
             { CleanseAction.MacroName, CleanseAction.Macro },
             { DivineTollAction.MacroName, DivineTollAction.Macro },
             { FlashOfLightAction.MacroName, FlashOfLightAction.Macro },
+            { HolyLightAction.MacroName, HolyLightAction.Macro },
             { HolyShockDefensiveAction.MacroName, HolyShockDefensiveAction.Macro },
             { WordOfGloryAction.MacroName, WordOfGloryAction.Macro },
         };

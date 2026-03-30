@@ -12,6 +12,7 @@ $commonFiles = @(
     "Common/Conditions/ActionIsNotNullCondition.cs",
     "Common/Conditions/CanCastCondition.cs",
     "Common/Conditions/Condition.cs",
+    "Common/Conditions/EnemiesInMeleeCondition.cs",
     "Common/Conditions/GroupMemberHasDebuffCondition.cs",
     "Common/Conditions/HasMoreThanChargesCondition.cs",
     "Common/Conditions/InCombatCondition.cs",

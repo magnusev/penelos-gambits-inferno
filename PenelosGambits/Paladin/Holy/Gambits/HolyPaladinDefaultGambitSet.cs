@@ -64,7 +64,7 @@
             new List<Condition>
             {
                 new InCombatCondition(),
-                new LowestUnderHPThresholdCondition(95, WordOfGloryAction.Name),
+                new LowestUnderHPThresholdCondition(90, WordOfGloryAction.Name),
                 new PlayerSecondaryPowerAtLeast(3, 9)
             },
             new FilterChainSelector(new List<IUnitFilterChain>
@@ -77,6 +77,22 @@
         ),
         new Gambit(
             3,
+            "Cast Holy Light",
+            new List<Condition>
+            {
+                new InCombatCondition(),
+                new LowestUnderHPThresholdCondition(60, HolyLightAction.Name),
+            },
+            new FilterChainSelector(new List<IUnitFilterChain>
+            {
+                new IsNotDead(),
+                new IsInRange(HolyLightAction.Name),
+                new GetLowestUnit()
+            }),
+            new HolyLightAction()
+        ),
+        new Gambit(
+            4,
             "Cast Holy Shock (Defensive)",
             new List<Condition>
             {
@@ -91,12 +107,14 @@
             }),
             new HolyShockDefensiveAction()
         ),
+        
         new Gambit(
-            9999,
-            "Cast Flash of Light",
+            5,
+            "Cast Flash of Light (<95%)",
             new List<Condition>
             {
-                new InCombatCondition()
+                new InCombatCondition(),
+                new LowestUnderHPThresholdCondition(95, WordOfGloryAction.Name),
             },
             new FilterChainSelector(new List<IUnitFilterChain>
             {
@@ -105,7 +123,8 @@
                 new GetLowestUnit()
             }),
             new FlashOfLightAction()
-        )
+        ),
+
     };
 
 
