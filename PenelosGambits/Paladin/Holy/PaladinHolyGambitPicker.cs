@@ -44,6 +44,16 @@
                     new CleanseAction(),
                     new CleanseAction()
                 );
+            case 2097: // Algeth'ar Academy
+            case 2098: // Algeth'ar Academy
+            case 2099: // Algeth'ar Academy
+                return new AlgethArAcademyGambitSet(
+                    defaultGambitSet,
+                    new CleanseAction(),
+                    new CleanseAction(),
+                    new CleanseAction()
+                );
+
             default:
                 return defaultGambitSet;
         }
