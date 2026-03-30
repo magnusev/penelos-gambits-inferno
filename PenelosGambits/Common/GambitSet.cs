@@ -42,6 +42,7 @@
                 Logger.Log("Next Gambit: " + nextGambit.ToString(environment));
                 Logger.Log("------------------");
                 Logger.Log("Debug Info: ");
+                environment.Bosses.ForEach(boss => boss.LogBossInfo());
                 Logger.Log("------------------");
             }
         }

@@ -21,7 +21,7 @@
             new DivineProtectionAction()
         ),
         new Gambit(-1,
-            "Cast Avenging Wrath if 3+ units under 60%",
+            "Cast Avenging Wrath if 2+ units under 60%",
             new List<Condition>
             {
                 new InCombatCondition(),

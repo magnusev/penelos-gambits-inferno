@@ -16,4 +16,13 @@
         HealthPercentage = maxHealth > 0 ? (health * 100) / maxHealth : 0;
         CurrentlyCastingSpellId = currentlyCastingSpellId;
     }
+    
+    public void LogBossInfo()
+    {
+        Logger.Log("Boss Info - " +
+                   "Name: "  + Name + ", " +
+                   "UnitName: " + UnitName + ", " +
+                   "Health: " + Health + "/" + MaxHealth + " (" + HealthPercentage + "%), " +
+                   "Casting Spell ID: " + CurrentlyCastingSpellId);
+    }
 }
