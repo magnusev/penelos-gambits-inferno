@@ -27,6 +27,7 @@
                 "Dispel Ethereal Shackles",
                 new List<Condition>
                 {
+                    new ActionIsNotNullCondition(_magicDispel),
                     new InCombatCondition(),
                     new GroupMemberHasDebuffCondition("Ethereal Shackles"),
                     new IsSpellOffCooldownCondition(_magicDispel.GetName())
@@ -44,6 +45,7 @@
                 "Dispel Consuming Void",
                 new List<Condition>
                 {
+                    new ActionIsNotNullCondition(_magicDispel),
                     new InCombatCondition(),
                     new GroupMemberHasDebuffCondition("Consuming Void"),
                     new IsSpellOffCooldownCondition(_magicDispel.GetName())
@@ -56,6 +58,8 @@
                 }),
                 _magicDispel
             ),
+            
+            // TODO only if Paladin
             new Gambit(
                 2,
                 "Blessing of Freedom Ethereal Shackles",
@@ -67,7 +71,7 @@
                 },
                 new FilterChainSelector(new List<IUnitFilterChain>
                 {
-                    new IsInRange(_magicDispel.GetName()),
+                    new IsInRange(BlessingOfFreedomAction.Name),
                     new HasDebuff("Ethereal Shackles"),
                     new GetFirst()
                 }),
@@ -78,6 +82,7 @@
                 "Dispel Holy Fire",
                 new List<Condition>
                 {
+                    new ActionIsNotNullCondition(_magicDispel),
                     new InCombatCondition(),
                     new GroupMemberHasDebuffCondition("Holy Fire"),
                     new IsSpellOffCooldownCondition(_magicDispel.GetName())
@@ -95,6 +100,7 @@
                 "Dispel Polymorph",
                 new List<Condition>
                 {
+                    new ActionIsNotNullCondition(_magicDispel),
                     new InCombatCondition(),
                     new GroupMemberHasDebuffCondition("Polymorph"),
                     new IsSpellOffCooldownCondition(_magicDispel.GetName())

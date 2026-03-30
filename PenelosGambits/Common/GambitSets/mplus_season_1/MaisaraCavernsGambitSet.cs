@@ -1,21 +1,31 @@
-﻿public class ProvingGroundGambitSet : GambitSet
+﻿public class MaisaraCavernsGambitSet : GambitSet
 {
     private readonly GambitSet _defaultSet;
     private readonly Action _magicDispel;
+    private readonly Action _poisonDispel;
+    private readonly Action _diseaseDispel;
+    
 
     private List<Gambit> gambitSet;
 
-    public ProvingGroundGambitSet(GambitSet defaultSet, Action magicDispel)
+    public MaisaraCavernsGambitSet(
+        GambitSet defaultSet,
+        Action magicDispel,
+        Action poisonDispel,
+        Action diseaseDispel
+    )
     {
         _defaultSet = defaultSet;
         _magicDispel = magicDispel;
+        _poisonDispel = poisonDispel;
+        _diseaseDispel = diseaseDispel;
 
         gambitSet = GenerateGambitSet();
     }
 
     public override string GetName()
     {
-        return "Proving Grounds GambitSet";
+        return "Maisara Caverns GambitSet";
     }
 
     private List<Gambit> GenerateGambitSet()
@@ -24,21 +34,22 @@
         {
             new Gambit(
                 1,
-                "Dispel Aqua Bomb",
+                "Dispel Infected Pinions",
                 new List<Condition>
                 {
+                    new ActionIsNotNullCondition(_diseaseDispel),
                     new InCombatCondition(),
-                    new GroupMemberHasDebuffCondition("Aqua Bomb"),
-                    new IsSpellOffCooldownCondition(_magicDispel.GetName())
+                    new GroupMemberHasDebuffCondition("Infected Pinions"),
+                    new IsSpellOffCooldownCondition(_diseaseDispel.GetName())
                 },
                 new FilterChainSelector(new List<IUnitFilterChain>
                 {
-                    new IsInRange(_magicDispel.GetName()),
-                    new HasDebuff("Aqua Bomb"),
+                    new IsInRange(_diseaseDispel.GetName()),
+                    new HasDebuff("Infected Pinions"),
                     new GetFirst()
                 }),
-                _magicDispel
-            ),
+                _diseaseDispel
+            )
         };
     }
 
