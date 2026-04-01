@@ -10,6 +10,7 @@ The Inferno runtime security validator enforces strict constraints on loaded rot
 |---|---|
 | **Allowed `using` directives** | `System`, `System.Collections.Generic`, `System.Drawing`, `System.Linq`, `System.IO`, `InfernoWow.API` |
 | **Allowed base classes** | `Rotation`, `Plugin` (only these two may appear in `: BaseClass`) |
+| **No namespace declarations** | The rotation file must NOT have any `namespace` wrapper. The class is top-level. `Rotation` and `Setting` are provided by the runtime at the top level; `Inferno` is in `InfernoWow.API`. |
 | **One class per file** | Only a single class definition is permitted in the loaded `.cs` file |
 | **No long string literals** | Strings > ~2000 chars are blocked as "potential encoded payload" |
 | **No banned namespaces** | `System.Diagnostics`, `System.Text`, `System.Net.Http`, `System.Threading.Tasks`, `InfernoWow.Modules` are all blocked |
@@ -472,11 +473,20 @@ private void Log(string msg)
 }
 ```
 
-### Step 10: Remove the `namespace InfernoWow.Modules` wrapper
+### Step 10: No namespace wrapper
 
-The current `PaladinHolyPvE.cs` wraps the class in `namespace InfernoWow.Modules`. This triggers the "Banned using directive `InfernoWow.Modules`" error because the build script adds `using InfernoWow.Modules;` at the top. In the output file:
-- **Do not use any namespace declaration.**
-- The class should be at the top level.
+The rotation file must NOT use any `namespace` declaration. The `Rotation` base type and `Setting` are provided at the top level by the runtime. Only `Inferno` needs `using InfernoWow.API;`.
+
+```csharp
+using InfernoWow.API;
+
+public class PaladinHolyPvE : Rotation
+{
+    // ...
+}
+```
+
+The old build script added `using InfernoWow.Modules;` and the original code used `namespace InfernoWow.Modules { }` — neither is needed or allowed in the final file.
 
 ---
 
@@ -597,7 +607,7 @@ For each spec:
 
 ## Output File Template
 
-Below is the skeleton of the final single-class rotation file. An AI agent can use this as a template and fill in the gambits from the OOP source files.
+Below is the skeleton of the final single-file rotation. An AI agent can use this as a template and fill in the gambits from the OOP source files.
 
 ```csharp
 using System;
@@ -610,21 +620,10 @@ using InfernoWow.API;
 public class PaladinHolyPvE : Rotation
 {
     // ═══════════════════════════════════════════════════════
-    //  CONSTANTS
-    // ═══════════════════════════════════════════════════════
-    // Spell names
-    // Macro names and texts
-
-    // ═══════════════════════════════════════════════════════
     //  STATE
     // ═══════════════════════════════════════════════════════
     private string _queuedAction = null;
     private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
-    private int _currentMapId = -1;
-
-    // Gambit lists (built in Initialize)
-    private List<(int pri, string name, Func<bool> cond, Func<bool> exec)> _healGambits;
-    private List<(int pri, string name, Func<bool> cond, Func<bool> exec)> _dmgGambits;
 
     // ═══════════════════════════════════════════════════════
     //  ROTATION LIFECYCLE
@@ -634,7 +633,6 @@ public class PaladinHolyPvE : Rotation
     public override void Initialize()
     {
         // Register spells, macros, focus macros
-        // Call BuildHealGambits(), BuildDmgGambits()
     }
 
     public override bool CombatTick()
@@ -643,9 +641,9 @@ public class PaladinHolyPvE : Rotation
         if (ProcessQueue()) return true;
 
         int mapId = Inferno.GetMapID();
-        if (RunGambits(GetDungeonGambits(mapId))) return true;
-        if (RunGambits(_healGambits)) return true;
-        return RunGambits(_dmgGambits);
+        if (RunDungeonGambits(mapId)) return true;
+        if (RunHealGambits()) return true;
+        return RunDmgGambits();
     }
 
     public override bool OutOfCombatTick()
@@ -654,52 +652,47 @@ public class PaladinHolyPvE : Rotation
     }
 
     // ═══════════════════════════════════════════════════════
-    //  GAMBIT ENGINE
+    //  GAMBIT CHAINS (if-chain style)
     // ═══════════════════════════════════════════════════════
-    private bool RunGambits(List<(int pri, string name, Func<bool> cond, Func<bool> exec)> gambits)
+    private bool RunHealGambits()
     {
-        if (gambits == null || gambits.Count == 0) return false;
-        var match = gambits.OrderBy(g => g.pri).FirstOrDefault(g => g.cond());
-        if (match.exec != null) return match.exec();
+        // Each gambit is an if-block: conditions -> selector -> cast
+        // if (IsInCombat() && ...) { ... return true; }
         return false;
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  GAMBIT DEFINITIONS
-    // ═══════════════════════════════════════════════════════
-    private void BuildHealGambits() { /* populate _healGambits */ }
-    private void BuildDmgGambits() { /* populate _dmgGambits */ }
-    private List<(int pri, string name, Func<bool> cond, Func<bool> exec)> GetDungeonGambits(int mapId)
+    private bool RunDmgGambits() { return false; }
+
+    private bool RunDungeonGambits(int mapId)
     {
-        // switch(mapId) { ... }
-        return null;
+        switch (mapId)
+        {
+            // case 480: return RunProvingGroundsGambits();
+            default: return false;
+        }
     }
 
     // ═══════════════════════════════════════════════════════
     //  CONDITION HELPERS
     // ═══════════════════════════════════════════════════════
-    private bool IsInCombat() => Inferno.InCombat("player");
-    private bool IsSpellReady(string spell) => Inferno.SpellCooldown(spell) <= 200;
-    private bool HolyPowerAtLeast(int n) => Inferno.Power("player", 9) >= n;
-    private bool HolyPowerLessThan(int n) => Inferno.Power("player", 9) < n;
-    private bool UnitUnder(string unit, int pct) => Inferno.Health(unit) < pct;
-    private bool GroupMembersUnder(int pct, int count)
-        => GetGroupMembers().Count(u => !Inferno.IsDead(u) && Inferno.Health(u) < pct) >= count;
-    private bool AnyAllyHasDebuff(string debuff)
-        => GetGroupMembers().Any(u => Inferno.HasDebuff(debuff, u, false));
-    private long GetTimestampMs() => DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+    private bool IsInCombat() { return Inferno.InCombat("player"); }
+    private bool IsSpellReady(string spell) { return Inferno.SpellCooldown(spell) <= 200; }
+    private long GetTimestampMs() { return DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond; }
     private bool ThrottleIsOpen(string key, int ms)
-        => !_throttleTimestamps.ContainsKey(key)
-           || (GetTimestampMs() - _throttleTimestamps[key]) >= ms;
+    {
+        if (!_throttleTimestamps.ContainsKey(key)) return true;
+        return (GetTimestampMs() - _throttleTimestamps[key]) >= ms;
+    }
     private void ThrottleRestart(string key)
-        => _throttleTimestamps[key] = GetTimestampMs();
+    {
+        _throttleTimestamps[key] = GetTimestampMs();
+    }
 
     // ═══════════════════════════════════════════════════════
     //  SELECTOR HELPERS
     // ═══════════════════════════════════════════════════════
     private List<string> GetGroupMembers() { /* see Step 3 */ return null; }
     private string LowestAllyUnder(int pct, string spell) { /* see Step 4 */ return null; }
-    private string LowestAllyInRange(string spell) { /* LowestAllyUnder(100, spell) */ return null; }
     private string GetAllyWithDebuff(string debuff, string spell) { /* ... */ return null; }
 
     // ═══════════════════════════════════════════════════════
@@ -714,8 +707,9 @@ public class PaladinHolyPvE : Rotation
     private bool ProcessQueue()
     {
         if (_queuedAction == null) return false;
-        Inferno.Cast(_queuedAction, true);
+        string action = _queuedAction;
         _queuedAction = null;
+        Inferno.Cast(action, true);
         return true;
     }
 }
@@ -729,9 +723,9 @@ If you want to keep the OOP project as the "source of truth" and generate flat f
 
 1. Write a C# console app or PowerShell script that uses **reflection** or **Roslyn source generators** to:
    - Walk all `Gambit` definitions in a `GambitSet` subclass
-   - Emit the corresponding lambda tuple code
+   - Emit the corresponding if-chain code
    - Inline all condition and action logic
-2. The generator reads the OOP class model and produces a compliant single-file `.cs`.
+2. The generator reads the OOP model and produces a compliant single-file `.cs`.
 3. This is more complex to build but pays off if you maintain 5+ specs.
 
 For now, the manual approach (A) is recommended given the scope of 2 specs.
@@ -740,9 +734,12 @@ For now, the manual approach (A) is recommended given the scope of 2 specs.
 
 ## Checklist Before Submitting to Inferno
 
+- [ ] No `namespace` declarations (top-level class)
 - [ ] File has exactly ONE class, inheriting from `Rotation`
-- [ ] Only allowed `using` directives (6 total)
-- [ ] No `namespace` declarations
+- [ ] Only allowed `using` directives (6 total: System, System.Collections.Generic, System.Drawing, System.Linq, System.IO, InfernoWow.API)
+- [ ] No value tuples `(int, string)` — the runtime does not support C# 7+
+- [ ] No `Environment.` access (pattern-matched and blocked, even in comments)
+- [ ] No banned words in comments (`class`, `Stopwatch`, `System.Diagnostics`, etc. — validator scans comments)
 - [ ] No `System.Diagnostics` usage (no `Stopwatch`, no `Debug`, no `Process`)
 - [ ] No `System.Threading` usage
 - [ ] No `System.Net` usage

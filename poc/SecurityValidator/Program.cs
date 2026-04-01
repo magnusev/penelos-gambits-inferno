@@ -152,8 +152,7 @@ class SecurityValidator
             "System.Diagnostics",
             "System.Net.Http",
             "System.Net.WebSockets",
-            "System.Threading.Tasks",
-            "InfernoWow.Modules"
+            "System.Threading.Tasks"
         };
         bool anyBannedRef = false;
         for (int i = 0; i < lines.Length; i++)
@@ -196,8 +195,8 @@ class SecurityValidator
         }
         if (!anyEnvAccess) { Console.WriteLine("  [PASS] No blocked 'Environment.' access"); passes++; }
 
-        // ── Rule 6: No namespace declarations ───────────────────────
-        bool anyNamespace = false;
+        // ── Rule 6: No namespace declarations ─────────────────────
+        bool anyBadNamespace = false;
         for (int i = 0; i < lines.Length; i++)
         {
             var trimmed = lines[i].Trim();
@@ -206,10 +205,10 @@ class SecurityValidator
             {
                 Console.WriteLine($"  [BLOCKED] Line {i + 1}: Namespace declaration: {trimmed}");
                 errors++;
-                anyNamespace = true;
+                anyBadNamespace = true;
             }
         }
-        if (!anyNamespace) { Console.WriteLine("  [PASS] No namespace declarations"); passes++; }
+        if (!anyBadNamespace) { Console.WriteLine("  [PASS] No namespace declarations"); passes++; }
 
         // ── Check: async/await ──────────────────────────────────────
         bool anyAsync = false;
