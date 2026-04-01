@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- Treat as a library — we just want to verify it compiles -->
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Include the actual POC rotation file as a linked compile item -->
+    <Compile Include="..\rotation.cs" Link="rotation.cs" />
+  </ItemGroup>
+</Project>

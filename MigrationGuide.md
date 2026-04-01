@@ -1,5 +1,7 @@
 ﻿# Migration Guide: OOP Gambit System → Single-File Functional Style
 
+> **📁 Proof of Concept:** See [`poc/`](poc/) for a working single-file rotation that passes both compilation and security validation. Run `dotnet build poc/CompileCheck/CompileCheck.csproj` and `dotnet run --project poc/SecurityValidator/SecurityValidator.csproj` to verify.
+
 ## Context
 
 The Inferno runtime security validator enforces strict constraints on loaded rotation files:
@@ -11,6 +13,9 @@ The Inferno runtime security validator enforces strict constraints on loaded rot
 | **One class per file** | Only a single class definition is permitted in the loaded `.cs` file |
 | **No long string literals** | Strings > ~2000 chars are blocked as "potential encoded payload" |
 | **No banned namespaces** | `System.Diagnostics`, `System.Text`, `System.Net.Http`, `System.Threading.Tasks`, `InfernoWow.Modules` are all blocked |
+| **No `Environment.` access** | ALL `Environment.` references are blocked (pattern-matched). This includes `System.Environment.TickCount`. Use `DateTime.UtcNow` instead. |
+| **Comments are scanned too** | The validator does **naive text pattern matching** — it does NOT skip `//` comments or `///` doc-comments. Mentioning banned words like `Stopwatch`, `System.Diagnostics`, or even `class hierarchy` in a comment will trigger a block. |
+| **C# version: no value tuples** | The runtime compiler does NOT support C# 7+ value tuples `(int, string)`. Use if-chains or plain methods instead of `List<(int, string, Func<bool>, Func<bool>)>`. |
 
 The current build system concatenates ~70 separate `.cs` files into one mega-file. Every custom class (conditions, actions, selectors, gambit sets, units, groups, etc.) becomes a separate class definition in that file — **all of which are blocked**.
 
@@ -112,18 +117,17 @@ using InfernoWow.API;
 ```
 
 These are the ONLY six you may use. In particular:
-- **No `System.Diagnostics`** → Replace `Stopwatch` with `System.Environment.TickCount` or `Inferno.CombatTime()`.
+- **No `System.Diagnostics`** → Replace `Stopwatch` with `DateTime.UtcNow` for timing. Do NOT use `Environment.TickCount` — `Environment.` is blocked.
 - **No `System.Threading.Tasks`** → No async/await (not needed anyway).
 - **No `InfernoWow.Modules`** → The `Rotation` base class is provided by `InfernoWow.API` at runtime even though your local dev stub is outside that namespace. Do NOT add the `namespace InfernoWow.Modules { }` wrapper.
+- **Watch your comments** → The validator scans comments too. Do NOT write banned words (e.g. `Stopwatch`, `System.Diagnostics`, `class hierarchy`) even in `//` comments.
 
 ### Step 2: Replace `Stopwatch` (Throttler)
 
-The `Throttler` class uses `System.Diagnostics.Stopwatch`. Replace with `System.Environment.TickCount` (returns `int` ms):
+The `Throttler` uses `System.Diagnostics.Stopwatch` which is banned. `Environment.TickCount` is also banned (`Environment.` pattern-matched). Use `DateTime.UtcNow` instead:
 
 **OOP (current):**
 ```csharp
-// Throttler.cs
-using System.Diagnostics;
 private Stopwatch stopwatch;
 public bool IsOpen() => !hasStarted || stopwatch.ElapsedMilliseconds >= throttleTimeMs;
 public void Restart() { hasStarted = true; stopwatch.Restart(); }
@@ -131,18 +135,22 @@ public void Restart() { hasStarted = true; stopwatch.Restart(); }
 
 **Functional (target) — inline helper methods:**
 ```csharp
-// Inside PaladinHolyPvE class:
-private Dictionary<string, int> _throttleTimestamps = new Dictionary<string, int>();
+private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
+
+private long GetTimestampMs()
+{
+    return DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+}
 
 private bool ThrottleIsOpen(string key, int intervalMs)
 {
     if (!_throttleTimestamps.ContainsKey(key)) return true;
-    return (System.Environment.TickCount - _throttleTimestamps[key]) >= intervalMs;
+    return (GetTimestampMs() - _throttleTimestamps[key]) >= intervalMs;
 }
 
 private void ThrottleRestart(string key)
 {
-    _throttleTimestamps[key] = System.Environment.TickCount;
+    _throttleTimestamps[key] = GetTimestampMs();
 }
 ```
 
@@ -350,7 +358,7 @@ public override bool CombatTick()
 }
 ```
 
-> **Recommendation:** Use **Option B** — it preserves the mental model of your OOP system (priority, conditions, actions) while being fully compliant.
+> **Recommendation:** Use **Option A** — the Inferno runtime does NOT support C# 7+ value tuples, so Option B is not viable. If-chains with helper methods are simple, readable, and fully compliant.
 
 ### Step 7: Replace GambitSetPicker / dungeon-specific GambitSets
 
@@ -449,7 +457,7 @@ public override void Initialize()
 
 `Logger` uses `System.IO` (which IS allowed) but also `System.Diagnostics` through `Throttler`. You have two options:
 
-1. **Keep file logging** — rewrite `Throttler` to use `Environment.TickCount` (see Step 2). File I/O via `System.IO` is allowed.
+1. **Keep file logging** — rewrite `Throttler` to use `DateTime.UtcNow` (see Step 2). File I/O via `System.IO` is allowed.
 2. **Use `Inferno.PrintMessage()` only** — simpler, no file I/O needed, but less detailed.
 
 ```csharp
@@ -486,7 +494,7 @@ The current `PaladinHolyPvE.cs` wraps the class in `namespace InfernoWow.Modules
 | `GambitSetPicker` | `GambitSetPicker.cs` + `PaladinHolyGambitPicker.cs` | `switch (mapId)` in `CombatTick()` or `GetDungeonGambits(int mapId)` |
 | `ActionBook` interface | `ActionBook.cs` + `PaladinHolyActionBook.cs` | Direct `Spellbook.Add()` / `Macros.Add()` calls in `Initialize()` |
 | `Environment` class | `Environment.cs` | Per-tick local variables or a few private fields refreshed at tick start |
-| `Throttler` class | `Throttler.cs` (uses `System.Diagnostics.Stopwatch`) | `Dictionary<string, int>` + `Environment.TickCount` |
+| `Throttler` class | `Throttler.cs` (uses `System.Diagnostics.Stopwatch`) | `Dictionary<string, long>` + `DateTime.UtcNow` |
 | `Logger` class | `Logger.cs` | `Inferno.PrintMessage()` or `File.AppendAllText()` |
 | `Boss` class | `Boss.cs` | Inline boss-checking logic using `Inferno.UnitName("boss1")` etc. |
 | `ActionQueuer` | `ActionQueuer.cs` | A `string _queuedAction` field + check at top of tick |
@@ -556,8 +564,8 @@ If you have multiple specs (Paladin Holy, Priest Holy, etc.) that share dungeon 
 // Use parallel arrays or just an if-chain (Option A from Step 6)
 ```
 
-### 8. `Environment.TickCount` overflow
-`Environment.TickCount` returns `int` and wraps around every ~24.8 days. For a game rotation this is irrelevant, but for correctness you can use subtraction (which handles overflow correctly for signed ints).
+### 8. `DateTime.UtcNow` precision
+`DateTime.UtcNow` has ~15ms resolution on Windows, which is fine for throttle intervals of 100ms+. For sub-15ms precision you'd need a high-resolution timer, but game rotation ticks don't need that.
 
 ### 9. Build script changes
 The build script (`BuildPaladinHoly.ps1` → `BuildFile.ps1`) will become **much simpler** — it just copies a single file. You may not even need it anymore since the rotation file IS the output.
@@ -611,7 +619,7 @@ public class PaladinHolyPvE : Rotation
     //  STATE
     // ═══════════════════════════════════════════════════════
     private string _queuedAction = null;
-    private Dictionary<string, int> _throttleTimestamps = new Dictionary<string, int>();
+    private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
     private int _currentMapId = -1;
 
     // Gambit lists (built in Initialize)
@@ -679,11 +687,12 @@ public class PaladinHolyPvE : Rotation
         => GetGroupMembers().Count(u => !Inferno.IsDead(u) && Inferno.Health(u) < pct) >= count;
     private bool AnyAllyHasDebuff(string debuff)
         => GetGroupMembers().Any(u => Inferno.HasDebuff(debuff, u, false));
+    private long GetTimestampMs() => DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
     private bool ThrottleIsOpen(string key, int ms)
         => !_throttleTimestamps.ContainsKey(key)
-           || (Environment.TickCount - _throttleTimestamps[key]) >= ms;
+           || (GetTimestampMs() - _throttleTimestamps[key]) >= ms;
     private void ThrottleRestart(string key)
-        => _throttleTimestamps[key] = Environment.TickCount;
+        => _throttleTimestamps[key] = GetTimestampMs();
 
     // ═══════════════════════════════════════════════════════
     //  SELECTOR HELPERS
