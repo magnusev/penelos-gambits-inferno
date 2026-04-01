@@ -45,7 +45,45 @@
                     new GetFirst()
                 }),
                 _poisonDispel
+            ),
+            new Gambit(
+                2,
+                "Dispel Soul Torment",
+                new List<Condition>
+                {
+                    new ActionIsNotNullCondition(_magicDispel),
+                    new InCombatCondition(),
+                    new GroupMemberHasDebuffCondition("Soul Torment"),
+                    new IsSpellOffCooldownCondition(_magicDispel.GetName())
+                },
+                new FilterChainSelector(new List<IUnitFilterChain>
+                {
+                    new IsInRange(_magicDispel.GetName()),
+                    new HasDebuff("Soul Torment"),
+                    new GetFirst()
+                }),
+                _magicDispel
+            ),
+            new Gambit(
+                3,
+                "Dispel Poison Blades",
+                new List<Condition>
+                {
+                    new ActionIsNotNullCondition(_poisonDispel),
+                    new InCombatCondition(),
+                    new GroupMemberHasDebuffCondition("Poison Blades"),
+                    new IsSpellOffCooldownCondition(_poisonDispel.GetName())
+                },
+                new FilterChainSelector(new List<IUnitFilterChain>
+                {
+                    new IsInRange(_poisonDispel.GetName()),
+                    new HasDebuff("Poison Blades"),
+                    new GetFirst()
+                }),
+                _poisonDispel
             )
+
+
         };
     }
 
