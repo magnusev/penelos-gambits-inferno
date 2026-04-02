@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.IO;
 using InfernoWow.API;
 
 namespace InfernoWow.Modules
@@ -80,9 +79,7 @@ public class HolyPaladinPvE : Rotation
 
     public override void OnStop() { }
 
-    // -----------------------------------------------------------------
-    //  HEAL GAMBITS (from HolyPaladinDefaultGambitSet)
-    // -----------------------------------------------------------------
+    // -- Heal Gambits --
 
     private bool RunHealGambits()
     {
@@ -166,9 +163,7 @@ public class HolyPaladinPvE : Rotation
         return false;
     }
 
-    // -----------------------------------------------------------------
-    //  DAMAGE GAMBITS (from HolyPaladinDamageGambitSet)
-    // -----------------------------------------------------------------
+    // -- Damage Gambits --
 
     private bool RunDmgGambits()
     {
@@ -209,9 +204,7 @@ public class HolyPaladinPvE : Rotation
         return false;
     }
 
-    // -----------------------------------------------------------------
-    //  DUNGEON GAMBITS (from PaladinHolyGambitPicker + GambitSets)
-    // -----------------------------------------------------------------
+    // -- Dungeon Gambits --
 
     private bool RunDungeonGambits(int mapId)
     {
@@ -331,9 +324,7 @@ public class HolyPaladinPvE : Rotation
         return CastOnFocus(target, "cast_bof");
     }
 
-    // -----------------------------------------------------------------
-    //  CONDITION HELPERS
-    // -----------------------------------------------------------------
+    // -- Condition Helpers --
 
     private bool IsInCombat()
     {
@@ -395,9 +386,7 @@ public class HolyPaladinPvE : Rotation
         return (int)((long)Inferno.Health(unit) * 100L / max);
     }
 
-    // -----------------------------------------------------------------
-    //  SELECTOR HELPERS
-    // -----------------------------------------------------------------
+    // -- Selector Helpers --
 
     private string LowestAllyUnder(int hpPct, string spell)
     {
@@ -437,9 +426,7 @@ public class HolyPaladinPvE : Rotation
             .FirstOrDefault();
     }
 
-    // -----------------------------------------------------------------
-    //  GROUP MEMBERS
-    // -----------------------------------------------------------------
+    // -- Group Members --
 
     private List<string> GetGroupMembers()
     {
@@ -472,9 +459,7 @@ public class HolyPaladinPvE : Rotation
         return members;
     }
 
-    // -----------------------------------------------------------------
-    //  CAST HELPERS
-    // -----------------------------------------------------------------
+    // -- Cast Helpers --
 
     // Friendly targeted: focus unit, queue [@focus] macro
     private bool CastOnFocus(string unitToken, string macroName)
@@ -511,9 +496,7 @@ public class HolyPaladinPvE : Rotation
         return true;
     }
 
-    // -----------------------------------------------------------------
-    //  THROTTLE
-    // -----------------------------------------------------------------
+    // -- Throttle --
 
     private long GetTimestampMs()
     {
@@ -531,9 +514,7 @@ public class HolyPaladinPvE : Rotation
         _throttleTimestamps[key] = GetTimestampMs();
     }
 
-    // -----------------------------------------------------------------
-    //  LOGGING (optional, toggle via settings)
-    // -----------------------------------------------------------------
+    // -- Logging --
 
     private void Log(string message)
     {
