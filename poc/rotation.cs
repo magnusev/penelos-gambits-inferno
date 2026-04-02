@@ -51,7 +51,7 @@ public class HolyPaladinPvE : Rotation
         if (Inferno.IsDead("player")) return false;
         if (ProcessQueue()) return true;
         // Global GCD gate - don't evaluate new actions while GCD is running
-        if (!ThrottleIsOpen("gcd", 1400)) return false;
+        if (!ThrottleIsOpen("gcd", 1000)) return false;
 
         // Periodic status log
         if (ThrottleIsOpen("diag", 2000))
@@ -231,10 +231,10 @@ public class HolyPaladinPvE : Rotation
     }
 
     // -- Cast --
-    private bool CastOnFocus(string unit, string macro) { Inferno.Cast("focus_" + unit); _queuedAction = macro; ThrottleRestart("gcd"); return true; }
+    private bool CastOnFocus(string unit, string macro) { Inferno.Cast("focus_" + unit); _queuedAction = macro; return true; }
     private bool CastPersonal(string s) { Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
     private bool CastOnEnemy(string s) { Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
-    private bool ProcessQueue() { if (_queuedAction == null) return false; string a = _queuedAction; _queuedAction = null; Inferno.Cast(a, true); return true; }
+    private bool ProcessQueue() { if (_queuedAction == null) return false; string a = _queuedAction; _queuedAction = null; Inferno.Cast(a, true); ThrottleRestart("gcd"); return true; }
 
     // -- Selectors (continued) --
     private string GetAllyWithDebuff(string d, string spell)
