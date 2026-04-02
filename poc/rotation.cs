@@ -178,7 +178,7 @@ public class HolyPaladinPvE : Rotation
             case 2501: return TryDispel("Infected Pinions");
             case 2097: case 2098: case 2099:
                 if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
-                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null && _queuedAction == null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); Inferno.Cast("focus_" + t, QuickDelay: true); _queuedAction = "cast_cleanse"; return true; } }
+                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { CastOnFocus(t, "cast_cleanse"); return true; } }
                 return false;
             default: return false;
         }
@@ -195,27 +195,17 @@ public class HolyPaladinPvE : Rotation
     private bool TryDispelStacks(string debuff, int min)
     {
         if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff, min)) return false;
-        if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithMostStacks(debuff, "Cleanse");
         if (t == null) return false;
-        if (_queuedAction != null) return false;
-        Log("Dispelling " + debuff + " on " + t);
-        ThrottleRestart("dispel_cd");
-        Inferno.Cast("focus_" + t, QuickDelay: true);
-        _queuedAction = "cast_cleanse";
+        CastOnFocus(t, "cast_cleanse");
         return true;
     }
     private bool TryBof(string debuff)
     {
         if (!IsSpellReady("Blessing of Freedom") || !AnyAllyHasDebuff(debuff)) return false;
-        if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithDebuff(debuff, "Blessing of Freedom");
         if (t == null) return false;
-        if (_queuedAction != null) return false;
-        Log("Casting Blessing of Freedom on " + t + " for " + debuff);
-        ThrottleRestart("dispel_cd");
-        Inferno.Cast("focus_" + t, QuickDelay: true);
-        _queuedAction = "cast_bof";
+        CastOnFocus(t, "cast_bof");
         return true;
     }
 
