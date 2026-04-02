@@ -1,10 +1,10 @@
-﻿Size: 12954 bytes, first3: EF BB BF
-Lines: 260
-Total '"' characters: 322
+﻿Size: 15194 bytes, first3: EF BB BF
+Lines: 298
+Total '"' characters: 356
 
 Quote pairs with gap > 100:
 
 Consecutive pairs with gap > 500:
-  idx 299->300: gap=887 lines 193-213
-  idx 311->312: gap=584 lines 215-230
-  idx 313->314: gap=1333 lines 230-253
+  idx 327->328: gap=1607 lines 218-251
+  idx 339->340: gap=584 lines 253-268
+  idx 347->348: gap=995 lines 271-291

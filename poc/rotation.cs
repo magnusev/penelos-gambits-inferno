@@ -16,10 +16,17 @@ public class HolyPaladinPvE : Rotation
     private const int HEALTHSTONE_ID = 5512;
     private string _logFile = null;
 
+    // Holy Shock charge tracking (API returns 0 for cd/charges)
+    private int _hsCharges = 2;
+    private long _hsLastRechargeMs = 0;
+    private const int HS_MAX_CHARGES = 2;
+    private const int HS_RECHARGE_MS = 5000;
+
     public override void LoadSettings()
     {
         Settings.Add(new Setting("Enable Logging", true));
         Settings.Add(new Setting("Use Light of Dawn", false));
+        Settings.Add(new Setting("Do DPS", false));
         Settings.Add(new Setting("Healthstone HP %", 1, 100, 50));
     }
 
@@ -56,7 +63,7 @@ public class HolyPaladinPvE : Rotation
         if (Inferno.IsDead("player")) return false;
         if (ProcessQueue()) return true;
         // Global GCD gate - don't evaluate new actions while GCD is running
-        if (!ThrottleIsOpen("gcd", 1000)) return false;
+        if (!ThrottleIsOpen("gcd", 250)) return false;
 
         // Periodic status log
         if (ThrottleIsOpen("diag", 2000))
@@ -81,33 +88,33 @@ public class HolyPaladinPvE : Rotation
     // -- Heal Gambits --
     private bool RunHealGambits()
     {
-        // Healthstone if player under threshold
+        // Healthstone if player under threshold (combat only)
         if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && Inferno.ItemCooldown(HEALTHSTONE_ID) == 0)
         { Log("Using Healthstone (player " + HealthPct("player") + "%)"); Inferno.Cast("use_healthstone", QuickDelay: true); return true; }
 
-        // Divine Protection if player under 75% (instant, off-GCD)
+        // Divine Protection if player under 75% (combat only)
         if (IsInCombat() && IsSpellReady("Divine Protection") && UnitUnder("player", 75))
         { Log("Casting Divine Protection (player " + HealthPct("player") + "%)"); return CastPersonal("Divine Protection"); }
 
-        // Avenging Wrath if 2+ under 60% (instant, off-GCD)
+        // Avenging Wrath if 2+ under 60% (combat only)
         if (IsInCombat() && IsSpellReady("Avenging Wrath") && GroupMembersUnder(60, 2))
         { Log("Casting Avenging Wrath"); return CastPersonal("Avenging Wrath"); }
 
-        // Divine Toll if 2+ under 80% and HolyPower < 3 (instant)
+        // Divine Toll if 2+ under 80% and HolyPower < 3 (combat only)
         if (IsInCombat() && IsSpellReady("Divine Toll") && GroupMembersUnder(80, 2) && PowerLessThan(3, HOLY_POWER))
         { string t = LowestAllyInRange("Divine Toll"); if (t != null) { Log("Casting Divine Toll on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_dt"); } }
 
-        // Light of Dawn if 5+ under 95% and HP >= 4 (instant, togglable)
+        // Light of Dawn if 5+ under 95% and HP >= 4 (combat only, togglable)
         if (IsSettingOn("Use Light of Dawn") && IsInCombat() && GroupMembersUnder(95, 5) && PowerAtLeast(4, HOLY_POWER))
         { Log("Casting Light of Dawn"); return CastPersonal("Light of Dawn"); }
-        
-        // Word of Glory if lowest under 90% and HP >= 3 (instant)
+
+        // Word of Glory if lowest under 90% and HP >= 3
         if (IsInCombat() && PowerAtLeast(3, HOLY_POWER))
         { string t = LowestAllyUnder(90, "Word of Glory"); if (t != null) { Log("Casting Word of Glory on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_wog"); } }
 
-        // Holy Shock on lowest (API bug: cooldown/charges always return 0, manual throttle)
-        if (IsInCombat() && ThrottleIsOpen("hs_cd", 5000))
-        { string t = LowestAllyInRange("Holy Shock"); if (t != null) { Log("Casting Holy Shock on " + t + " (" + HealthPct(t) + "%)"); ThrottleRestart("hs_cd"); return CastOnFocus(t, "cast_hs"); } }
+        // Holy Shock on lowest (manual charge tracking - API bug)
+        if (IsInCombat() && HsChargesAvailable() > 0)
+        { string t = LowestAllyInRange("Holy Shock"); if (t != null) { Log("Casting Holy Shock on " + t + " (" + HealthPct(t) + "%) [charges=" + HsChargesAvailable() + "]"); UseHsCharge(); return CastOnFocus(t, "cast_hs"); } }
 
         // Holy Light if lowest under 60%
         if (IsInCombat())
@@ -123,12 +130,12 @@ public class HolyPaladinPvE : Rotation
     // -- Damage Gambits --
     private bool RunDmgGambits()
     {
-        if (IsInCombat() && !TargetIsEnemy()) { Inferno.Cast("target_enemy", true); return true; }
+        if (IsSettingOn("Do DPS") && IsInCombat() && !TargetIsEnemy()) { Inferno.Cast("target_enemy", true); return true; }
 
-        if (IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1))
+        if (IsSettingOn("Do DPS") && IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1))
         { Log("Casting Shield of the Righteous"); return CastPersonal("Shield of the Righteous"); }
 
-        if (IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && IsSpellReady("Judgment"))
+        if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && IsSpellReady("Judgment"))
         { Log("Casting Judgment"); return CastOnEnemy("Judgment"); }
 
         // Flash of Light filler - always have something to do
@@ -224,6 +231,19 @@ public class HolyPaladinPvE : Rotation
         return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.DebuffStacks(d, u, false) >= stacks);
     }
     private int HealthPct(string u) { int mx = Inferno.MaxHealth(u); if (mx < 1) mx = 1; return (Inferno.Health(u) * 100) / mx; }
+
+    // Holy Shock charge system (API is bugged, returns 0 for cd/charges)
+    private int HsChargesAvailable()
+    {
+        if (_hsCharges < HS_MAX_CHARGES)
+        {
+            long elapsed = NowMs() - _hsLastRechargeMs;
+            int recharged = (int)(elapsed / HS_RECHARGE_MS);
+            if (recharged > 0) { _hsCharges = _hsCharges + recharged; if (_hsCharges > HS_MAX_CHARGES) _hsCharges = HS_MAX_CHARGES; _hsLastRechargeMs = _hsLastRechargeMs + recharged * HS_RECHARGE_MS; }
+        }
+        return _hsCharges;
+    }
+    private void UseHsCharge() { HsChargesAvailable(); _hsCharges = _hsCharges - 1; if (_hsCharges < 0) _hsCharges = 0; if (_hsCharges == HS_MAX_CHARGES - 1) _hsLastRechargeMs = NowMs(); }
 
     // -- Group --
     private List<string> GetGroupMembers()
