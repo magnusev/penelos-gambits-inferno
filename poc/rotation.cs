@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using InfernoWow.API;
 
 namespace InfernoWow.Modules
@@ -153,21 +154,15 @@ public class HolyPaladinPvE : Rotation
 
     private bool GroupMembersUnder(int pct, int min)
     {
-        int c = 0; List<string> m = GetGroupMembers();
-        for (int i = 0; i < m.Count; i++) { if (!Inferno.IsDead(m[i]) && HealthPct(m[i]) < pct) c++; }
-        return c >= min;
+        return GetGroupMembers().Count(u => !Inferno.IsDead(u) && HealthPct(u) < pct) >= min;
     }
     private bool AnyAllyHasDebuff(string d)
     {
-        List<string> m = GetGroupMembers();
-        for (int i = 0; i < m.Count; i++) { if (!Inferno.IsDead(m[i]) && Inferno.HasDebuff(d, m[i], false)) return true; }
-        return false;
+        return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false));
     }
     private bool AnyAllyHasDebuff(string d, int stacks)
     {
-        List<string> m = GetGroupMembers();
-        for (int i = 0; i < m.Count; i++) { if (!Inferno.IsDead(m[i]) && Inferno.HasDebuff(d, m[i], false) && Inferno.DebuffStacks(d, m[i], false) >= stacks) return true; }
-        return false;
+        return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.DebuffStacks(d, u, false) >= stacks);
     }
     private int HealthPct(string u) { int mx = Inferno.MaxHealth(u); if (mx < 1) mx = 1; return (Inferno.Health(u) * 100) / mx; }
 
@@ -184,15 +179,11 @@ public class HolyPaladinPvE : Rotation
     // -- Selectors --
     private string LowestAllyUnder(int pct, string spell)
     {
-        string best = null; int bHp = 999; List<string> m = GetGroupMembers();
-        for (int i = 0; i < m.Count; i++) { if (Inferno.IsDead(m[i])) continue; int h = HealthPct(m[i]); if (h >= pct || !Inferno.SpellInRange(spell, m[i])) continue; if (h < bHp) { bHp = h; best = m[i]; } }
-        return best;
+        return GetGroupMembers().Where(u => !Inferno.IsDead(u) && HealthPct(u) < pct && Inferno.SpellInRange(spell, u)).OrderBy(u => HealthPct(u)).FirstOrDefault();
     }
     private string LowestAllyInRange(string spell)
     {
-        string best = null; int bHp = 999; List<string> m = GetGroupMembers();
-        for (int i = 0; i < m.Count; i++) { if (Inferno.IsDead(m[i]) || !Inferno.SpellInRange(spell, m[i])) continue; int h = HealthPct(m[i]); if (h < bHp) { bHp = h; best = m[i]; } }
-        return best;
+        return GetGroupMembers().Where(u => !Inferno.IsDead(u) && Inferno.SpellInRange(spell, u)).OrderBy(u => HealthPct(u)).FirstOrDefault();
     }
 
     // -- Cast --
@@ -204,15 +195,11 @@ public class HolyPaladinPvE : Rotation
     // -- Selectors (continued) --
     private string GetAllyWithDebuff(string d, string spell)
     {
-        List<string> m = GetGroupMembers();
-        for (int i = 0; i < m.Count; i++) { if (!Inferno.IsDead(m[i]) && Inferno.HasDebuff(d, m[i], false) && Inferno.SpellInRange(spell, m[i])) return m[i]; }
-        return null;
+        return GetGroupMembers().Where(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.SpellInRange(spell, u)).FirstOrDefault();
     }
     private string GetAllyWithMostStacks(string d, string spell)
     {
-        string best = null; int bSt = -1; List<string> m = GetGroupMembers();
-        for (int i = 0; i < m.Count; i++) { if (Inferno.IsDead(m[i]) || !Inferno.HasDebuff(d, m[i], false) || !Inferno.SpellInRange(spell, m[i])) continue; int s = Inferno.DebuffStacks(d, m[i], false); if (s > bSt) { bSt = s; best = m[i]; } }
-        return best;
+        return GetGroupMembers().Where(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.SpellInRange(spell, u)).OrderByDescending(u => Inferno.DebuffStacks(d, u, false)).FirstOrDefault();
     }
 
     // -- Throttle --
