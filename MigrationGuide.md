@@ -1,4 +1,4 @@
-﻿﻿# Migration Guide: OOP Gambit System → Single-File Functional Style
+﻿﻿﻿# Migration Guide: OOP Gambit System → Single-File Functional Style
 
 > **📁 Proof of Concept:** See [`poc/`](poc/) for a working single-file rotation that passes both compilation and security validation. Run `dotnet build poc/CompileCheck/CompileCheck.csproj` and `dotnet run --project poc/SecurityValidator/SecurityValidator.csproj` to verify.
 
@@ -19,6 +19,7 @@ The Inferno runtime security validator enforces strict constraints on loaded rot
 | **C# version: no value tuples** | The runtime compiler does NOT support C# 7+ value tuples `(int, string)`. Use if-chains or plain methods instead. |
 | **No lambda expressions or LINQ** | ~~Initially thought to be blocked~~ — **LINQ and lambdas ARE allowed**. The actual issue was the "long string literal" validator (see above). LINQ code that uses parameter variables (no inline string literals) creates quote-free stretches that trigger the naive scanner. Fix: interleave string-heavy sections between LINQ-heavy sections. |
 | **API doc bug: `Health()` returns raw HP** | Despite the API doc saying `Health(unit)` returns "Current HP percentage (0-100)", it actually returns **raw HP** (e.g. `369540`). Use `MaxHealth()` to calculate percentage: `(Health * 100) / MaxHealth`. |
+| **API bug: Holy Shock cooldown** | `SpellCooldown("Holy Shock")`, `SpellCharges`, and `MaxCharges` all return 0 for Holy Shock. Use a manual throttle (7500ms) instead of `IsSpellReady()`. |
 
 The current build system concatenates ~70 separate `.cs` files into one mega-file. Every custom class (conditions, actions, selectors, gambit sets, units, groups, etc.) becomes a separate class definition in that file — **all of which are blocked**.
 

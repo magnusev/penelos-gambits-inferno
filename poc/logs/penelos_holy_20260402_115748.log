@@ -1,0 +1,52 @@
+11:57:48.961 Initialize complete
+11:58:01.040 Tick: combat=False group=2 | player=100% party1=100% 
+11:58:03.059 Tick: combat=False group=2 | player=100% party1=100% 
+11:58:05.085 Tick: combat=False group=2 | player=100% party1=100% 
+11:58:06.419 Casting Holy Shock on player (100%)
+11:58:07.826 Tick: combat=True group=2 | player=100% party1=96% 
+11:58:07.827 Casting Holy Shock on party1 (96%)
+11:58:09.244 Casting Holy Shock on party1 (99%)
+11:58:10.670 Tick: combat=True group=2 | player=100% party1=97% 
+11:58:10.671 Casting Holy Shock on party1 (97%)
+11:58:12.076 Casting Holy Shock on player (93%)
+11:58:13.479 Tick: combat=True group=2 | player=80% party1=95% 
+11:58:13.479 Casting Word of Glory on player (80%)
+11:58:14.907 Casting Holy Shock on player (89%)
+11:58:16.330 Tick: combat=True group=2 | player=92% party1=92% 
+11:58:16.330 Casting Holy Shock on player (92%)
+11:58:17.760 Casting Holy Shock on party1 (88%)
+11:58:19.201 Tick: combat=True group=2 | player=87% party1=99% 
+11:58:19.201 Casting Word of Glory on player (87%)
+11:58:20.640 Casting Holy Shock on player (97%)
+11:58:22.076 Tick: combat=True group=2 | player=97% party1=96% 
+11:58:22.079 Casting Holy Shock on party1 (96%)
+11:58:23.484 Casting Holy Shock on party1 (86%)
+11:58:24.922 Tick: combat=True group=2 | player=94% party1=92% 
+11:58:24.923 Casting Holy Shock on party1 (92%)
+11:58:26.358 Casting Holy Shock on party1 (85%)
+11:58:27.774 Tick: combat=True group=2 | player=77% party1=85% 
+11:58:27.775 Casting Holy Shock on player (77%)
+11:58:29.207 Casting Divine Toll on player (79%)
+11:58:30.627 Tick: combat=True group=2 | player=99% party1=85% 
+11:58:30.627 Casting Word of Glory on party1 (85%)
+11:58:32.034 Casting Holy Shock on player (91%)
+11:58:33.451 Tick: combat=True group=2 | player=91% party1=92% 
+11:58:33.451 Casting Holy Shock on player (91%)
+11:58:34.876 Casting Holy Shock on party1 (93%)
+11:58:36.316 Tick: combat=True group=2 | player=100% party1=88% 
+11:58:36.317 Casting Word of Glory on party1 (88%)
+11:58:37.717 Casting Holy Shock on party1 (99%)
+11:58:39.136 Tick: combat=True group=2 | player=99% party1=99% 
+11:58:39.137 Casting Holy Shock on player (99%)
+11:58:40.544 Casting Holy Shock on player (97%)
+11:58:41.971 Tick: combat=True group=2 | player=100% party1=99% 
+11:58:41.972 Casting Holy Shock on party1 (99%)
+11:58:43.404 Casting Holy Shock on player (93%)
+11:58:44.836 Tick: combat=True group=2 | player=91% party1=100% 
+11:58:44.837 Casting Holy Shock on player (91%)
+11:58:46.262 Casting Holy Shock on player (95%)
+11:58:47.688 Tick: combat=False group=2 | player=100% party1=99% 
+11:58:49.721 Tick: combat=False group=2 | player=100% party1=99% 
+11:58:51.746 Tick: combat=False group=2 | player=100% party1=99% 
+11:58:53.747 Tick: combat=False group=2 | player=100% party1=98% 
+11:58:55.437 Rotation stopped
