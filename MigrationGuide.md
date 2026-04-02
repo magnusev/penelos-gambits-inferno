@@ -10,7 +10,7 @@ The Inferno runtime security validator enforces strict constraints on loaded rot
 |---|---|
 | **Allowed `using` directives** | `System`, `System.Collections.Generic`, `System.Drawing`, `System.Linq`, `System.IO`, `InfernoWow.API` |
 | **Allowed base classes** | `Rotation`, `Plugin` (only these two may appear in `: BaseClass`) |
-| **No namespace declarations** | The rotation file must NOT have any `namespace` wrapper. The class is top-level. `Rotation` and `Setting` are provided by the runtime at the top level; `Inferno` is in `InfernoWow.API`. |
+| **Namespace** | The rotation must be wrapped in `namespace InfernoWow.Modules { }`. `Rotation` and `Setting` live in this namespace. `Inferno` is in `InfernoWow.API`. |
 | **One class per file** | Only a single class definition is permitted in the loaded `.cs` file |
 | **No long string literals** | Strings > ~2000 chars are blocked as "potential encoded payload". Also avoid repeated special/unicode characters (e.g. `═══`) in comments — multi-byte UTF-8 chars may inflate byte counts and trigger this check. |
 | **No banned namespaces** | `System.Diagnostics`, `System.Text`, `System.Net.Http`, `System.Threading.Tasks` are all blocked |
@@ -474,20 +474,21 @@ private void Log(string msg)
 }
 ```
 
-### Step 10: No namespace wrapper
+### Step 10: Wrap in `namespace InfernoWow.Modules`
 
-The rotation file must NOT use any `namespace` declaration. The `Rotation` base type and `Setting` are provided at the top level by the runtime. Only `Inferno` needs `using InfernoWow.API;`.
+The rotation must be wrapped in `namespace InfernoWow.Modules`. This is where `Rotation` and `Setting` live. `Inferno` is accessed via `using InfernoWow.API;`.
 
 ```csharp
 using InfernoWow.API;
 
+namespace InfernoWow.Modules
+{
 public class PaladinHolyPvE : Rotation
 {
     // ...
 }
+}
 ```
-
-The old build script added `using InfernoWow.Modules;` and the original code used `namespace InfernoWow.Modules { }` — neither is needed or allowed in the final file.
 
 ---
 
@@ -606,115 +607,44 @@ For each spec:
 
 ---
 
-## Output File Template
+## Output File: Working Reference
 
-Below is the skeleton of the final single-file rotation. An AI agent can use this as a template and fill in the gambits from the OOP source files.
+The complete working rotation is in [`poc/rotation.cs`](poc/rotation.cs) (546 lines). It implements:
 
-```csharp
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.IO;
-using InfernoWow.API;
+- **12 spells** registered in `Initialize()`
+- **3 cast types**: `CastOnFocus()` (friendly via @focus), `CastPersonal()` (self-buff), `CastOnEnemy()` (current target)
+- **7 heal gambits**: Divine Protection, Avenging Wrath, Divine Toll, Word of Glory, Holy Light, Holy Shock, Flash of Light
+- **4 damage gambits**: Target enemy, Shield of the Righteous, Judgment, Flash of Light filler
+- **7 dungeon gambit sets**: Proving Grounds, Magisters Terrace, Skyreach, Pit of Saron, Windrunner Spire, Maisara Caverns, Algeth'ar Academy
+- **3 dungeon helper patterns**: `TryDispel()`, `TryDispelStacks()`, `TryBlessingOfFreedom()`
+- **Separate throttle keys**: `heal_throttle`, `dmg_throttle`, `dispel_throttle`, `holy_shock_cd`
 
-public class PaladinHolyPvE : Rotation
-{
-    // ═══════════════════════════════════════════════════════
-    //  STATE
-    // ═══════════════════════════════════════════════════════
-    private string _queuedAction = null;
-    private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
+### File layout (top to bottom)
 
-    // ═══════════════════════════════════════════════════════
-    //  ROTATION LIFECYCLE
-    // ═══════════════════════════════════════════════════════
-    public override void LoadSettings() { }
-
-    public override void Initialize()
-    {
-        // Register spells, macros, focus macros
-    }
-
-    public override bool CombatTick()
-    {
-        if (Inferno.IsDead("player")) return false;
-        if (ProcessQueue()) return true;
-
-        int mapId = Inferno.GetMapID();
-        if (RunDungeonGambits(mapId)) return true;
-        if (RunHealGambits()) return true;
-        return RunDmgGambits();
-    }
-
-    public override bool OutOfCombatTick()
-    {
-        return CombatTick();
-    }
-
-    // ═══════════════════════════════════════════════════════
-    //  GAMBIT CHAINS (if-chain style)
-    // ═══════════════════════════════════════════════════════
-    private bool RunHealGambits()
-    {
-        // Each gambit is an if-block: conditions -> selector -> cast
-        // if (IsInCombat() && ...) { ... return true; }
-        return false;
-    }
-
-    private bool RunDmgGambits() { return false; }
-
-    private bool RunDungeonGambits(int mapId)
-    {
-        switch (mapId)
-        {
-            // case 480: return RunProvingGroundsGambits();
-            default: return false;
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    //  CONDITION HELPERS
-    // ═══════════════════════════════════════════════════════
-    private bool IsInCombat() { return Inferno.InCombat("player"); }
-    private bool IsSpellReady(string spell) { return Inferno.SpellCooldown(spell) <= 200; }
-    private long GetTimestampMs() { return DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond; }
-    private bool ThrottleIsOpen(string key, int ms)
-    {
-        if (!_throttleTimestamps.ContainsKey(key)) return true;
-        return (GetTimestampMs() - _throttleTimestamps[key]) >= ms;
-    }
-    private void ThrottleRestart(string key)
-    {
-        _throttleTimestamps[key] = GetTimestampMs();
-    }
-
-    // ═══════════════════════════════════════════════════════
-    //  SELECTOR HELPERS
-    // ═══════════════════════════════════════════════════════
-    private List<string> GetGroupMembers() { /* see Step 3 */ return null; }
-    private string LowestAllyUnder(int pct, string spell) { /* see Step 4 */ return null; }
-    private string GetAllyWithDebuff(string debuff, string spell) { /* ... */ return null; }
-
-    // ═══════════════════════════════════════════════════════
-    //  CAST HELPERS
-    // ═══════════════════════════════════════════════════════
-    private bool CastOnFocus(string unit, string macro)
-    {
-        Inferno.Cast("focus_" + unit);
-        _queuedAction = macro;
-        return true;
-    }
-    private bool ProcessQueue()
-    {
-        if (_queuedAction == null) return false;
-        string action = _queuedAction;
-        _queuedAction = null;
-        Inferno.Cast(action, true);
-        return true;
-    }
-}
 ```
+State fields (_queuedAction, _throttleTimestamps, HOLY_POWER)
+LoadSettings()
+Initialize() - spell + macro registration
+CombatTick() / OutOfCombatTick() / OnStop()
+RunHealGambits() - if-chain of heal priorities
+RunDmgGambits() - if-chain of damage priorities
+RunDungeonGambits(mapId) - switch to dungeon-specific methods
+  Run<Dungeon>Gambits() - one method per dungeon
+  TryDispel/TryDispelStacks/TryBlessingOfFreedom - shared dispel patterns
+Condition helpers - IsInCombat, IsSpellReady, TargetIsEnemy, etc.
+Selector helpers - LowestAllyUnder, GetAllyWithDebuff, etc.
+Group members - GetGroupMembers()
+Cast helpers - CastOnFocus, CastPersonal, CastOnEnemy, ProcessQueue
+Throttle - GetTimestampMs, ThrottleIsOpen, ThrottleRestart
+Logging - Log()
+```
+
+### How to extend
+
+- **Add a new spell**: Add to `Spellbook` + `Macros` in `Initialize()`, add an if-block in the appropriate gambit method
+- **Add a new dungeon**: Add map ID cases to `RunDungeonGambits()`, create a `Run<Name>Gambits()` method using `TryDispel()` helpers
+- **Add a new condition**: Add a private method in the condition helpers section
+- **Add a new selector**: Add a private method in the selector helpers section
 
 ---
 
@@ -735,7 +665,7 @@ For now, the manual approach (A) is recommended given the scope of 2 specs.
 
 ## Checklist Before Submitting to Inferno
 
-- [ ] No `namespace` declarations (top-level class)
+- [ ] Wrapped in `namespace InfernoWow.Modules { }`
 - [ ] File has exactly ONE class, inheriting from `Rotation`
 - [ ] Only allowed `using` directives (6 total: System, System.Collections.Generic, System.Drawing, System.Linq, System.IO, InfernoWow.API)
 - [ ] No value tuples `(int, string)` — the runtime does not support C# 7+
