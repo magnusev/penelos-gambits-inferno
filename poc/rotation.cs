@@ -173,7 +173,7 @@ public class HolyPaladinPvE : Rotation
             case 2501: return TryDispel("Infected Pinions");
             case 2097: case 2098: case 2099:
                 if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
-                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); Inferno.Cast("focus_" + t); Inferno.Cast("cast_cleanse", true); } }
+                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); Inferno.Cast("focus_" + t); _queuedAction = "cast_cleanse"; return true; } }
                 return false;
             default: return false;
         }
@@ -181,36 +181,15 @@ public class HolyPaladinPvE : Rotation
 
     private bool TryDispel(string debuff)
     {
-        bool ready = IsSpellReady("Cleanse");
-        bool hasDebuff = AnyAllyHasDebuff(debuff);
-        bool throttleOk = ThrottleIsOpen("dispel_cd", 500);
-        if (!ready || !hasDebuff)
-        {
-            Log("DISPEL-DBG: skip " + debuff + " ready=" + ready + " hasDebuff=" + hasDebuff);
-            return false;
-        }
-        if (!throttleOk)
-        {
-            Log("DISPEL-DBG: throttled " + debuff);
-            return false;
-        }
-        // Debug: check each member for debuff and range
-        List<string> gm = GetGroupMembers();
-        for (int i = 0; i < gm.Count; i++)
-        {
-            string u = gm[i];
-            bool dead = Inferno.IsDead(u);
-            bool has = Inferno.HasDebuff(debuff, u, false);
-            bool inRange = Inferno.SpellInRange("Cleanse", u);
-            if (has) Log("DISPEL-DBG: " + u + " has " + debuff + " dead=" + dead + " inRange=" + inRange);
-        }
+        if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
+        if (!ThrottleIsOpen("dispel_cd", 500)) return false;
         string t = GetAllyWithDebuff(debuff, "Cleanse");
-        if (t == null) { Log("DISPEL-DBG: no target in range for " + debuff); return false; }
-        Log("Dispelling " + debuff + " on " + t + " cd=" + Inferno.SpellCooldown("Cleanse"));
+        if (t == null) return false;
+        Log("Dispelling " + debuff + " on " + t);
         ThrottleRestart("dispel_cd");
         Inferno.Cast("focus_" + t);
-        Inferno.Cast("cast_cleanse", true);
-        return false;
+        _queuedAction = "cast_cleanse";
+        return true;
     }
     private bool TryDispelStacks(string debuff, int min)
     {
@@ -221,8 +200,8 @@ public class HolyPaladinPvE : Rotation
         Log("Dispelling " + debuff + " on " + t);
         ThrottleRestart("dispel_cd");
         Inferno.Cast("focus_" + t);
-        Inferno.Cast("cast_cleanse", true);
-        return false;
+        _queuedAction = "cast_cleanse";
+        return true;
     }
     private bool TryBof(string debuff)
     {
@@ -234,8 +213,8 @@ public class HolyPaladinPvE : Rotation
         ThrottleRestart("dispel_cd");
         Inferno.StopCasting();
         Inferno.Cast("focus_" + t);
-        Inferno.Cast("cast_bof", true);
-        return false;
+        _queuedAction = "cast_bof";
+        return true;
     }
 
     // -- Conditions --
@@ -300,7 +279,14 @@ public class HolyPaladinPvE : Rotation
     private bool CastOnFocus(string unit, string macro) { Inferno.Cast("focus_" + unit); _queuedAction = macro; return true; }
     private bool CastPersonal(string s) { Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
     private bool CastOnEnemy(string s) { Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
-    private bool ProcessQueue() { if (_queuedAction == null) return false; string a = _queuedAction; _queuedAction = null; Inferno.Cast(a, true); ThrottleRestart("gcd"); return true; }
+    private bool ProcessQueue()
+    {
+        if (_queuedAction == null) return false;
+        string a = _queuedAction; _queuedAction = null;
+        Inferno.Cast(a, true);
+        if (a != "cast_cleanse" && a != "cast_bof") ThrottleRestart("gcd");
+        return true;
+    }
 
     // -- Selectors (continued) --
     private string GetAllyWithDebuff(string d, string spell)
