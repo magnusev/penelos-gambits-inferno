@@ -184,7 +184,7 @@ public class HolyPaladinPvE : Rotation
                 return TryDispel("Poison Blades");
             case 2501: return TryDispel("Infected Pinions");
             case 2097: case 2098: case 2099:
-                if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
+                if (Inferno.CanCast("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
                 { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); Inferno.Cast("focus_" + t); _queuedAction = "cast_cleanse"; return true; } }
                 return false;
             default: return false;
@@ -193,7 +193,7 @@ public class HolyPaladinPvE : Rotation
 
     private bool TryDispel(string debuff)
     {
-        if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
+        if (!Inferno.CanCast("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
         if (!ThrottleIsOpen("dispel_cd", 500)) return false;
         string t = GetAllyWithDebuff(debuff, "Cleanse");
         if (t == null) return false;
@@ -206,7 +206,7 @@ public class HolyPaladinPvE : Rotation
     }
     private bool TryDispelStacks(string debuff, int min)
     {
-        if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff, min)) return false;
+        if (!Inferno.CanCast("Cleanse") || !AnyAllyHasDebuff(debuff, min)) return false;
         if (!ThrottleIsOpen("dispel_cd", 500)) return false;
         string t = GetAllyWithMostStacks(debuff, "Cleanse");
         if (t == null) return false;
@@ -219,7 +219,7 @@ public class HolyPaladinPvE : Rotation
     }
     private bool TryBof(string debuff)
     {
-        if (!IsSpellReady("Blessing of Freedom") || !AnyAllyHasDebuff(debuff)) return false;
+        if (!Inferno.CanCast("Blessing of Freedom") || !AnyAllyHasDebuff(debuff)) return false;
         if (!ThrottleIsOpen("dispel_cd", 500)) return false;
         string t = GetAllyWithDebuff(debuff, "Blessing of Freedom");
         if (t == null) return false;
@@ -281,25 +281,28 @@ public class HolyPaladinPvE : Rotation
     }
 
     // -- Selectors --
+    // Use Inferno.CanCast to check GCD, resources, range, and spell known — not just range.
+    // This prevents queuing spells that can't actually fire (e.g. game GCD still running after Cleanse).
     private string LowestAllyUnder(int pct, string spell)
     {
-        return GetGroupMembers().Where(u => !Inferno.IsDead(u) && HealthPct(u) < pct && Inferno.SpellInRange(spell, u)).OrderBy(u => HealthPct(u)).FirstOrDefault();
+        return GetGroupMembers().Where(u => !Inferno.IsDead(u) && HealthPct(u) < pct && Inferno.CanCast(spell, u)).OrderBy(u => HealthPct(u)).FirstOrDefault();
     }
     private string LowestAllyInRange(string spell)
     {
-        return GetGroupMembers().Where(u => !Inferno.IsDead(u) && Inferno.SpellInRange(spell, u)).OrderBy(u => HealthPct(u)).FirstOrDefault();
+        return GetGroupMembers().Where(u => !Inferno.IsDead(u) && Inferno.CanCast(spell, u)).OrderBy(u => HealthPct(u)).FirstOrDefault();
     }
 
     // -- Cast --
     private bool CastOnFocus(string unit, string macro) { Inferno.Cast("focus_" + unit); _queuedAction = macro; return true; }
-    private bool CastPersonal(string s) { Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
-    private bool CastOnEnemy(string s) { Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
+    private bool CastPersonal(string s) { if (!Inferno.CanCast(s)) return false; Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
+    private bool CastOnEnemy(string s) { if (!Inferno.CanCast(s, "target")) return false; Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
     private bool ProcessQueue()
     {
         if (_queuedAction == null) return false;
         string a = _queuedAction; _queuedAction = null;
         if (a == "cast_cleanse" || a == "cast_bof") { Inferno.Cast("stop_cast", true); Inferno.Cast(a, true); }
-        else { Inferno.Cast(a, true); ThrottleRestart("gcd"); }
+        else { Inferno.Cast(a, true); }
+        ThrottleRestart("gcd");
         return true;
     }
 
