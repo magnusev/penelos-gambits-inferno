@@ -13,8 +13,12 @@ public class HolyPaladinPvE : Rotation
     private string _queuedAction = null;
     private string _lastLoggedAction = null;
     private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
+    
+    // Constants
     private const int HOLY_POWER = 9;
     private const int HEALTHSTONE_ID = 5512;
+    private const int DIAGNOSTIC_LOG_INTERVAL_MS = 2000;
+    
     private string _logFile = null;
 
     // Holy Shock charge tracking (API returns 0 for cd/charges)
@@ -22,6 +26,10 @@ public class HolyPaladinPvE : Rotation
     private long _hsLastRechargeMs = 0;
     private const int HS_MAX_CHARGES = 2;
     private const int HS_RECHARGE_MS = 5000;
+
+    // ========================================
+    // SETTINGS & INITIALIZATION
+    // ========================================
 
     public override void LoadSettings()
     {
@@ -46,7 +54,6 @@ public class HolyPaladinPvE : Rotation
         Macros.Add("cast_wog", "/cast [@focus] Word of Glory");
         Macros.Add("cast_dt", "/cast [@focus] Divine Toll");
         Macros.Add("cast_cleanse", "/cast [@focus] Cleanse");
-        Macros.Add("stop_cast", "/stopcasting");
         Macros.Add("cast_bof", "/cast [@focus] Blessing of Freedom");
         Macros.Add("focus_player", "/focus player");
         for (int i = 1; i <= 4; i++) Macros.Add("focus_party" + i, "/focus party" + i);
@@ -60,6 +67,10 @@ public class HolyPaladinPvE : Rotation
         Log("Initialize complete");
     }
 
+    // ========================================
+    // MAIN TICK LOOP
+    // ========================================
+
     public override bool CombatTick()
     {
         if (Inferno.IsDead("player")) return true;
@@ -69,7 +80,7 @@ public class HolyPaladinPvE : Rotation
         if (ProcessQueue()) return true;
 
         // Periodic status log
-        if (ThrottleIsOpen("diag", 2000))
+        if (ThrottleIsOpen("diag", DIAGNOSTIC_LOG_INTERVAL_MS))
         {
             ThrottleRestart("diag");
             List<string> gm = GetGroupMembers();
@@ -89,6 +100,10 @@ public class HolyPaladinPvE : Rotation
 
     public override bool OutOfCombatTick() { return CombatTick(); }
     public override void OnStop() { Log("Rotation stopped"); }
+
+    // ========================================
+    // GAMBIT PRIORITY CHAINS
+    // ========================================
 
     // -- Heal Gambits --
     private bool RunHealGambits()
@@ -209,6 +224,10 @@ public class HolyPaladinPvE : Rotation
         return true;
     }
 
+    // ========================================
+    // HELPER METHODS
+    // ========================================
+
     // -- Conditions --
     private bool IsInCombat() { return Inferno.InCombat("player"); }
     private bool IsSpellReady(string s) { return Inferno.SpellCooldown(s) <= 200; }
@@ -285,7 +304,6 @@ public class HolyPaladinPvE : Rotation
         if (_queuedAction == null) return false;
         string a = _queuedAction; 
         _queuedAction = null;
-        Log("Casting queued action: " + a);
         Inferno.Cast(a, QuickDelay: true);
         return true;
     }
