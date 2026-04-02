@@ -187,14 +187,9 @@ public class HolyPaladinPvE : Rotation
     private bool TryDispel(string debuff)
     {
         if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
-        if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithDebuff(debuff, "Cleanse");
         if (t == null) return false;
-        if (_queuedAction != null) return false;
-        Log("Dispelling " + debuff + " on " + t);
-        ThrottleRestart("dispel_cd");
-        Inferno.Cast("focus_" + t, QuickDelay: true);
-        _queuedAction = "cast_cleanse";
+        CastOnFocus(t, "cast_cleanse");
         return true;
     }
     private bool TryDispelStacks(string debuff, int min)
