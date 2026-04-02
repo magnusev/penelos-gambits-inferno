@@ -1,0 +1,11 @@
+Boomstick=1261193-  
+Call Pet 1=883- 
+Flamefang Pitch=1251592- ground
+Hatchet Toss=193265- 
+Kill Command=259489- 
+Moonlight Chakram=1264949- 
+Raptor Strike=186270- 
+Raptor Swipe=1262343,1262293- 
+Revive Pet=982- 
+Takedown=1250646- 
+Wildfire Bomb=259495- 

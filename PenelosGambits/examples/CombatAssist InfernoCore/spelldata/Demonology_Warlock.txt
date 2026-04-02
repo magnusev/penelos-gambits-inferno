@@ -1,0 +1,16 @@
+Call Dreadstalkers=104316-  
+Demonbolt=264178-  
+Grimoire: Fel Ravager=1276467-  
+Grimoire: Imp Lord=1276452-  
+Hand of Gul'dan=105174-  
+Implosion=196277-  
+Infernal Bolt=434506-  
+Power Siphon=264130- 
+Ruination=434635-  
+Shadow Bolt=686-  
+Summon Charhound=455476-  
+Summon Demonic Tyrant=265187-  
+Summon Doomguard=1276672-  
+Summon Felguard=30146,112870-  
+Summon Gloomhound=455465-  
+Summon Vilefiend=264119-  

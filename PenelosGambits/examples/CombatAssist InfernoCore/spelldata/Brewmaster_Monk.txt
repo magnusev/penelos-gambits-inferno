@@ -1,0 +1,12 @@
+Auto Attack=6603- 
+Blackout Kick=205523- 
+Breath of Fire=115181-
+Chi Burst=123986- 
+Crackling Jade Lightning=117952- 
+Empty the Cellar=1263438- 
+Exploding Keg=325153- ground 
+Keg Smash=121253- 
+Rushing Jade Wind=116847-
+Spinning Crane Kick=322729- 
+Tiger Palm=100780- 
+Touch of Death=322109- 

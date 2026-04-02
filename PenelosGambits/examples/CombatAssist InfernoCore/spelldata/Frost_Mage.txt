@@ -1,0 +1,11 @@
+Arcane Intellect=1459- player
+Blizzard=1248829,190356- ground
+Comet Storm=153595- 
+Cone of Cold=120- 
+Flurry=44614- 
+Frostbolt=116- 
+Frostfire Bolt=431044- 
+Frozen Orb=84714,198149- ground
+Glacial Spike=199786- 
+Ice Lance=30455- 
+Ray of Frost=205021- 

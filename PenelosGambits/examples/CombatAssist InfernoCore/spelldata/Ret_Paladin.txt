@@ -1,0 +1,11 @@
+Avenging Wrath=31884- 
+Blade of Justice=184575- 
+Crusader Strike=35395- 
+Divine Storm=53385- 
+Divine Toll=375576- 
+Execution Sentence=343527- 
+Final Verdict=383328- 
+Judgment=20271,24275- 
+Templar Slash=406647- 
+Templar Strike=407480- 
+Wake of Ashes=255937,427453- 

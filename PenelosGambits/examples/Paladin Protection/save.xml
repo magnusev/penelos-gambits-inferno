@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SaveData>
+  <wowPath>C:\Program Files (x86)\World of Warcraft</wowPath>
+  <addonName>herbing</addonName>
+  <rotationName>Retail\Paladin Protection</rotationName>
+  <activePlugins />
+  <settings>
+    <Group name="Retail\Paladin Protection">
+      <Setting>
+        <settingName>=== Protection Paladin ===</settingName>
+        <settingType>Label</settingType>
+        <minValue>0</minValue>
+        <maxValue>0</maxValue>
+        <currentValue>0</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Use Avenging Wrath</settingName>
+        <settingType>CheckBox</settingType>
+        <minValue>0</minValue>
+        <maxValue>0</maxValue>
+        <currentValue>0</currentValue>
+        <boxChecked>true</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Use Trinkets</settingName>
+        <settingType>CheckBox</settingType>
+        <minValue>0</minValue>
+        <maxValue>0</maxValue>
+        <currentValue>0</currentValue>
+        <boxChecked>true</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>=== Defensives ===</settingName>
+        <settingType>Label</settingType>
+        <minValue>0</minValue>
+        <maxValue>0</maxValue>
+        <currentValue>0</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Use Defensives</settingName>
+        <settingType>CheckBox</settingType>
+        <minValue>0</minValue>
+        <maxValue>0</maxValue>
+        <currentValue>0</currentValue>
+        <boxChecked>true</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Word of Glory HP %</settingName>
+        <settingType>Slider</settingType>
+        <minValue>1</minValue>
+        <maxValue>100</maxValue>
+        <currentValue>41</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Ardent Defender HP %</settingName>
+        <settingType>Slider</settingType>
+        <minValue>1</minValue>
+        <maxValue>100</maxValue>
+        <currentValue>35</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Guardian of Ancient Kings HP %</settingName>
+        <settingType>Slider</settingType>
+        <minValue>1</minValue>
+        <maxValue>100</maxValue>
+        <currentValue>25</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Lay on Hands HP %</settingName>
+        <settingType>Slider</settingType>
+        <minValue>1</minValue>
+        <maxValue>100</maxValue>
+        <currentValue>15</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Healthstone HP %</settingName>
+        <settingType>Slider</settingType>
+        <minValue>1</minValue>
+        <maxValue>100</maxValue>
+        <currentValue>50</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>=== Interrupt ===</settingName>
+        <settingType>Label</settingType>
+        <minValue>0</minValue>
+        <maxValue>0</maxValue>
+        <currentValue>0</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Auto Interrupt</settingName>
+        <settingType>CheckBox</settingType>
+        <minValue>0</minValue>
+        <maxValue>0</maxValue>
+        <currentValue>0</currentValue>
+        <boxChecked>true</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Interrupt at cast % (min)</settingName>
+        <settingType>Slider</settingType>
+        <minValue>0</minValue>
+        <maxValue>100</maxValue>
+        <currentValue>40</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+      <Setting>
+        <settingName>Interrupt at cast % (max)</settingName>
+        <settingType>Slider</settingType>
+        <minValue>0</minValue>
+        <maxValue>100</maxValue>
+        <currentValue>90</currentValue>
+        <boxChecked>false</boxChecked>
+        <currentString></currentString>
+        <dropDownList />
+      </Setting>
+    </Group>
+  </settings>
+</SaveData>

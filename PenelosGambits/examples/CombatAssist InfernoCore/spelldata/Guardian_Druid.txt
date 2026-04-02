@@ -1,0 +1,15 @@
+Bear Form=5487-
+Berserk=50334- gcd 
+Convoke the spirits=391528- 
+Incarnation: Guardian of Ursoc=102558- gcd
+Lunar Beam=204066- 
+Mangle=33917- 
+Mark of the Wild=1126-
+Maul=6807- 
+Moonfire=8921- 
+Ravage=441605- 
+Raze=400254- 
+Sundering Roar=1253799- 
+Swipe=213771- 
+Thrash=77758- 
+Wild Guardian=1269616,1270277,1269658- gcd

@@ -1,0 +1,9 @@
+Blood Boil=50842- 
+Consumption=1263824- 
+Dancing Rune Weapon=49028-   
+Death and Decay=43265- ground
+Death Strike=49998- 
+Death's Caress=195292- 
+Heart Strike=206930,433895- 
+Marrowrend=195182- 
+Reaper's Mark=439843- 

@@ -1,0 +1,17 @@
+Agony=980-  
+Corruption=172-  
+Dark Harvest=1257052-  
+Drain Soul=198590,1261153-  
+Grimoire of Sacrifice=108503-  
+Haunt=48181-  
+Malevolence=442726-  
+Seed of Corruption=27243-  
+Summon Darkglare=205180-  
+Summon Felhunter=691,112869-  
+Summon Imp=688-  
+Summon Incubus=365349-  
+Summon Sayaad=366222-  
+Summon Soulkeeper=386256-  
+Summon Voidwalker=697-  
+Unstable Affliction=1259790-  
+Wither=445468-

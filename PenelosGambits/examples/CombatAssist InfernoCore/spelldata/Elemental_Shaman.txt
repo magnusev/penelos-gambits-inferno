@@ -1,0 +1,15 @@
+Ancestral Swiftness=443454- gcd  
+Ascendance=114051-  
+Chain Lightning=188443-  
+Earth Shock=8042-  
+Earthquake=61882,462620- ground  
+Elemental Blast=117014- 
+Lava Burst=51505-  
+Lightning Bolt=188196-  
+Lightning Shield=192106-  
+Nature's Swiftness=378081- gcd  
+Skyfury=462854- 
+Stormkeeper=191634-  
+Tempest=452201-  
+Voltaic Blaze=470057-  
+Flame Shock=470411- 

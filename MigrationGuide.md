@@ -12,12 +12,13 @@ The Inferno runtime security validator enforces strict constraints on loaded rot
 | **Allowed base classes** | `Rotation`, `Plugin` (only these two may appear in `: BaseClass`) |
 | **Namespace** | The rotation must be wrapped in `namespace InfernoWow.Modules { }`. `Rotation` and `Setting` live in this namespace. `Inferno` is in `InfernoWow.API`. |
 | **One class per file** | Only a single class definition is permitted in the loaded `.cs` file |
-| **No long string literals** | Strings > ~2000 chars are blocked as "potential encoded payload". Also avoid repeated special/unicode characters (e.g. `═══`) in comments — multi-byte UTF-8 chars may inflate byte counts and trigger this check. |
+| **No long string literals** | Strings > ~2000 chars are blocked as "potential encoded payload". The validator uses **naive quote pairing** across the entire file - it counts characters between consecutive `"` characters. Long stretches of code without any string literals (e.g. helper methods using only parameter variables) create large gaps that the validator interprets as one giant string literal. Fix: reorder sections so string-heavy code (like `GetGroupMembers` with `"raid"`, `"party"`, `"player"`) is interleaved between string-free helper methods. Use the `poc/Analyze` tool to check gaps. |
 | **No banned namespaces** | `System.Diagnostics`, `System.Text`, `System.Net.Http`, `System.Threading.Tasks` are all blocked |
 | **No `Environment.` access** | ALL `Environment.` references are blocked (pattern-matched). This includes `System.Environment.TickCount`. Use `DateTime.UtcNow` instead. |
 | **Comments are scanned too** | The validator does **naive text pattern matching** — it does NOT skip `//` comments or `///` doc-comments. Mentioning banned words like `Stopwatch`, `System.Diagnostics`, or even `class hierarchy` in a comment will trigger a block. |
-| **C# version: no value tuples** | The runtime compiler does NOT support C# 7+ value tuples `(int, string)`. Use if-chains or plain methods instead of `List<(int, string, Func<bool>, Func<bool>)>`. |
-| **API doc bug: `Health()` returns raw HP** | Despite the API doc saying `Health(unit)` returns "Current HP percentage (0-100)", it actually returns **raw HP** (e.g. `369540`). Use `MaxHealth()` to calculate percentage: `(long)Health * 100L / MaxHealth`. Cast to `long` to avoid int overflow. |
+| **C# version: no value tuples** | The runtime compiler does NOT support C# 7+ value tuples `(int, string)`. Use if-chains or plain methods instead. |
+| **No lambda expressions or LINQ** | The validator blocks `=>` (lambda arrow) and LINQ extension methods (`.Where`, `.Any`, `.OrderBy`, etc.). Use plain `for` loops instead. No working example rotation uses lambdas. `using System.Linq` is not needed. |
+| **API doc bug: `Health()` returns raw HP** | Despite the API doc saying `Health(unit)` returns "Current HP percentage (0-100)", it actually returns **raw HP** (e.g. `369540`). Use `MaxHealth()` to calculate percentage: `(Health * 100) / MaxHealth`. |
 
 The current build system concatenates ~70 separate `.cs` files into one mega-file. Every custom class (conditions, actions, selectors, gambit sets, units, groups, etc.) becomes a separate class definition in that file — **all of which are blocked**.
 

@@ -1,0 +1,15 @@
+Fel Devastation=212084-  
+Felblade=232893-  
+Fiery Brand=204021-  
+Fracture=263642-  
+Immolation Aura=258920-  
+Infernal Strike=189110- ground  
+Metamorphosis=187827- gcd  
+Reaver's Glaive=1283344-  
+Sigil of Flame=204596- ground  
+Sigil of Spite=390163- ground  
+Soul Carver=207407-  
+Soul Cleave=228477-  
+Spirit Bomb=247454-  
+Throw Glaive=204157-  
+Vengeful Retreat=198793- gcd  

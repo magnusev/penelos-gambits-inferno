@@ -1,0 +1,9 @@
+Arcane Intellect=1459- player  
+Combustion=190319- gcd  
+Fire Blast=108853- gcd  
+Fireball=133-  
+Flamestrike=2120,1254851- ground  
+Frostfire Bolt=431044- 
+Meteor=153561- ground  
+Pyroblast=11366-  
+Scorch=2948- 

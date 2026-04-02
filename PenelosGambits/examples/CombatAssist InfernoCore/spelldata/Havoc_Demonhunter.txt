@@ -1,0 +1,16 @@
+Abyssal Gaze=452497- 
+Annihilation=201427- 
+Blade Dance=188499- 
+Chaos Strike=162794- 
+Consuming Fire=452487- 
+Death Sweep=210152- 
+Essence Break=258860- 
+Eye Beam=198013- 
+Fel Rush=195072- 
+Felblade=232893- 
+Immolation Aura=258920,427917- 
+Metamorphosis=191427- ground
+Reaver's Glaive=442294-  
+The Hunt=370965- 
+Throw Glaive=185123- 
+Vengeful Retreat=198793- gcd

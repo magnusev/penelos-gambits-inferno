@@ -1,0 +1,17 @@
+Berserk=106951- gcd
+Cat Form=768- 
+Chomp=1244258- 
+Convoke the Spirits=391528- 
+Feral Frenzy=274837- 
+Ferocious Bite=22568- 
+Frantic Frenzy=1243807- 
+Incarnation: Avatar of Ashamane=102543- 
+Moonfire=155625- 
+Primal Wrath=285381- 
+Rake=1822- 
+Ravage=441591- 
+Rip=1079- 
+Shred=5221- 
+Swipe=106785- 
+Tiger's Fury=5217- gcd
+Waiting for Energy=1249752- 
