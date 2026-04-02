@@ -44,7 +44,7 @@ public class HolyPaladinPvE : Rotation
         Macros.Add("cast_word_of_glory", "/cast [@focus] Word of Glory");
         Macros.Add("cast_divine_toll", "/cast [@focus] Divine Toll");
         Macros.Add("cast_cleanse", "/cast [@focus] Cleanse");
-        Macros.Add("cast_bof", "/stopcasting\\n/cast [@focus] Blessing of Freedom");
+        Macros.Add("cast_bof", "/cast [@focus] Blessing of Freedom");
 
         // Focus macros (targeting)
         Macros.Add("focus_player", "/focus player");
@@ -321,6 +321,7 @@ public class HolyPaladinPvE : Rotation
         string target = GetAllyWithDebuff(debuff, "Blessing of Freedom");
         if (target == null) return false;
         ThrottleRestart("dispel_throttle");
+        Inferno.StopCasting();
         return CastOnFocus(target, "cast_bof");
     }
 
