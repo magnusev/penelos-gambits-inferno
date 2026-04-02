@@ -137,11 +137,11 @@ public class HolyPaladinPvE : Rotation
         { string t = LowestAllyUnder(95, "Holy Shock"); if (t != null) { Log("Casting Holy Shock on " + t + " (" + HealthPct(t) + "%) [charges=" + HsChargesAvailable() + "]"); UseHsCharge(); return CastOnFocus(t, "cast_hs"); } }
 
         // Holy Light if lowest under 60%
-        if (IsInCombat())
+        if (IsInCombat() && CanCastWhileMoving("Holy Light"))
         { string t = LowestAllyUnder(60, "Holy Light"); if (t != null) { Log("Casting Holy Light on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_hl"); } }
 
         // Flash of Light if lowest under 95%
-        if (IsInCombat())
+        if (IsInCombat() && CanCastWhileMoving("Flash of Light"))
         { string t = LowestAllyUnder(95, "Flash of Light"); if (t != null) { Log("Casting Flash of Light on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_fol"); } }
 
         return false;
@@ -159,7 +159,7 @@ public class HolyPaladinPvE : Rotation
         { Log("Casting Judgment"); return CastOnEnemy("Judgment"); }
 
         // Flash of Light filler - always have something to do
-        if (IsInCombat())
+        if (IsInCombat() && CanCastWhileMoving("Flash of Light"))
         {
             string t = LowestAllyInRange("Flash of Light");
             if (t != null) { Log("Filler FoL on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_fol"); }
@@ -238,6 +238,15 @@ public class HolyPaladinPvE : Rotation
     private bool EnemiesInMelee(int n) { return Inferno.EnemiesNearUnit(8, "player") >= n; }
     private bool PowerAtLeast(int n, int t) { return Inferno.Power("player", t) >= n; }
     private bool PowerLessThan(int n, int t) { return Inferno.Power("player", t) < n; }
+    
+    // Movement checks for cast-time spells
+    private bool CanCastWhileMoving(string spell)
+    {
+        if (!Inferno.IsMoving("player")) return true;
+        if (spell == "Flash of Light" && Inferno.HasBuff("Infusion of Light", "player", true)) return true;
+        if (spell == "Holy Light" && Inferno.HasBuff("Hand of Divinity", "player", true)) return true;
+        return false;
+    }
 
     private bool GroupMembersUnder(int pct, int min)
     {
