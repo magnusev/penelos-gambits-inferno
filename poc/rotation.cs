@@ -13,12 +13,14 @@ public class HolyPaladinPvE : Rotation
     private string _queuedAction = null;
     private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
     private const int HOLY_POWER = 9;
+    private const int HEALTHSTONE_ID = 5512;
     private string _logFile = null;
 
     public override void LoadSettings()
     {
         Settings.Add(new Setting("Enable Logging", true));
         Settings.Add(new Setting("Use Light of Dawn", false));
+        Settings.Add(new Setting("Healthstone HP %", 1, 100, 50));
     }
 
     public override void Initialize()
@@ -41,6 +43,8 @@ public class HolyPaladinPvE : Rotation
         for (int i = 1; i <= 4; i++) Macros.Add("focus_party" + i, "/focus party" + i);
         for (int i = 1; i <= 28; i++) Macros.Add("focus_raid" + i, "/focus raid" + i);
         Macros.Add("target_enemy", "/targetenemy");
+        Macros.Add("use_healthstone", "/use Healthstone");
+        CustomFunctions.Add("HasHealthstone", "return GetItemCount(5512) > 0 and 1 or 0");
 
         _logFile = "penelos_holy_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
         Inferno.PrintMessage("Penelos Gambits - Holy Paladin loaded!", Color.Green);
@@ -77,6 +81,10 @@ public class HolyPaladinPvE : Rotation
     // -- Heal Gambits --
     private bool RunHealGambits()
     {
+        // Healthstone if player under threshold
+        if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && Inferno.ItemCooldown(HEALTHSTONE_ID) == 0)
+        { Log("Using Healthstone (player " + HealthPct("player") + "%)"); Inferno.Cast("use_healthstone", QuickDelay: true); return true; }
+
         // Divine Protection if player under 75% (instant, off-GCD)
         if (IsInCombat() && IsSpellReady("Divine Protection") && UnitUnder("player", 75))
         { Log("Casting Divine Protection (player " + HealthPct("player") + "%)"); return CastPersonal("Divine Protection"); }
@@ -89,13 +97,13 @@ public class HolyPaladinPvE : Rotation
         if (IsInCombat() && IsSpellReady("Divine Toll") && GroupMembersUnder(80, 2) && PowerLessThan(3, HOLY_POWER))
         { string t = LowestAllyInRange("Divine Toll"); if (t != null) { Log("Casting Divine Toll on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_dt"); } }
 
-        // Word of Glory if lowest under 90% and HP >= 3 (instant)
-        if (IsInCombat() && PowerAtLeast(3, HOLY_POWER))
-        { string t = LowestAllyUnder(90, "Word of Glory"); if (t != null) { Log("Casting Word of Glory on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_wog"); } }
-
         // Light of Dawn if 5+ under 95% and HP >= 4 (instant, togglable)
         if (IsSettingOn("Use Light of Dawn") && IsInCombat() && GroupMembersUnder(95, 5) && PowerAtLeast(4, HOLY_POWER))
         { Log("Casting Light of Dawn"); return CastPersonal("Light of Dawn"); }
+        
+        // Word of Glory if lowest under 90% and HP >= 3 (instant)
+        if (IsInCombat() && PowerAtLeast(3, HOLY_POWER))
+        { string t = LowestAllyUnder(90, "Word of Glory"); if (t != null) { Log("Casting Word of Glory on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_wog"); } }
 
         // Holy Shock on lowest (API bug: cooldown/charges always return 0, manual throttle)
         if (IsInCombat() && ThrottleIsOpen("hs_cd", 5000))
@@ -196,6 +204,7 @@ public class HolyPaladinPvE : Rotation
     private bool IsInCombat() { return Inferno.InCombat("player"); }
     private bool IsSpellReady(string s) { return Inferno.SpellCooldown(s) <= 200; }
     private bool IsSettingOn(string s) { return GetCheckBox(s); }
+    private bool HasHealthstone() { return Inferno.CustomFunction("HasHealthstone") == 1; }
     private bool TargetIsEnemy() { return Inferno.UnitCanAttack("player", "target"); }
     private bool UnitUnder(string u, int p) { return HealthPct(u) < p; }
     private bool EnemiesInMelee(int n) { return Inferno.EnemiesNearUnit(8, "player") >= n; }
