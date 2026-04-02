@@ -11,6 +11,7 @@ namespace InfernoWow.Modules
 public class HolyPaladinPvE : Rotation
 {
     private string _queuedAction = null;
+    private string _lastLoggedAction = null;
     private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
     private const int HOLY_POWER = 9;
     private const int HEALTHSTONE_ID = 5512;
@@ -85,8 +86,9 @@ public class HolyPaladinPvE : Rotation
             return false;
         }
 
-        // Global GCD gate - don't evaluate new actions while GCD is running
-        if (!ThrottleIsOpen("gcd", 250)) return false;
+        // Wait for the actual game GCD to finish before evaluating new actions.
+        // return false (not true) so we don't trigger an immediate re-tick.
+        if (Inferno.GCD() > 0) return false;
 
         if (RunDungeonGambits(mapId)) return true;
         if (RunHealGambits()) return true;
@@ -194,7 +196,7 @@ public class HolyPaladinPvE : Rotation
     private bool TryDispel(string debuff)
     {
         if (!Inferno.CanCast("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
-        if (!ThrottleIsOpen("dispel_cd", 500)) return false;
+        if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithDebuff(debuff, "Cleanse");
         if (t == null) return false;
         Log("Dispelling " + debuff + " on " + t);
@@ -207,7 +209,7 @@ public class HolyPaladinPvE : Rotation
     private bool TryDispelStacks(string debuff, int min)
     {
         if (!Inferno.CanCast("Cleanse") || !AnyAllyHasDebuff(debuff, min)) return false;
-        if (!ThrottleIsOpen("dispel_cd", 500)) return false;
+        if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithMostStacks(debuff, "Cleanse");
         if (t == null) return false;
         Log("Dispelling " + debuff + " on " + t);
@@ -220,7 +222,7 @@ public class HolyPaladinPvE : Rotation
     private bool TryBof(string debuff)
     {
         if (!Inferno.CanCast("Blessing of Freedom") || !AnyAllyHasDebuff(debuff)) return false;
-        if (!ThrottleIsOpen("dispel_cd", 500)) return false;
+        if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithDebuff(debuff, "Blessing of Freedom");
         if (t == null) return false;
         Log("Casting Blessing of Freedom on " + t + " for " + debuff);
@@ -294,15 +296,14 @@ public class HolyPaladinPvE : Rotation
 
     // -- Cast --
     private bool CastOnFocus(string unit, string macro) { Inferno.Cast("focus_" + unit); _queuedAction = macro; return true; }
-    private bool CastPersonal(string s) { if (!Inferno.CanCast(s)) return false; Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
-    private bool CastOnEnemy(string s) { if (!Inferno.CanCast(s, "target")) return false; Inferno.Cast(s); ThrottleRestart("gcd"); return true; }
+    private bool CastPersonal(string s) { if (!Inferno.CanCast(s)) return false; Inferno.Cast(s); return true; }
+    private bool CastOnEnemy(string s) { if (!Inferno.CanCast(s, "target")) return false; Inferno.Cast(s); return true; }
     private bool ProcessQueue()
     {
         if (_queuedAction == null) return false;
         string a = _queuedAction; _queuedAction = null;
         if (a == "cast_cleanse" || a == "cast_bof") { Inferno.Cast("stop_cast", true); Inferno.Cast(a, true); }
         else { Inferno.Cast(a, true); }
-        ThrottleRestart("gcd");
         return true;
     }
 
@@ -325,6 +326,9 @@ public class HolyPaladinPvE : Rotation
     private void Log(string msg)
     {
         if (!GetCheckBox("Enable Logging")) return;
+        // Suppress duplicate log lines (e.g. "Casting Judgment" 30x in a row)
+        if (msg == _lastLoggedAction && !msg.StartsWith("Tick:")) return;
+        _lastLoggedAction = msg;
         Inferno.PrintMessage(msg, Color.White);
         if (_logFile != null) { try { File.AppendAllText(_logFile, DateTime.Now.ToString("HH:mm:ss.fff") + " " + msg + "\n"); } catch { } }
     }
