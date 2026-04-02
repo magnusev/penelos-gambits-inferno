@@ -18,6 +18,7 @@ public class HolyPaladinPvE : Rotation
     public override void LoadSettings()
     {
         Settings.Add(new Setting("Enable Logging", true));
+        Settings.Add(new Setting("Use Light of Dawn", false));
     }
 
     public override void Initialize()
@@ -91,6 +92,10 @@ public class HolyPaladinPvE : Rotation
         // Word of Glory if lowest under 90% and HP >= 3 (instant)
         if (IsInCombat() && PowerAtLeast(3, HOLY_POWER))
         { string t = LowestAllyUnder(90, "Word of Glory"); if (t != null) { Log("Casting Word of Glory on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_wog"); } }
+
+        // Light of Dawn if 5+ under 95% and HP >= 4 (instant, togglable)
+        if (IsSettingOn("Use Light of Dawn") && IsInCombat() && GroupMembersUnder(95, 5) && PowerAtLeast(4, HOLY_POWER))
+        { Log("Casting Light of Dawn"); return CastPersonal("Light of Dawn"); }
 
         // Holy Shock on lowest (API bug: cooldown/charges always return 0, manual throttle)
         if (IsInCombat() && ThrottleIsOpen("hs_cd", 5000))
@@ -190,6 +195,7 @@ public class HolyPaladinPvE : Rotation
     // -- Conditions --
     private bool IsInCombat() { return Inferno.InCombat("player"); }
     private bool IsSpellReady(string s) { return Inferno.SpellCooldown(s) <= 200; }
+    private bool IsSettingOn(string s) { return GetCheckBox(s); }
     private bool TargetIsEnemy() { return Inferno.UnitCanAttack("player", "target"); }
     private bool UnitUnder(string u, int p) { return HealthPct(u) < p; }
     private bool EnemiesInMelee(int n) { return Inferno.EnemiesNearUnit(8, "player") >= n; }
