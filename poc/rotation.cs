@@ -12,6 +12,7 @@ public class HolyPaladinPvE : Rotation
 {
     private string _queuedAction = null;
     private string _lastLoggedAction = null;
+    private long _castLockoutUntil = 0;
     private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
     private const int HOLY_POWER = 9;
     private const int HEALTHSTONE_ID = 5512;
@@ -87,8 +88,9 @@ public class HolyPaladinPvE : Rotation
         }
 
         // Wait for the actual game GCD to finish before evaluating new actions.
+        // The cast lockout covers the brief window where GCD() hasn't registered yet.
         // return false (not true) so we don't trigger an immediate re-tick.
-        if (Inferno.GCD() > 0) return false;
+        if (Inferno.GCD() > 0 || NowMs() < _castLockoutUntil) return false;
 
         if (RunDungeonGambits(mapId)) return true;
         if (RunHealGambits()) return true;
@@ -296,14 +298,18 @@ public class HolyPaladinPvE : Rotation
 
     // -- Cast --
     private bool CastOnFocus(string unit, string macro) { Inferno.Cast("focus_" + unit); _queuedAction = macro; return true; }
-    private bool CastPersonal(string s) { if (!Inferno.CanCast(s)) return false; Inferno.Cast(s); return true; }
-    private bool CastOnEnemy(string s) { if (!Inferno.CanCast(s, "target")) return false; Inferno.Cast(s); return true; }
+    private bool CastPersonal(string s) { if (!Inferno.CanCast(s)) return false; Inferno.Cast(s); _castLockoutUntil = NowMs() + 300; return true; }
+    private bool CastOnEnemy(string s) { if (!Inferno.CanCast(s, "target")) return false; Inferno.Cast(s); _castLockoutUntil = NowMs() + 300; return true; }
     private bool ProcessQueue()
     {
         if (_queuedAction == null) return false;
         string a = _queuedAction; _queuedAction = null;
         if (a == "cast_cleanse" || a == "cast_bof") { Inferno.Cast("stop_cast", true); Inferno.Cast(a, true); }
         else { Inferno.Cast(a, true); }
+        // Brief lockout: gives the game ~300ms to register the GCD/cast state
+        // before we re-evaluate. Prevents the race where GCD() returns 0
+        // because the game hasn't processed the cast command yet.
+        _castLockoutUntil = NowMs() + 300;
         return true;
     }
 
