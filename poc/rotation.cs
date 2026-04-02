@@ -112,9 +112,9 @@ public class HolyPaladinPvE : Rotation
         if (IsInCombat() && PowerAtLeast(3, HOLY_POWER))
         { string t = LowestAllyUnder(90, "Word of Glory"); if (t != null) { Log("Casting Word of Glory on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_wog"); } }
 
-        // Holy Shock on lowest (manual charge tracking - API bug)
+        // Holy Shock on lowest injured ally (manual charge tracking - API bug)
         if (IsInCombat() && HsChargesAvailable() > 0)
-        { string t = LowestAllyInRange("Holy Shock"); if (t != null) { Log("Casting Holy Shock on " + t + " (" + HealthPct(t) + "%) [charges=" + HsChargesAvailable() + "]"); UseHsCharge(); return CastOnFocus(t, "cast_hs"); } }
+        { string t = LowestAllyUnder(95, "Holy Shock"); if (t != null) { Log("Casting Holy Shock on " + t + " (" + HealthPct(t) + "%) [charges=" + HsChargesAvailable() + "]"); UseHsCharge(); return CastOnFocus(t, "cast_hs"); } }
 
         // Holy Light if lowest under 60%
         if (IsInCombat())
@@ -173,7 +173,7 @@ public class HolyPaladinPvE : Rotation
             case 2501: return TryDispel("Infected Pinions");
             case 2097: case 2098: case 2099:
                 if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
-                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); return CastOnFocus(t, "cast_cleanse"); } }
+                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); Inferno.Cast("focus_" + t); Inferno.Cast("cast_cleanse", true); } }
                 return false;
             default: return false;
         }
@@ -181,12 +181,36 @@ public class HolyPaladinPvE : Rotation
 
     private bool TryDispel(string debuff)
     {
-        if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
-        if (!ThrottleIsOpen("dispel_cd", 500)) return false;
+        bool ready = IsSpellReady("Cleanse");
+        bool hasDebuff = AnyAllyHasDebuff(debuff);
+        bool throttleOk = ThrottleIsOpen("dispel_cd", 500);
+        if (!ready || !hasDebuff)
+        {
+            Log("DISPEL-DBG: skip " + debuff + " ready=" + ready + " hasDebuff=" + hasDebuff);
+            return false;
+        }
+        if (!throttleOk)
+        {
+            Log("DISPEL-DBG: throttled " + debuff);
+            return false;
+        }
+        // Debug: check each member for debuff and range
+        List<string> gm = GetGroupMembers();
+        for (int i = 0; i < gm.Count; i++)
+        {
+            string u = gm[i];
+            bool dead = Inferno.IsDead(u);
+            bool has = Inferno.HasDebuff(debuff, u, false);
+            bool inRange = Inferno.SpellInRange("Cleanse", u);
+            if (has) Log("DISPEL-DBG: " + u + " has " + debuff + " dead=" + dead + " inRange=" + inRange);
+        }
         string t = GetAllyWithDebuff(debuff, "Cleanse");
-        if (t == null) return false;
-        Log("Dispelling " + debuff + " on " + t);
-        ThrottleRestart("dispel_cd"); return CastOnFocus(t, "cast_cleanse");
+        if (t == null) { Log("DISPEL-DBG: no target in range for " + debuff); return false; }
+        Log("Dispelling " + debuff + " on " + t + " cd=" + Inferno.SpellCooldown("Cleanse"));
+        ThrottleRestart("dispel_cd");
+        Inferno.Cast("focus_" + t);
+        Inferno.Cast("cast_cleanse", true);
+        return false;
     }
     private bool TryDispelStacks(string debuff, int min)
     {
@@ -195,7 +219,10 @@ public class HolyPaladinPvE : Rotation
         string t = GetAllyWithMostStacks(debuff, "Cleanse");
         if (t == null) return false;
         Log("Dispelling " + debuff + " on " + t);
-        ThrottleRestart("dispel_cd"); return CastOnFocus(t, "cast_cleanse");
+        ThrottleRestart("dispel_cd");
+        Inferno.Cast("focus_" + t);
+        Inferno.Cast("cast_cleanse", true);
+        return false;
     }
     private bool TryBof(string debuff)
     {
@@ -204,7 +231,11 @@ public class HolyPaladinPvE : Rotation
         string t = GetAllyWithDebuff(debuff, "Blessing of Freedom");
         if (t == null) return false;
         Log("Casting Blessing of Freedom on " + t + " for " + debuff);
-        ThrottleRestart("dispel_cd"); Inferno.StopCasting(); return CastOnFocus(t, "cast_bof");
+        ThrottleRestart("dispel_cd");
+        Inferno.StopCasting();
+        Inferno.Cast("focus_" + t);
+        Inferno.Cast("cast_bof", true);
+        return false;
     }
 
     // -- Conditions --
