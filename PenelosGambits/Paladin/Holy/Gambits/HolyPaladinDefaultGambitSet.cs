@@ -48,17 +48,17 @@
             }),
             new DivineTollAction()
         ),
-        // new Gambit(1,
-        //     "Light of Dawn if under 90% for 3+ units",
-        //     new List<Condition>
-        //     {
-        //         new InCombatCondition(),
-        //         new MinimumGroupMembersUnderThreshold(95, 5),
-        //         new PlayerSecondaryPowerAtLeast(4, 9)
-        //     },
-        //     null,
-        //     new LightOfDawnAction()
-        // ),
+        new Gambit(1,
+            "Light of Dawn if under 90% for 3+ units",
+            new List<Condition>
+            {
+                new InCombatCondition(),
+                new MinimumGroupMembersUnderThreshold(95, 5),
+                new PlayerSecondaryPowerAtLeast(4, 9)
+            },
+            null,
+            new LightOfDawnAction()
+        ),
         new Gambit(2,
             "Word of Glory if under 90%",
             new List<Condition>

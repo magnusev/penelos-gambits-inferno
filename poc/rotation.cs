@@ -45,6 +45,7 @@ public class HolyPaladinPvE : Rotation
         Macros.Add("cast_wog", "/cast [@focus] Word of Glory");
         Macros.Add("cast_dt", "/cast [@focus] Divine Toll");
         Macros.Add("cast_cleanse", "/cast [@focus] Cleanse");
+        Macros.Add("stop_cast", "/stopcasting");
         Macros.Add("cast_bof", "/cast [@focus] Blessing of Freedom");
         Macros.Add("focus_player", "/focus player");
         for (int i = 1; i <= 4; i++) Macros.Add("focus_party" + i, "/focus party" + i);
@@ -62,8 +63,6 @@ public class HolyPaladinPvE : Rotation
     {
         if (Inferno.IsDead("player")) return false;
         if (ProcessQueue()) return true;
-        // Global GCD gate - don't evaluate new actions while GCD is running
-        if (!ThrottleIsOpen("gcd", 250)) return false;
 
         // Periodic status log
         if (ThrottleIsOpen("diag", 2000))
@@ -76,6 +75,19 @@ public class HolyPaladinPvE : Rotation
         }
 
         int mapId = Inferno.GetMapID();
+
+        // If player is mid-cast (Flash of Light, Holy Light etc.), only allow
+        // emergency interrupts (dispels). Do NOT re-evaluate normal heal/dmg
+        // priorities — that would re-queue a macro and restart the cast.
+        if (IsPlayerCasting())
+        {
+            if (RunDungeonGambits(mapId)) return true;
+            return false;
+        }
+
+        // Global GCD gate - don't evaluate new actions while GCD is running
+        if (!ThrottleIsOpen("gcd", 250)) return false;
+
         if (RunDungeonGambits(mapId)) return true;
         if (RunHealGambits()) return true;
         if (RunDmgGambits()) return true;
@@ -187,6 +199,7 @@ public class HolyPaladinPvE : Rotation
         if (t == null) return false;
         Log("Dispelling " + debuff + " on " + t);
         ThrottleRestart("dispel_cd");
+        Inferno.StopCasting();
         Inferno.Cast("focus_" + t);
         _queuedAction = "cast_cleanse";
         return true;
@@ -199,6 +212,7 @@ public class HolyPaladinPvE : Rotation
         if (t == null) return false;
         Log("Dispelling " + debuff + " on " + t);
         ThrottleRestart("dispel_cd");
+        Inferno.StopCasting();
         Inferno.Cast("focus_" + t);
         _queuedAction = "cast_cleanse";
         return true;
@@ -218,6 +232,7 @@ public class HolyPaladinPvE : Rotation
     }
 
     // -- Conditions --
+    private bool IsPlayerCasting() { return Inferno.CastingID("player") != 0; }
     private bool IsInCombat() { return Inferno.InCombat("player"); }
     private bool IsSpellReady(string s) { return Inferno.SpellCooldown(s) <= 200; }
     private bool IsSettingOn(string s) { return GetCheckBox(s); }
@@ -283,8 +298,8 @@ public class HolyPaladinPvE : Rotation
     {
         if (_queuedAction == null) return false;
         string a = _queuedAction; _queuedAction = null;
-        Inferno.Cast(a, true);
-        if (a != "cast_cleanse" && a != "cast_bof") ThrottleRestart("gcd");
+        if (a == "cast_cleanse" || a == "cast_bof") { Inferno.Cast("stop_cast", true); Inferno.Cast(a, true); }
+        else { Inferno.Cast(a, true); ThrottleRestart("gcd"); }
         return true;
     }
 
