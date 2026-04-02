@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.IO;
 using InfernoWow.API;
 
 namespace InfernoWow.Modules
@@ -12,10 +13,11 @@ public class HolyPaladinPvE : Rotation
     private string _queuedAction = null;
     private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
     private const int HOLY_POWER = 9;
+    private string _logFile = null;
 
     public override void LoadSettings()
     {
-        Settings.Add(new Setting("Enable Logging", false));
+        Settings.Add(new Setting("Enable Logging", true));
     }
 
     public override void Initialize()
@@ -38,13 +40,27 @@ public class HolyPaladinPvE : Rotation
         for (int i = 1; i <= 4; i++) Macros.Add("focus_party" + i, "/focus party" + i);
         for (int i = 1; i <= 28; i++) Macros.Add("focus_raid" + i, "/focus raid" + i);
         Macros.Add("target_enemy", "/targetenemy");
+
+        _logFile = "penelos_holy_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
         Inferno.PrintMessage("Penelos Gambits - Holy Paladin loaded!", Color.Green);
+        Log("Initialize complete");
     }
 
     public override bool CombatTick()
     {
         if (Inferno.IsDead("player")) return false;
         if (ProcessQueue()) return true;
+
+        // Periodic status log
+        if (ThrottleIsOpen("diag", 2000))
+        {
+            ThrottleRestart("diag");
+            List<string> gm = GetGroupMembers();
+            string info = "";
+            for (int i = 0; i < gm.Count; i++) info += gm[i] + "=" + HealthPct(gm[i]) + "% ";
+            Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + gm.Count + " | " + info);
+        }
+
         int mapId = Inferno.GetMapID();
         if (RunDungeonGambits(mapId)) return true;
         if (RunHealGambits()) return true;
@@ -53,40 +69,61 @@ public class HolyPaladinPvE : Rotation
     }
 
     public override bool OutOfCombatTick() { return CombatTick(); }
-    public override void OnStop() { }
+    public override void OnStop() { Log("Rotation stopped"); }
 
     // -- Heal Gambits --
     private bool RunHealGambits()
     {
-        if (!ThrottleIsOpen("heal_throttle", 2000)) return false;
+        // Only throttle cast-time heals, not instants
+        if (!ThrottleIsOpen("cast_gcd", 1500)) return false;
+
+        // Divine Protection if player under 75% (instant, off-GCD)
         if (IsInCombat() && IsSpellReady("Divine Protection") && UnitUnder("player", 75))
-            return CastPersonal("Divine Protection");
+        { Log("Casting Divine Protection (player " + HealthPct("player") + "%)"); return CastPersonal("Divine Protection"); }
+
+        // Avenging Wrath if 2+ under 60% (instant, off-GCD)
         if (IsInCombat() && IsSpellReady("Avenging Wrath") && GroupMembersUnder(60, 2))
-            return CastPersonal("Avenging Wrath");
+        { Log("Casting Avenging Wrath"); return CastPersonal("Avenging Wrath"); }
+
+        // Divine Toll if 2+ under 80% and HolyPower < 3
         if (IsInCombat() && IsSpellReady("Divine Toll") && GroupMembersUnder(80, 2) && PowerLessThan(3, HOLY_POWER))
-        { string t = LowestAllyInRange("Divine Toll"); if (t != null) return CastOnFocus(t, "cast_dt"); }
+        { string t = LowestAllyInRange("Divine Toll"); if (t != null) { Log("Casting Divine Toll on " + t + " (" + HealthPct(t) + "%)"); ThrottleRestart("cast_gcd"); return CastOnFocus(t, "cast_dt"); } }
+
+        // Word of Glory if lowest under 90% and HP >= 3 (instant)
         if (IsInCombat() && PowerAtLeast(3, HOLY_POWER))
-        { string t = LowestAllyUnder(90, "Word of Glory"); if (t != null) return CastOnFocus(t, "cast_wog"); }
-        if (IsInCombat())
-        { string t = LowestAllyUnder(60, "Holy Light"); if (t != null) return CastOnFocus(t, "cast_hl"); }
-        if (IsInCombat() && ThrottleIsOpen("holy_shock_cd", 2000))
-        { string t = LowestAllyInRange("Holy Shock"); if (t != null) { ThrottleRestart("holy_shock_cd"); return CastOnFocus(t, "cast_hs"); } }
-        if (IsInCombat())
-        { string t = LowestAllyUnder(95, "Flash of Light"); if (t != null) return CastOnFocus(t, "cast_fol"); }
+        { string t = LowestAllyUnder(90, "Word of Glory"); if (t != null) { Log("Casting Word of Glory on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_wog"); } }
+
+        // Holy Light if lowest under 60% (cast time)
+        if (IsInCombat() && ThrottleIsOpen("cast_gcd", 1500))
+        { string t = LowestAllyUnder(60, "Holy Light"); if (t != null) { Log("Casting Holy Light on " + t + " (" + HealthPct(t) + "%)"); ThrottleRestart("cast_gcd"); return CastOnFocus(t, "cast_hl"); } }
+
+        // Holy Shock on lowest (instant, own CD throttle)
+        if (IsInCombat() && IsSpellReady("Holy Shock") && ThrottleIsOpen("hs_cd", 2000))
+        { string t = LowestAllyInRange("Holy Shock"); if (t != null) { Log("Casting Holy Shock on " + t + " (" + HealthPct(t) + "%)"); ThrottleRestart("hs_cd"); return CastOnFocus(t, "cast_hs"); } }
+
+        // Flash of Light if lowest under 95% (cast time)
+        if (IsInCombat() && ThrottleIsOpen("cast_gcd", 1500))
+        { string t = LowestAllyUnder(95, "Flash of Light"); if (t != null) { Log("Casting Flash of Light on " + t + " (" + HealthPct(t) + "%)"); ThrottleRestart("cast_gcd"); return CastOnFocus(t, "cast_fol"); } }
+
         return false;
     }
 
     // -- Damage Gambits --
     private bool RunDmgGambits()
     {
-        if (!ThrottleIsOpen("dmg_throttle", 1500)) return false;
+        if (!ThrottleIsOpen("cast_gcd", 1500)) return false;
+
         if (IsInCombat() && !TargetIsEnemy()) { Inferno.Cast("target_enemy", true); return true; }
+
         if (IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1))
-            return CastPersonal("Shield of the Righteous");
+        { Log("Casting Shield of the Righteous"); return CastPersonal("Shield of the Righteous"); }
+
         if (IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && IsSpellReady("Judgment"))
-            return CastOnEnemy("Judgment");
+        { Log("Casting Judgment"); ThrottleRestart("cast_gcd"); return CastOnEnemy("Judgment"); }
+
         if (IsInCombat())
-        { string t = LowestAllyInRange("Flash of Light"); if (t != null) return CastOnFocus(t, "cast_fol"); }
+        { string t = LowestAllyInRange("Flash of Light"); if (t != null) { ThrottleRestart("cast_gcd"); return CastOnFocus(t, "cast_fol"); } }
+
         return false;
     }
 
@@ -94,7 +131,7 @@ public class HolyPaladinPvE : Rotation
     private bool RunDungeonGambits(int mapId)
     {
         if (!IsInCombat()) return false;
-        if (!ThrottleIsOpen("dispel_throttle", 1500)) return false;
+        if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         switch (mapId)
         {
             case 480: return TryDispel("Aqua Bomb");
@@ -115,7 +152,7 @@ public class HolyPaladinPvE : Rotation
             case 2501: return TryDispel("Infected Pinions");
             case 2097: case 2098: case 2099:
                 if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
-                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { ThrottleRestart("dispel_throttle"); return CastOnFocus(t, "cast_cleanse"); } }
+                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); return CastOnFocus(t, "cast_cleanse"); } }
                 return false;
             default: return false;
         }
@@ -126,21 +163,24 @@ public class HolyPaladinPvE : Rotation
         if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
         string t = GetAllyWithDebuff(debuff, "Cleanse");
         if (t == null) return false;
-        ThrottleRestart("dispel_throttle"); return CastOnFocus(t, "cast_cleanse");
+        Log("Dispelling " + debuff + " on " + t);
+        ThrottleRestart("dispel_cd"); return CastOnFocus(t, "cast_cleanse");
     }
     private bool TryDispelStacks(string debuff, int min)
     {
         if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff, min)) return false;
         string t = GetAllyWithMostStacks(debuff, "Cleanse");
         if (t == null) return false;
-        ThrottleRestart("dispel_throttle"); return CastOnFocus(t, "cast_cleanse");
+        Log("Dispelling " + debuff + " on " + t);
+        ThrottleRestart("dispel_cd"); return CastOnFocus(t, "cast_cleanse");
     }
     private bool TryBof(string debuff)
     {
         if (!IsSpellReady("Blessing of Freedom") || !AnyAllyHasDebuff(debuff)) return false;
         string t = GetAllyWithDebuff(debuff, "Blessing of Freedom");
         if (t == null) return false;
-        ThrottleRestart("dispel_throttle"); Inferno.StopCasting(); return CastOnFocus(t, "cast_bof");
+        Log("Casting Blessing of Freedom on " + t + " for " + debuff);
+        ThrottleRestart("dispel_cd"); Inferno.StopCasting(); return CastOnFocus(t, "cast_bof");
     }
 
     // -- Conditions --
@@ -187,9 +227,9 @@ public class HolyPaladinPvE : Rotation
     }
 
     // -- Cast --
-    private bool CastOnFocus(string unit, string macro) { Inferno.Cast("focus_" + unit); _queuedAction = macro; ThrottleRestart("heal_throttle"); return true; }
-    private bool CastPersonal(string s) { Inferno.Cast(s); ThrottleRestart("heal_throttle"); return true; }
-    private bool CastOnEnemy(string s) { Inferno.Cast(s); ThrottleRestart("dmg_throttle"); return true; }
+    private bool CastOnFocus(string unit, string macro) { Inferno.Cast("focus_" + unit); _queuedAction = macro; return true; }
+    private bool CastPersonal(string s) { Inferno.Cast(s); return true; }
+    private bool CastOnEnemy(string s) { Inferno.Cast(s); return true; }
     private bool ProcessQueue() { if (_queuedAction == null) return false; string a = _queuedAction; _queuedAction = null; Inferno.Cast(a, true); return true; }
 
     // -- Selectors (continued) --
@@ -208,8 +248,12 @@ public class HolyPaladinPvE : Rotation
     private void ThrottleRestart(string k) { _throttleTimestamps[k] = NowMs(); }
 
     // -- Log --
-    private void Log(string msg) { if (GetCheckBox("Enable Logging")) Inferno.PrintMessage(msg, Color.White); }
+    private void Log(string msg)
+    {
+        if (!GetCheckBox("Enable Logging")) return;
+        Inferno.PrintMessage(msg, Color.White);
+        if (_logFile != null) { try { File.AppendAllText(_logFile, DateTime.Now.ToString("HH:mm:ss.fff") + " " + msg + "\n"); } catch { } }
+    }
 }
 
 }
-
