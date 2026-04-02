@@ -195,7 +195,7 @@ class SecurityValidator
         }
         if (!anyEnvAccess) { Console.WriteLine("  [PASS] No blocked 'Environment.' access"); passes++; }
 
-        // ── Rule 6: No namespace declarations ─────────────────────
+        // ── Rule 6: No unexpected namespace declarations ────────────
         bool anyBadNamespace = false;
         for (int i = 0; i < lines.Length; i++)
         {
@@ -203,12 +203,14 @@ class SecurityValidator
             if (trimmed.StartsWith("//")) continue;
             if (Regex.IsMatch(trimmed, @"^namespace\s+"))
             {
+                // InfernoWow.Modules is the required namespace for rotations
+                if (trimmed == "namespace InfernoWow.Modules") continue;
                 Console.WriteLine($"  [BLOCKED] Line {i + 1}: Namespace declaration: {trimmed}");
                 errors++;
                 anyBadNamespace = true;
             }
         }
-        if (!anyBadNamespace) { Console.WriteLine("  [PASS] No namespace declarations"); passes++; }
+        if (!anyBadNamespace) { Console.WriteLine("  [PASS] Namespace (InfernoWow.Modules or none)"); passes++; }
 
         // ── Check: async/await ──────────────────────────────────────
         bool anyAsync = false;

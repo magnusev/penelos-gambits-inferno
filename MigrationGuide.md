@@ -1,4 +1,4 @@
-﻿# Migration Guide: OOP Gambit System → Single-File Functional Style
+﻿﻿# Migration Guide: OOP Gambit System → Single-File Functional Style
 
 > **📁 Proof of Concept:** See [`poc/`](poc/) for a working single-file rotation that passes both compilation and security validation. Run `dotnet build poc/CompileCheck/CompileCheck.csproj` and `dotnet run --project poc/SecurityValidator/SecurityValidator.csproj` to verify.
 
@@ -12,11 +12,12 @@ The Inferno runtime security validator enforces strict constraints on loaded rot
 | **Allowed base classes** | `Rotation`, `Plugin` (only these two may appear in `: BaseClass`) |
 | **No namespace declarations** | The rotation file must NOT have any `namespace` wrapper. The class is top-level. `Rotation` and `Setting` are provided by the runtime at the top level; `Inferno` is in `InfernoWow.API`. |
 | **One class per file** | Only a single class definition is permitted in the loaded `.cs` file |
-| **No long string literals** | Strings > ~2000 chars are blocked as "potential encoded payload" |
-| **No banned namespaces** | `System.Diagnostics`, `System.Text`, `System.Net.Http`, `System.Threading.Tasks`, `InfernoWow.Modules` are all blocked |
+| **No long string literals** | Strings > ~2000 chars are blocked as "potential encoded payload". Also avoid repeated special/unicode characters (e.g. `═══`) in comments — multi-byte UTF-8 chars may inflate byte counts and trigger this check. |
+| **No banned namespaces** | `System.Diagnostics`, `System.Text`, `System.Net.Http`, `System.Threading.Tasks` are all blocked |
 | **No `Environment.` access** | ALL `Environment.` references are blocked (pattern-matched). This includes `System.Environment.TickCount`. Use `DateTime.UtcNow` instead. |
 | **Comments are scanned too** | The validator does **naive text pattern matching** — it does NOT skip `//` comments or `///` doc-comments. Mentioning banned words like `Stopwatch`, `System.Diagnostics`, or even `class hierarchy` in a comment will trigger a block. |
 | **C# version: no value tuples** | The runtime compiler does NOT support C# 7+ value tuples `(int, string)`. Use if-chains or plain methods instead of `List<(int, string, Func<bool>, Func<bool>)>`. |
+| **API doc bug: `Health()` returns raw HP** | Despite the API doc saying `Health(unit)` returns "Current HP percentage (0-100)", it actually returns **raw HP** (e.g. `369540`). Use `MaxHealth()` to calculate percentage: `(long)Health * 100L / MaxHealth`. Cast to `long` to avoid int overflow. |
 
 The current build system concatenates ~70 separate `.cs` files into one mega-file. Every custom class (conditions, actions, selectors, gambit sets, units, groups, etc.) becomes a separate class definition in that file — **all of which are blocked**.
 

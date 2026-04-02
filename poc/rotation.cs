@@ -8,298 +8,271 @@ using InfernoWow.API;
 namespace InfernoWow.Modules
 {
 
-// POC: Flash of Light on lowest HP team member
-    public class FlashOfLightPOC : Rotation
+public class FlashOfLightPOC : Rotation
+{
+    private string _queuedAction = null;
+    private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
+    private string _logFile = null;
+
+    public override void LoadSettings()
     {
-        // ═══════════════════════════════════════════════════════
-        //  STATE
-        // ═══════════════════════════════════════════════════════
+        Settings.Add(new Setting("Flash of Light Threshold", 1, 100, 95));
+        Settings.Add(new Setting("Enable Logging", true));
+    }
 
-        // ActionQueuer replacement — queued macro for next tick
-        private string _queuedAction = null;
+    public override void Initialize()
+    {
+        Spellbook.Add("Flash of Light");
+        Spellbook.Add("Cleanse");
 
-        // Throttler replacement — keyed timestamps using DateTime
-        private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
+        Macros.Add("cast_flash_of_light", "/cast [@focus] Flash of Light");
+        Macros.Add("cast_cleanse", "/cast [@focus] Cleanse");
 
-        // Logger — file path for file-based logging (System.IO is allowed)
-        private string _logFile = null;
+        Macros.Add("focus_player", "/focus player");
+        for (int i = 1; i <= 4; i++)
+            Macros.Add("focus_party" + i, "/focus party" + i);
+        for (int i = 1; i <= 28; i++)
+            Macros.Add("focus_raid" + i, "/focus raid" + i);
 
-        // ═══════════════════════════════════════════════════════
-        //  ROTATION LIFECYCLE
-        // ═══════════════════════════════════════════════════════
+        _logFile = "poc_flashoflight_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
+        Inferno.PrintMessage("POC Flash of Light rotation loaded!", Color.Green);
+        Log("Initialize complete");
+    }
 
-        public override void LoadSettings()
+    public override bool CombatTick()
+    {
+        if (Inferno.IsDead("player")) return false;
+        if (ProcessQueue()) return true;
+
+        if (ThrottleIsOpen("diag_tick", 2000))
         {
-            Settings.Add(new Setting("Flash of Light Threshold", 1, 100, 95));
-            Settings.Add(new Setting("Enable Logging", true));
-        }
-
-        public override void Initialize()
-        {
-            // --- Spellbook ---
-            Spellbook.Add("Flash of Light");
-            Spellbook.Add("Cleanse");
-
-            // --- Macros: focus-cast patterns ---
-            Macros.Add("cast_flash_of_light", "/cast [@focus] Flash of Light");
-            Macros.Add("cast_cleanse", "/cast [@focus] Cleanse");
-
-            // --- Macros: focus targeting (party) ---
-            Macros.Add("focus_player", "/focus player");
-            for (int i = 1; i <= 4; i++)
-                Macros.Add("focus_party" + i, "/focus party" + i);
-
-            // --- Macros: focus targeting (raid) ---
-            for (int i = 1; i <= 28; i++)
-                Macros.Add("focus_raid" + i, "/focus raid" + i);
-
-            // --- Logger init ---
-            _logFile = "poc_flashoflight_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
-
-            Inferno.PrintMessage("POC Flash of Light rotation loaded!", Color.Green);
-            Log("Initialize complete");
-        }
-
-        public override bool CombatTick()
-        {
-            if (Inferno.IsDead("player")) return false;
-
-            // Process queued macro from previous tick first
-            if (ProcessQueue()) return true;
-
-            int mapId = Inferno.GetMapID();
-
-            // Dungeon-specific gambits (highest priority)
-            if (RunDungeonGambits(mapId)) return true;
-
-            // Default heal gambits
-            if (RunHealGambits()) return true;
-
-            // Damage fallback (empty for this POC)
-            if (RunDmgGambits()) return true;
-
-            return false;
-        }
-
-        public override bool OutOfCombatTick()
-        {
-            return CombatTick();
-        }
-
-        public override void OnStop()
-        {
-            Log("Rotation stopped");
-        }
-
-        // ═══════════════════════════════════════════════════════
-        //  GAMBIT CHAINS (if-chain style — replaces GambitSet + Gambit)
-        // ═══════════════════════════════════════════════════════
-
-        private bool RunHealGambits()
-        {
-            int threshold = GetSlider("Flash of Light Threshold");
-
-            // Flash of Light on lowest ally under threshold
-            if (IsInCombat())
+            ThrottleRestart("diag_tick");
+            var members = GetGroupMembers();
+            string memberInfo = "";
+            foreach (string m in members)
             {
-                string target = LowestAllyUnder(threshold, "Flash of Light");
-                if (target != null)
-                {
-                    Log("Casting Flash of Light on " + target + " (HP: " + Inferno.Health(target) + "%)");
-                    return CastOnFocus(target, "cast_flash_of_light");
-                }
+                memberInfo += m + "=" + HealthPct(m) + "% ";
             }
-
-            return false;
+            Log("Tick: combat=" + Inferno.InCombat("player")
+                + " group=" + members.Count
+                + " inParty=" + Inferno.InParty()
+                + " inRaid=" + Inferno.InRaid()
+                + " groupSize=" + Inferno.GroupSize()
+                + " | " + memberInfo);
         }
 
-        private bool RunDmgGambits()
+        int mapId = Inferno.GetMapID();
+        if (RunDungeonGambits(mapId)) return true;
+        if (RunHealGambits()) return true;
+        if (RunDmgGambits()) return true;
+        return false;
+    }
+
+    public override bool OutOfCombatTick()
+    {
+        return CombatTick();
+    }
+
+    public override void OnStop()
+    {
+        Log("Rotation stopped");
+    }
+
+    private bool RunHealGambits()
+    {
+        if (!ThrottleIsOpen("cast_throttle", 2000)) return false;
+
+        int threshold = GetSlider("Flash of Light Threshold");
+        string target = LowestAllyUnder(threshold, "Flash of Light");
+        if (target != null)
         {
-            // Empty for this POC
-            return false;
+            Log("Casting Flash of Light on " + target + " (" + HealthPct(target) + "%)");
+            return CastOnFocus(target, "cast_flash_of_light");
         }
 
-        private bool RunDungeonGambits(int mapId)
+        if (ThrottleIsOpen("diag_noheal", 3000))
         {
-            switch (mapId)
+            ThrottleRestart("diag_noheal");
+            var members = GetGroupMembers();
+            string reason = "No heal target t=" + threshold;
+            foreach (string m in members)
             {
-                case 480: // Proving Grounds — dispel Aqua Bomb before healing
-                    return RunProvingGroundsGambits();
-                default:
-                    return false;
+                if (Inferno.IsDead(m))
+                    reason += " | " + m + "=DEAD";
+                else if (HealthPct(m) >= threshold)
+                    reason += " | " + m + "=" + HealthPct(m) + "%ok";
+                else if (!Inferno.SpellInRange("Flash of Light", m))
+                    reason += " | " + m + "=" + HealthPct(m) + "%oor";
+                else
+                    reason += " | " + m + "=" + HealthPct(m) + "%rdy";
             }
+            Log(reason);
         }
 
-        private bool RunProvingGroundsGambits()
+        return false;
+    }
+
+    private bool RunDmgGambits()
+    {
+        return false;
+    }
+
+    private bool RunDungeonGambits(int mapId)
+    {
+        switch (mapId)
         {
-            // Dispel Aqua Bomb
-            if (IsInCombat()
-                && IsSpellReady("Cleanse")
-                && AnyAllyHasDebuff("Aqua Bomb"))
-            {
-                string target = GetAllyWithDebuff("Aqua Bomb", "Cleanse");
-                if (target != null)
-                {
-                    ThrottleRestart("dispel_aqua_bomb");
-                    Log("Dispelling Aqua Bomb on " + target);
-                    return CastOnFocus(target, "cast_cleanse");
-                }
-            }
-
-            return false;
-        }
-
-        // ═══════════════════════════════════════════════════════
-        //  CONDITION HELPERS
-        // ═══════════════════════════════════════════════════════
-
-        private bool IsInCombat()
-        {
-            return Inferno.InCombat("player");
-        }
-
-        private bool IsSpellReady(string spell)
-        {
-            return Inferno.SpellCooldown(spell) <= 200;
-        }
-
-        private bool AnyAllyHasDebuff(string debuff)
-        {
-            return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(debuff, u, false));
-        }
-
-        // ═══════════════════════════════════════════════════════
-        //  SELECTOR HELPERS
-        // ═══════════════════════════════════════════════════════
-
-        private string LowestAllyUnder(int hpThreshold, string spell)
-        {
-            return GetGroupMembers()
-                .Where(u => !Inferno.IsDead(u))
-                .Where(u => Inferno.Health(u) < hpThreshold)
-                .Where(u => Inferno.SpellInRange(spell, u))
-                .OrderBy(u => Inferno.Health(u))
-                .FirstOrDefault();
-        }
-
-        private string GetAllyWithDebuff(string debuff, string spell)
-        {
-            return GetGroupMembers()
-                .Where(u => !Inferno.IsDead(u))
-                .Where(u => Inferno.HasDebuff(debuff, u, false))
-                .Where(u => Inferno.SpellInRange(spell, u))
-                .FirstOrDefault();
-        }
-
-        // ═══════════════════════════════════════════════════════
-        //  GROUP MEMBER DETECTION
-        // ═══════════════════════════════════════════════════════
-
-        private List<string> GetGroupMembers()
-        {
-            var members = new List<string>();
-
-            if (Inferno.InRaid())
-            {
-                int size = Inferno.GroupSize();
-                for (int i = 1; i <= size; i++)
-                {
-                    string token = "raid" + i;
-                    if (!string.IsNullOrEmpty(Inferno.UnitName(token)))
-                        members.Add(token);
-                }
-            }
-            else if (Inferno.InParty())
-            {
-                members.Add("player");
-                int size = Inferno.GroupSize();
-                for (int i = 1; i < size; i++)
-                {
-                    string token = "party" + i;
-                    if (!string.IsNullOrEmpty(Inferno.UnitName(token)))
-                        members.Add(token);
-                }
-            }
-            else
-            {
-                members.Add("player");
-            }
-
-            return members;
-        }
-
-        // ═══════════════════════════════════════════════════════
-        //  CAST HELPERS
-        // ═══════════════════════════════════════════════════════
-
-        private bool CastOnFocus(string unitToken, string macroName)
-        {
-            Inferno.Cast("focus_" + unitToken);
-            _queuedAction = macroName;
-            return true;
-        }
-
-        private bool ProcessQueue()
-        {
-            if (_queuedAction == null) return false;
-            string action = _queuedAction;
-            _queuedAction = null;
-            Inferno.Cast(action, true);
-            return true;
-        }
-
-        // ═══════════════════════════════════════════════════════
-        //  THROTTLE HELPERS
-        // ═══════════════════════════════════════════════════════
-
-        private long GetTimestampMs()
-        {
-            return DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
-        }
-
-        private bool ThrottleIsOpen(string key, int intervalMs)
-        {
-            if (!_throttleTimestamps.ContainsKey(key)) return true;
-            return (GetTimestampMs() - _throttleTimestamps[key]) >= intervalMs;
-        }
-
-        private void ThrottleRestart(string key)
-        {
-            _throttleTimestamps[key] = GetTimestampMs();
-        }
-
-        // ═══════════════════════════════════════════════════════
-        //  LOGGING
-        // ═══════════════════════════════════════════════════════
-
-        private void Log(string message)
-        {
-            if (!GetCheckBox("Enable Logging")) return;
-
-            Inferno.PrintMessage(message, Color.White);
-
-            if (_logFile != null)
-            {
-                try
-                {
-                    File.AppendAllText(_logFile,
-                        DateTime.Now.ToString("HH:mm:ss.fff") + " " + message + "\n");
-                }
-                catch
-                {
-                    // Swallow — file logging is best-effort
-                }
-            }
-        }
-
-        private void LogThrottled(string key, int intervalMs, string message)
-        {
-            if (ThrottleIsOpen(key, intervalMs))
-            {
-                ThrottleRestart(key);
-                Log(message);
-            }
+            case 480:
+                return RunProvingGroundsGambits();
+            default:
+                return false;
         }
     }
+
+    private bool RunProvingGroundsGambits()
+    {
+        if (IsInCombat()
+            && IsSpellReady("Cleanse")
+            && AnyAllyHasDebuff("Aqua Bomb"))
+        {
+            string target = GetAllyWithDebuff("Aqua Bomb", "Cleanse");
+            if (target != null)
+            {
+                ThrottleRestart("dispel_aqua_bomb");
+                Log("Dispelling Aqua Bomb on " + target);
+                return CastOnFocus(target, "cast_cleanse");
+            }
+        }
+        return false;
+    }
+
+    private bool IsInCombat()
+    {
+        return Inferno.InCombat("player");
+    }
+
+    private bool IsSpellReady(string spell)
+    {
+        return Inferno.SpellCooldown(spell) <= 200;
+    }
+
+    private bool AnyAllyHasDebuff(string debuff)
+    {
+        return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(debuff, u, false));
+    }
+
+    private int HealthPct(string unit)
+    {
+        long max = Inferno.MaxHealth(unit);
+        if (max <= 0) return 100;
+        return (int)((long)Inferno.Health(unit) * 100L / max);
+    }
+
+    private string LowestAllyUnder(int hpThreshold, string spell)
+    {
+        return GetGroupMembers()
+            .Where(u => !Inferno.IsDead(u))
+            .Where(u => HealthPct(u) < hpThreshold)
+            .Where(u => Inferno.SpellInRange(spell, u))
+            .OrderBy(u => HealthPct(u))
+            .FirstOrDefault();
+    }
+
+    private string GetAllyWithDebuff(string debuff, string spell)
+    {
+        return GetGroupMembers()
+            .Where(u => !Inferno.IsDead(u))
+            .Where(u => Inferno.HasDebuff(debuff, u, false))
+            .Where(u => Inferno.SpellInRange(spell, u))
+            .FirstOrDefault();
+    }
+
+    private List<string> GetGroupMembers()
+    {
+        var members = new List<string>();
+        if (Inferno.InRaid())
+        {
+            int size = Inferno.GroupSize();
+            for (int i = 1; i <= size; i++)
+            {
+                string token = "raid" + i;
+                if (!string.IsNullOrEmpty(Inferno.UnitName(token)))
+                    members.Add(token);
+            }
+        }
+        else if (Inferno.InParty())
+        {
+            members.Add("player");
+            int size = Inferno.GroupSize();
+            for (int i = 1; i < size; i++)
+            {
+                string token = "party" + i;
+                if (!string.IsNullOrEmpty(Inferno.UnitName(token)))
+                    members.Add(token);
+            }
+        }
+        else
+        {
+            members.Add("player");
+        }
+        return members;
+    }
+
+    private bool CastOnFocus(string unitToken, string macroName)
+    {
+        Inferno.Cast("focus_" + unitToken);
+        _queuedAction = macroName;
+        ThrottleRestart("cast_throttle");
+        return true;
+    }
+
+    private bool ProcessQueue()
+    {
+        if (_queuedAction == null) return false;
+        string action = _queuedAction;
+        _queuedAction = null;
+        Inferno.Cast(action, true);
+        return true;
+    }
+
+    private long GetTimestampMs()
+    {
+        return DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+    }
+
+    private bool ThrottleIsOpen(string key, int intervalMs)
+    {
+        if (!_throttleTimestamps.ContainsKey(key)) return true;
+        return (GetTimestampMs() - _throttleTimestamps[key]) >= intervalMs;
+    }
+
+    private void ThrottleRestart(string key)
+    {
+        _throttleTimestamps[key] = GetTimestampMs();
+    }
+
+    private void Log(string message)
+    {
+        if (!GetCheckBox("Enable Logging")) return;
+        Inferno.PrintMessage(message, Color.White);
+        if (_logFile != null)
+        {
+            try
+            {
+                File.AppendAllText(_logFile,
+                    DateTime.Now.ToString("HH:mm:ss.fff") + " " + message + "\n");
+            }
+            catch { }
+        }
+    }
+
+    private void LogThrottled(string key, int intervalMs, string message)
+    {
+        if (ThrottleIsOpen(key, intervalMs))
+        {
+            ThrottleRestart(key);
+            Log(message);
+        }
+    }
+}
 
 }
