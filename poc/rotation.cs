@@ -12,7 +12,6 @@ public class HolyPaladinPvE : Rotation
 {
     private string _queuedAction = null;
     private string _lastLoggedAction = null;
-    private long _castLockoutUntil = 0;
     private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
     private const int HOLY_POWER = 9;
     private const int HEALTHSTONE_ID = 5512;
@@ -64,6 +63,8 @@ public class HolyPaladinPvE : Rotation
     public override bool CombatTick()
     {
         if (Inferno.IsDead("player")) return false;
+        
+        // Process queued action first (matches ActionQueuer.CastQueuedActionIfExists)
         if (ProcessQueue()) return true;
 
         // Periodic status log
@@ -77,25 +78,12 @@ public class HolyPaladinPvE : Rotation
         }
 
         int mapId = Inferno.GetMapID();
-
-        // If player is mid-cast (Flash of Light, Holy Light etc.), only allow
-        // emergency interrupts (dispels). Do NOT re-evaluate normal heal/dmg
-        // priorities — that would re-queue a macro and restart the cast.
-        if (IsPlayerCasting())
-        {
-            if (RunDungeonGambits(mapId)) return true;
-            return false;
-        }
-
-        // Wait for the actual game GCD to finish before evaluating new actions.
-        // The cast lockout covers the brief window where GCD() hasn't registered yet.
-        // return false (not true) so we don't trigger an immediate re-tick.
-        if (Inferno.GCD() > 0 || NowMs() < _castLockoutUntil) return false;
-
         if (RunDungeonGambits(mapId)) return true;
         if (RunHealGambits()) return true;
         if (RunDmgGambits()) return true;
-        return false;
+        
+        // Always return true to keep ticking (matches old PeneloRotation.Tick)
+        return true;
     }
 
     public override bool OutOfCombatTick() { return CombatTick(); }
@@ -188,8 +176,8 @@ public class HolyPaladinPvE : Rotation
                 return TryDispel("Poison Blades");
             case 2501: return TryDispel("Infected Pinions");
             case 2097: case 2098: case 2099:
-                if (Inferno.CanCast("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
-                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); Inferno.Cast("focus_" + t); _queuedAction = "cast_cleanse"; return true; } }
+                if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
+                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); Inferno.StopCasting(); Inferno.Cast("focus_" + t, QuickDelay: true); _queuedAction = "cast_cleanse"; return true; } }
                 return false;
             default: return false;
         }
@@ -197,46 +185,48 @@ public class HolyPaladinPvE : Rotation
 
     private bool TryDispel(string debuff)
     {
-        if (!Inferno.CanCast("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
+        if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
         if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithDebuff(debuff, "Cleanse");
         if (t == null) return false;
+        if (_queuedAction != null) return false;  // Don't interrupt if action queued
         Log("Dispelling " + debuff + " on " + t);
         ThrottleRestart("dispel_cd");
         Inferno.StopCasting();
-        Inferno.Cast("focus_" + t);
+        Inferno.Cast("focus_" + t, QuickDelay: true);
         _queuedAction = "cast_cleanse";
         return true;
     }
     private bool TryDispelStacks(string debuff, int min)
     {
-        if (!Inferno.CanCast("Cleanse") || !AnyAllyHasDebuff(debuff, min)) return false;
+        if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff, min)) return false;
         if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithMostStacks(debuff, "Cleanse");
         if (t == null) return false;
+        if (_queuedAction != null) return false;
         Log("Dispelling " + debuff + " on " + t);
         ThrottleRestart("dispel_cd");
         Inferno.StopCasting();
-        Inferno.Cast("focus_" + t);
+        Inferno.Cast("focus_" + t, QuickDelay: true);
         _queuedAction = "cast_cleanse";
         return true;
     }
     private bool TryBof(string debuff)
     {
-        if (!Inferno.CanCast("Blessing of Freedom") || !AnyAllyHasDebuff(debuff)) return false;
+        if (!IsSpellReady("Blessing of Freedom") || !AnyAllyHasDebuff(debuff)) return false;
         if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithDebuff(debuff, "Blessing of Freedom");
         if (t == null) return false;
+        if (_queuedAction != null) return false;
         Log("Casting Blessing of Freedom on " + t + " for " + debuff);
         ThrottleRestart("dispel_cd");
         Inferno.StopCasting();
-        Inferno.Cast("focus_" + t);
+        Inferno.Cast("focus_" + t, QuickDelay: true);
         _queuedAction = "cast_bof";
         return true;
     }
 
     // -- Conditions --
-    private bool IsPlayerCasting() { return Inferno.CastingID("player") != 0; }
     private bool IsInCombat() { return Inferno.InCombat("player"); }
     private bool IsSpellReady(string s) { return Inferno.SpellCooldown(s) <= 200; }
     private bool IsSettingOn(string s) { return GetCheckBox(s); }
@@ -297,19 +287,22 @@ public class HolyPaladinPvE : Rotation
     }
 
     // -- Cast --
-    private bool CastOnFocus(string unit, string macro) { Inferno.Cast("focus_" + unit); _queuedAction = macro; return true; }
-    private bool CastPersonal(string s) { if (!Inferno.CanCast(s)) return false; Inferno.Cast(s); _castLockoutUntil = NowMs() + 300; return true; }
-    private bool CastOnEnemy(string s) { if (!Inferno.CanCast(s, "target")) return false; Inferno.Cast(s); _castLockoutUntil = NowMs() + 300; return true; }
+    // Matches old ActionQueuer.QueueAction: don't overwrite if already queued
+    private bool CastOnFocus(string unit, string macro) 
+    { 
+        if (_queuedAction != null) return false;
+        Inferno.Cast("focus_" + unit, QuickDelay: true); 
+        _queuedAction = macro; 
+        return true; 
+    }
+    private bool CastPersonal(string s) { if (!Inferno.CanCast(s)) return false; Inferno.Cast(s); return true; }
+    private bool CastOnEnemy(string s) { if (!Inferno.CanCast(s, "target")) return false; Inferno.Cast(s); return true; }
     private bool ProcessQueue()
     {
         if (_queuedAction == null) return false;
-        string a = _queuedAction; _queuedAction = null;
-        if (a == "cast_cleanse" || a == "cast_bof") { Inferno.Cast("stop_cast", true); Inferno.Cast(a, true); }
-        else { Inferno.Cast(a, true); }
-        // Brief lockout: gives the game ~300ms to register the GCD/cast state
-        // before we re-evaluate. Prevents the race where GCD() returns 0
-        // because the game hasn't processed the cast command yet.
-        _castLockoutUntil = NowMs() + 300;
+        string a = _queuedAction; 
+        _queuedAction = null;
+        Inferno.Cast(a, QuickDelay: true);
         return true;
     }
 
