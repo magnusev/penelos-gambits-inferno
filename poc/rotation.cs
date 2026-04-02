@@ -62,8 +62,9 @@ public class HolyPaladinPvE : Rotation
 
     public override bool CombatTick()
     {
-        if (Inferno.IsDead("player")) return false;
-        
+        if (Inferno.IsDead("player")) return true;
+        if(Inferno.GCD() != 0) return true;
+
         // Process queued action first (matches ActionQueuer.CastQueuedActionIfExists)
         if (ProcessQueue()) return true;
 
@@ -97,19 +98,19 @@ public class HolyPaladinPvE : Rotation
         { Log("Using Healthstone (player " + HealthPct("player") + "%)"); Inferno.Cast("use_healthstone", QuickDelay: true); return true; }
 
         // Divine Protection if player under 75% (combat only)
-        if (IsInCombat() && IsSpellReady("Divine Protection") && UnitUnder("player", 75))
+        if (IsInCombat() && UnitUnder("player", 75) && Inferno.CanCast("Divine Protection"))
         { Log("Casting Divine Protection (player " + HealthPct("player") + "%)"); return CastPersonal("Divine Protection"); }
 
         // Avenging Wrath if 2+ under 60% (combat only)
-        if (IsInCombat() && IsSpellReady("Avenging Wrath") && GroupMembersUnder(60, 2))
+        if (IsInCombat() && GroupMembersUnder(60, 2) && Inferno.CanCast("Avenging Wrath"))
         { Log("Casting Avenging Wrath"); return CastPersonal("Avenging Wrath"); }
 
         // Divine Toll if 2+ under 80% and HolyPower < 3 (combat only)
-        if (IsInCombat() && IsSpellReady("Divine Toll") && GroupMembersUnder(80, 2) && PowerLessThan(3, HOLY_POWER))
+        if (IsInCombat() && GroupMembersUnder(80, 2) && PowerLessThan(3, HOLY_POWER))
         { string t = LowestAllyInRange("Divine Toll"); if (t != null) { Log("Casting Divine Toll on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_dt"); } }
 
         // Light of Dawn if 5+ under 95% and HP >= 4 (combat only, togglable)
-        if (IsSettingOn("Use Light of Dawn") && IsInCombat() && GroupMembersUnder(95, 5) && PowerAtLeast(4, HOLY_POWER))
+        if (IsSettingOn("Use Light of Dawn") && IsInCombat() && GroupMembersUnder(95, 5) && PowerAtLeast(4, HOLY_POWER) && Inferno.CanCast("Light of Dawn"))
         { Log("Casting Light of Dawn"); return CastPersonal("Light of Dawn"); }
 
         // Word of Glory if lowest under 90% and HP >= 3
@@ -136,10 +137,10 @@ public class HolyPaladinPvE : Rotation
     {
         if (IsSettingOn("Do DPS") && IsInCombat() && !TargetIsEnemy()) { Inferno.Cast("target_enemy", true); return true; }
 
-        if (IsSettingOn("Do DPS") && IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1))
+        if (IsSettingOn("Do DPS") && IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1) && Inferno.CanCast("Shield of the Righteous"))
         { Log("Casting Shield of the Righteous"); return CastPersonal("Shield of the Righteous"); }
 
-        if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && IsSpellReady("Judgment"))
+        if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && Inferno.CanCast("Judgment", "target"))
         { Log("Casting Judgment"); return CastOnEnemy("Judgment"); }
 
         // Flash of Light filler - always have something to do
@@ -177,7 +178,7 @@ public class HolyPaladinPvE : Rotation
             case 2501: return TryDispel("Infected Pinions");
             case 2097: case 2098: case 2099:
                 if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
-                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); Inferno.StopCasting(); Inferno.Cast("focus_" + t, QuickDelay: true); _queuedAction = "cast_cleanse"; return true; } }
+                { string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); if (t != null && _queuedAction == null) { Log("Dispelling Lasher Toxin on " + t); ThrottleRestart("dispel_cd"); Inferno.Cast("focus_" + t, QuickDelay: true); _queuedAction = "cast_cleanse"; return true; } }
                 return false;
             default: return false;
         }
@@ -189,10 +190,9 @@ public class HolyPaladinPvE : Rotation
         if (!ThrottleIsOpen("dispel_cd", 1500)) return false;
         string t = GetAllyWithDebuff(debuff, "Cleanse");
         if (t == null) return false;
-        if (_queuedAction != null) return false;  // Don't interrupt if action queued
+        if (_queuedAction != null) return false;
         Log("Dispelling " + debuff + " on " + t);
         ThrottleRestart("dispel_cd");
-        Inferno.StopCasting();
         Inferno.Cast("focus_" + t, QuickDelay: true);
         _queuedAction = "cast_cleanse";
         return true;
@@ -206,7 +206,6 @@ public class HolyPaladinPvE : Rotation
         if (_queuedAction != null) return false;
         Log("Dispelling " + debuff + " on " + t);
         ThrottleRestart("dispel_cd");
-        Inferno.StopCasting();
         Inferno.Cast("focus_" + t, QuickDelay: true);
         _queuedAction = "cast_cleanse";
         return true;
@@ -220,7 +219,6 @@ public class HolyPaladinPvE : Rotation
         if (_queuedAction != null) return false;
         Log("Casting Blessing of Freedom on " + t + " for " + debuff);
         ThrottleRestart("dispel_cd");
-        Inferno.StopCasting();
         Inferno.Cast("focus_" + t, QuickDelay: true);
         _queuedAction = "cast_bof";
         return true;
@@ -291,17 +289,18 @@ public class HolyPaladinPvE : Rotation
     private bool CastOnFocus(string unit, string macro) 
     { 
         if (_queuedAction != null) return false;
-        Inferno.Cast("focus_" + unit, QuickDelay: true); 
+        Inferno.Cast("focus_" + unit); 
         _queuedAction = macro; 
         return true; 
     }
-    private bool CastPersonal(string s) { if (!Inferno.CanCast(s)) return false; Inferno.Cast(s); return true; }
-    private bool CastOnEnemy(string s) { if (!Inferno.CanCast(s, "target")) return false; Inferno.Cast(s); return true; }
+    private bool CastPersonal(string s) { Inferno.Cast(s); return true; }
+    private bool CastOnEnemy(string s) { Inferno.Cast(s); return true; }
     private bool ProcessQueue()
     {
         if (_queuedAction == null) return false;
         string a = _queuedAction; 
         _queuedAction = null;
+        Log("Casting queued action: " + a);
         Inferno.Cast(a, QuickDelay: true);
         return true;
     }
