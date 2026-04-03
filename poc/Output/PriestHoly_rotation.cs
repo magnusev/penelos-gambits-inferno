@@ -244,43 +244,14 @@ private int HealthPct(string u)
 public override void LoadSettings()
 {
     Settings.Add(new Setting("Enable Logging", true));
-    Settings.Add(new Setting("Use Circle of Healing", true));
-    Settings.Add(new Setting("Use Prayer of Mending", true));
-    Settings.Add(new Setting("Do DPS", false));
     Settings.Add(new Setting("Healthstone HP %", 1, 100, 50));
 }
 public override void Initialize()
 {
-    Spellbook.Add("Circle of Healing");
-    Spellbook.Add("Desperate Prayer");
     Spellbook.Add("Dispel Magic");
-    Spellbook.Add("Divine Hymn");
-    Spellbook.Add("Divine Star");
-    Spellbook.Add("Flash Heal");
-    Spellbook.Add("Guardian Spirit");
-    Spellbook.Add("Halo");
-    Spellbook.Add("Heal");
-    Spellbook.Add("Holy Fire");
-    Spellbook.Add("Holy Word: Sanctify");
-    Spellbook.Add("Holy Word: Serenity");
-    Spellbook.Add("Mindgames");
-    Spellbook.Add("Power Word: Fortitude");
-    Spellbook.Add("Power Word: Life");
-    Spellbook.Add("Power Word: Shield");
-    Spellbook.Add("Prayer of Healing");
     Spellbook.Add("Prayer of Mending");
-    Spellbook.Add("Renew");
-    Spellbook.Add("Shadow Word: Death");
-    Spellbook.Add("Shadow Word: Pain");
     Spellbook.Add("Smite");
-    Macros.Add("cast_fh", "/cast [@focus] Flash Heal");
-    Macros.Add("cast_heal", "/cast [@focus] Heal");
-    Macros.Add("cast_renew", "/cast [@focus] Renew");
-    Macros.Add("cast_pws", "/cast [@focus] Power Word: Shield");
     Macros.Add("cast_pom", "/cast [@focus] Prayer of Mending");
-    Macros.Add("cast_serenity", "/cast [@focus] Holy Word: Serenity");
-    Macros.Add("cast_pwl", "/cast [@focus] Power Word: Life");
-    Macros.Add("cast_gs", "/cast [@focus] Guardian Spirit");
     Macros.Add("cast_dispel", "/cast [@focus] Dispel Magic");
     InitializeSharedComponents();
     _logFile = "penelos_priest_holy_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
@@ -288,23 +259,7 @@ public override void Initialize()
     Log("Initialize complete");
 }
 
-private bool HasPrayerOfMending(string unit)
-{
-    return Inferno.HasBuff("Prayer of Mending", unit, true);
-}
-private bool HasRenew(string unit)
-{
-    return Inferno.HasBuff("Renew", unit, true);
-}
-private bool HasShield(string unit)
-{
-    return Inferno.HasBuff("Power Word: Shield", unit, true) || Inferno.HasDebuff("Weakened Soul", unit, false);
-}
-private int RenewRemaining(string unit)
-{
-    if (!HasRenew(unit)) return 0;
-    return Inferno.BuffRemaining("Renew", unit, true);
-}
+
 
 private bool RunHealGambits()
 {
@@ -314,101 +269,13 @@ private bool RunHealGambits()
         Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
         return true; 
     }
-    if (IsInCombat() && UnitUnder("player", 60) && Inferno.CanCast("Desperate Prayer"))
-    { 
-        Log("Casting Desperate Prayer (player " + HealthPct("player") + "%)"); 
-        return CastPersonal("Desperate Prayer"); 
-    }
-    if (IsInCombat())
-    { 
-        string t = LowestAllyUnder(25, "Guardian Spirit"); 
-        if (t != null) 
-        { 
-            Log("Casting Guardian Spirit on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_gs"); 
-        } 
-    }
-    if (IsInCombat())
-    { 
-        string t = LowestAllyUnder(35, "Power Word: Life"); 
-        if (t != null) 
-        { 
-            Log("Casting Power Word: Life on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_pwl"); 
-        } 
-    }
-    if (IsInCombat() && GroupMembersUnder(50, 3) && Inferno.CanCast("Divine Hymn"))
-    { 
-        Log("Casting Divine Hymn"); 
-        return CastPersonal("Divine Hymn"); 
-    }
-    if (IsInCombat() && GroupMembersUnder(80, 3) && Inferno.CanCast("Holy Word: Sanctify"))
-    { 
-        Log("Casting Holy Word: Sanctify"); 
-        return CastPersonal("Holy Word: Sanctify"); 
-    }
-    if (IsSettingOn("Use Circle of Healing") && IsInCombat() && GroupMembersUnder(85, 3) && Inferno.CanCast("Circle of Healing"))
-    { 
-        Log("Casting Circle of Healing"); 
-        return CastPersonal("Circle of Healing"); 
-    }
-    if (IsInCombat() && GroupMembersUnder(90, 3) && CanCastWhileMoving("Prayer of Healing") && PowerAtLeast(25000, MANA))
-    { 
-        Log("Casting Prayer of Healing"); 
-        return CastPersonal("Prayer of Healing"); 
-    }
-    if (IsInCombat())
-    { 
-        string t = LowestAllyUnder(75, "Holy Word: Serenity"); 
-        if (t != null) 
-        { 
-            Log("Casting Holy Word: Serenity on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_serenity"); 
-        } 
-    }
-    if (IsInCombat() && CanCastWhileMoving("Flash Heal"))
-    { 
-        string t = LowestAllyUnder(65, "Flash Heal"); 
-        if (t != null) 
-        { 
-            Log("Casting Flash Heal on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_fh"); 
-        } 
-    }
-    if (IsSettingOn("Use Prayer of Mending") && IsInCombat())
+    if (Inferno.CanCast("Prayer of Mending"))
     { 
         string t = LowestAllyInRange("Prayer of Mending"); 
-        if (t != null && !HasPrayerOfMending(t)) 
-        { 
-            Log("Casting Prayer of Mending on " + t); 
-            return CastOnFocus(t, "cast_pom"); 
-        } 
-    }
-    if (IsInCombat())
-    { 
-        string t = LowestAllyUnder(90, "Power Word: Shield"); 
-        if (t != null && !HasShield(t)) 
-        { 
-            Log("Casting Power Word: Shield on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_pws"); 
-        } 
-    }
-    if (IsInCombat())
-    { 
-        string t = LowestAllyUnder(95, "Renew"); 
-        if (t != null && (!HasRenew(t) || RenewRemaining(t) < 3000)) 
-        { 
-            Log("Casting Renew on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_renew"); 
-        } 
-    }
-    if (IsInCombat() && CanCastWhileMoving("Heal") && PowerAtLeast(15000, MANA))
-    { 
-        string t = LowestAllyUnder(80, "Heal"); 
         if (t != null) 
         { 
-            Log("Casting Heal on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_heal"); 
+            Log("Casting Prayer of Mending on " + t + " (" + HealthPct(t) + "%)"); 
+            return CastOnFocus(t, "cast_pom"); 
         } 
     }
     return false;
@@ -416,54 +283,15 @@ private bool RunHealGambits()
 
 private bool RunDmgGambits()
 {
-    if (IsSettingOn("Do DPS") && IsInCombat() && !TargetIsEnemy()) 
+    if (IsInCombat() && !TargetIsEnemy()) 
     { 
         Inferno.Cast(MACRO_TARGET_ENEMY, true); 
         return true; 
     }
-    if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Mindgames", "target"))
-    { 
-        Log("Casting Mindgames"); 
-        return CastOnEnemy("Mindgames"); 
-    }
-    if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Holy Fire", "target"))
-    { 
-        Log("Casting Holy Fire"); 
-        return CastOnEnemy("Holy Fire"); 
-    }
-    if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Shadow Word: Death", "target") && HealthPct("target") < 20)
-    { 
-        Log("Casting Shadow Word: Death"); 
-        return CastOnEnemy("Shadow Word: Death"); 
-    }
-    if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Shadow Word: Pain", "target") && !Inferno.HasDebuff("Shadow Word: Pain", "target", true))
-    { 
-        Log("Casting Shadow Word: Pain"); 
-        return CastOnEnemy("Shadow Word: Pain"); 
-    }
-    if (IsSettingOn("Do DPS") && IsInCombat() && EnemiesInMelee(3) && Inferno.CanCast("Halo"))
-    { 
-        Log("Casting Halo"); 
-        return CastPersonal("Halo"); 
-    }
-    if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Divine Star"))
-    { 
-        Log("Casting Divine Star"); 
-        return CastPersonal("Divine Star"); 
-    }
     if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Smite", "target"))
     {
-        Log("Filler Smite on target"); 
+        Log("Casting Smite on target"); 
         return CastOnEnemy("Smite");
-    }
-    if (IsInCombat())
-    {
-        string t = LowestAllyInRange("Renew");
-        if (t != null && (!HasRenew(t) || RenewRemaining(t) < 3000)) 
-        { 
-            Log("Filler Renew on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_renew"); 
-        }
     }
     return false;
 }
