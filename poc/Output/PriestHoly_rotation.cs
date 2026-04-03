@@ -249,12 +249,16 @@ public override void LoadSettings()
 public override void Initialize()
 {
     Spellbook.Add("Dispel Magic");
+    Spellbook.Add("Flash Heal");
     Spellbook.Add("Holy Fire");
     Spellbook.Add("Holy Word: Chastise");
+    Spellbook.Add("Holy Word: Serenity");
     Spellbook.Add("Prayer of Mending");
     Spellbook.Add("Smite");
     Macros.Add("cast_pom", "/cast [@focus] Prayer of Mending");
     Macros.Add("cast_dispel", "/cast [@focus] Dispel Magic");
+    Macros.Add("cast_flash_heal", "/cast [@focus] Flash Heal");
+    Macros.Add("cast_serenity", "/cast [@focus] Holy Word: Serenity");
     InitializeSharedComponents();
     _logFile = "penelos_priest_holy_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
     Inferno.PrintMessage("Penelos Gambits - Holy Priest loaded!", Color.Green);
@@ -271,13 +275,49 @@ private bool RunHealGambits()
         Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
         return true; 
     }
+    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") >= 2)
+    { 
+        string target = LowestAllyInRange("Holy Word: Serenity"); 
+        if (target != null) 
+        { 
+            Log("Casting Holy Word: Serenity on " + target + " (" + HealthPct(target) + "%) [2 charges]"); 
+            return CastOnFocus(target, "cast_serenity"); 
+        } 
+    }
+    if (IsInCombat() && Inferno.HasBuff("Surge of Light", "player", true))
+    { 
+        string target = LowestAllyUnder(90, "Flash Heal"); 
+        if (target != null) 
+        { 
+            Log("Casting Flash Heal (Surge of Light) on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_flash_heal"); 
+        } 
+    }
+    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") >= 1)
+    { 
+        string target = LowestAllyUnder(80, "Holy Word: Serenity"); 
+        if (target != null) 
+        { 
+            Log("Casting Holy Word: Serenity on " + target + " (" + HealthPct(target) + "%) [1 charge]"); 
+            return CastOnFocus(target, "cast_serenity"); 
+        } 
+    }
+    if (IsInCombat() && !Inferno.IsMoving("player"))
+    { 
+        string target = LowestAllyUnder(85, "Flash Heal"); 
+        if (target != null) 
+        { 
+            Log("Casting Flash Heal on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_flash_heal"); 
+        } 
+    }
     if (IsInCombat() && Inferno.CanCast("Prayer of Mending"))
     { 
-        string t = LowestAllyInRange("Prayer of Mending"); 
-        if (t != null) 
+        string target = LowestAllyInRange("Prayer of Mending"); 
+        if (target != null) 
         { 
-            Log("Casting Prayer of Mending on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_pom"); 
+            Log("Casting Prayer of Mending on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_pom"); 
         } 
     }
     return false;
