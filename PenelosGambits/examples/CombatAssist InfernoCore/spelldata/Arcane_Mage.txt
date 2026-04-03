@@ -1,9 +1,0 @@
-Arcane Barrage=44425- 
-Arcane Blast=30451- 
-Arcane Missiles=5143- 
-Arcane Orb=153626- 
-Arcane Surge=365350- 
-Arcane Explosion=1449-
-Arcane Pulse=1241462- 
-Evocation=12051-
-Touch of the Magi=321507- gcd
