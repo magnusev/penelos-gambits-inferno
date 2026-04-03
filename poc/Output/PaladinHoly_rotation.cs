@@ -55,15 +55,42 @@ private void Log(string msg)
     }
 }
 
-private bool IsInCombat() { return Inferno.InCombat("player"); }
-private bool IsSpellReady(string s) { return Inferno.SpellCooldown(s) <= 200; }
-private bool IsSettingOn(string s) { return GetCheckBox(s); }
-private bool HasHealthstone() { return Inferno.CustomFunction("HasHealthstone") == 1; }
-private bool TargetIsEnemy() { return Inferno.UnitCanAttack("player", "target"); }
-private bool UnitUnder(string u, int p) { return HealthPct(u) < p; }
-private bool EnemiesInMelee(int n) { return Inferno.EnemiesNearUnit(8, "player") >= n; }
-private bool PowerAtLeast(int n, int t) { return Inferno.Power("player", t) >= n; }
-private bool PowerLessThan(int n, int t) { return Inferno.Power("player", t) < n; }
+private bool IsInCombat()
+{
+    return Inferno.InCombat("player");
+}
+private bool IsSpellReady(string s)
+{
+    return Inferno.SpellCooldown(s) <= 200;
+}
+private bool IsSettingOn(string s)
+{
+    return GetCheckBox(s);
+}
+private bool HasHealthstone()
+{
+    return Inferno.CustomFunction("HasHealthstone") == 1;
+}
+private bool TargetIsEnemy()
+{
+    return Inferno.UnitCanAttack("player", "target");
+}
+private bool UnitUnder(string u, int p)
+{
+    return HealthPct(u) < p;
+}
+private bool EnemiesInMelee(int n)
+{
+    return Inferno.EnemiesNearUnit(8, "player") >= n;
+}
+private bool PowerAtLeast(int n, int t)
+{
+    return Inferno.Power("player", t) >= n;
+}
+private bool PowerLessThan(int n, int t)
+{
+    return Inferno.Power("player", t) < n;
+}
 private bool GroupMembersUnder(int pct, int min)
 {
     return GetGroupMembers().Count(u => !Inferno.IsDead(u) && HealthPct(u) < pct) >= min;
@@ -78,9 +105,12 @@ private bool AnyAllyHasDebuff(string d, int stacks)
 }
 private bool CanCastWhileMoving(string spell)
 {
-    if (!Inferno.IsMoving("player")) return true;
-    if (spell == "Flash of Light" && Inferno.HasBuff("Infusion of Light", "player", true)) return true;
-    if (spell == "Holy Light" && Inferno.HasBuff("Hand of Divinity", "player", true)) return true;
+    if (!Inferno.IsMoving("player"))
+        return true;
+    if (spell == "Flash of Light" && Inferno.HasBuff("Infusion of Light", "player", true))
+        return true;
+    if (spell == "Holy Light" && Inferno.HasBuff("Hand of Divinity", "player", true))
+        return true;
     return false;
 }
 
@@ -144,6 +174,7 @@ private int HealthPct(string u)
     return (Inferno.Health(u) * 100) / mx; 
 }
 
+private const int MANA = 0;
 private const int HOLY_POWER = 9;
 private const int HEALTHSTONE_ID = 5512;
 private const int DIAGNOSTIC_LOG_INTERVAL_MS = 2000;
@@ -293,7 +324,7 @@ private bool RunHealGambits()
             return CastOnFocus(t, "cast_hs"); 
         } 
     }
-    if (IsInCombat() && CanCastWhileMoving("Holy Light"))
+    if (IsInCombat() && CanCastWhileMoving("Holy Light") && PowerAtLeast(20000, MANA))
     { 
         string t = LowestAllyUnder(60, "Holy Light"); 
         if (t != null) 

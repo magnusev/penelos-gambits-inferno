@@ -3,6 +3,7 @@
 // ========================================
 
 // Constants
+private const int MANA = 0;
 private const int HOLY_POWER = 9;
 private const int HEALTHSTONE_ID = 5512;
 private const int DIAGNOSTIC_LOG_INTERVAL_MS = 2000;

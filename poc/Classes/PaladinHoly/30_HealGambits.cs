@@ -68,7 +68,7 @@ private bool RunHealGambits()
     }
 
     // Holy Light if lowest under 60%
-    if (IsInCombat() && CanCastWhileMoving("Holy Light"))
+    if (IsInCombat() && CanCastWhileMoving("Holy Light") && PowerAtLeast(20000, MANA))
     { 
         string t = LowestAllyUnder(60, "Holy Light"); 
         if (t != null) 
