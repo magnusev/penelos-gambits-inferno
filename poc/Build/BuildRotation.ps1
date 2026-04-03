@@ -1,0 +1,146 @@
+﻿param(
+    [string]$Class = "PaladinHoly",
+    [string]$ClassName = "HolyPaladinPvE",
+    [string]$OutputDir = "C:\libs\Live\Rotations\Retail",
+    [switch]$LocalOnly
+)
+
+$ErrorActionPreference = "Stop"
+
+# Paths
+$scriptDir = Split-Path -Parent $PSCommandPath
+$pocRoot = Split-Path -Parent $scriptDir
+$componentsDir = Join-Path $pocRoot "Components"
+$classDir = Join-Path $pocRoot "Classes\$Class"
+$localOutput = Join-Path $pocRoot "Output"
+$rotationFolder = Join-Path $OutputDir "Penelos$Class"
+$outputFile = Join-Path $rotationFolder "rotation.cs"
+$localFile = Join-Path $localOutput "${Class}_rotation.cs"
+
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "Building $Class rotation..." -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+
+# Verify directories exist
+if (-not (Test-Path $componentsDir)) {
+    Write-Host "❌ Components directory not found: $componentsDir" -ForegroundColor Red
+    exit 1
+}
+if (-not (Test-Path $classDir)) {
+    Write-Host "❌ Class directory not found: $classDir" -ForegroundColor Red
+    exit 1
+}
+
+# Header template
+$header = @"
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.IO;
+using InfernoWow.API;
+
+namespace InfernoWow.Modules
+{
+
+public class $ClassName : Rotation
+{
+"@
+
+$footer = @"
+}
+
+}
+"@
+
+# Get all component files (sorted by name - 00_, 01_, etc.)
+$componentFiles = Get-ChildItem "$componentsDir\*.cs" | Sort-Object Name
+$classFiles = Get-ChildItem "$classDir\*.cs" | Sort-Object Name
+
+if ($componentFiles.Count -eq 0) {
+    Write-Host "⚠️ No component files found in $componentsDir" -ForegroundColor Yellow
+}
+if ($classFiles.Count -eq 0) {
+    Write-Host "⚠️ No class files found in $classDir" -ForegroundColor Yellow
+}
+
+Write-Host "📦 Combining files:" -ForegroundColor White
+$componentFiles | ForEach-Object { Write-Host "   ✓ Components\$($_.Name)" -ForegroundColor Gray }
+$classFiles | ForEach-Object { Write-Host "   ✓ Classes\$Class\$($_.Name)" -ForegroundColor Gray }
+
+# Build the content
+$content = $header
+
+# Add shared components
+foreach ($file in $componentFiles) {
+    $content += "`n    // ========================================`n"
+    $content += "    // FROM: Components\$($file.Name)`n"
+    $content += "    // ========================================`n`n"
+    $fileContent = Get-Content $file.FullName -Raw
+    $content += $fileContent
+    $content += "`n"
+}
+
+# Add class-specific files
+foreach ($file in $classFiles) {
+    $content += "`n    // ========================================`n"
+    $content += "    // FROM: Classes\$Class\$($file.Name)`n"
+    $content += "    // ========================================`n`n"
+    $fileContent = Get-Content $file.FullName -Raw
+    $content += $fileContent
+    $content += "`n"
+}
+
+$content += $footer
+
+# Create output directories
+New-Item -ItemType Directory -Force -Path $localOutput | Out-Null
+
+# Write to local output (always)
+Set-Content -Path $localFile -Value $content
+Write-Host "✅ Local output: $localFile" -ForegroundColor Green
+
+# Run security validation
+Write-Host "" 
+Write-Host "🔒 Running security validation..." -ForegroundColor Yellow
+$validatorProject = Join-Path $pocRoot "SecurityValidator\SecurityValidator.csproj"
+if (Test-Path $validatorProject) {
+    $validationResult = & dotnet run --project $validatorProject -- $localFile 2>&1
+    $validationOutput = $validationResult -join "`n"
+    
+    # Check if validation actually failed (look for "Errors: " line with non-zero count)
+    if ($validationOutput -match "Errors:\s+(\d+)" -and [int]$matches[1] -gt 0) {
+        Write-Host "❌ Security validation FAILED:" -ForegroundColor Red
+        Write-Host $validationOutput -ForegroundColor Red
+        Write-Host ""
+        Write-Host "Build completed but rotation has security issues." -ForegroundColor Yellow
+        Write-Host "Fix the issues in component files and rebuild." -ForegroundColor Yellow
+        exit 1
+    } elseif ($validationOutput -match "PASSED") {
+        Write-Host "✅ Security validation PASSED" -ForegroundColor Green
+    } else {
+        Write-Host "⚠️ Security validation output unclear:" -ForegroundColor Yellow
+        Write-Host $validationOutput
+    }
+} else {
+    Write-Host "⚠️ Security validator not found, skipping validation" -ForegroundColor Yellow
+}
+
+# Write to bot directory (unless -LocalOnly)
+if (-not $LocalOnly) {
+    if (Test-Path $OutputDir) {
+        New-Item -ItemType Directory -Force -Path $rotationFolder | Out-Null
+        Set-Content -Path $outputFile -Value $content
+        Write-Host "✅ Bot output: $outputFile" -ForegroundColor Green
+    } else {
+        Write-Host "⚠️ Bot directory not found: $OutputDir" -ForegroundColor Yellow
+        Write-Host "   Use -LocalOnly to skip bot deployment" -ForegroundColor Yellow
+    }
+}
+
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "Build complete! Lines: $((($content -split "`n").Count))" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+
+
