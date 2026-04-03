@@ -18,11 +18,11 @@ public override bool CombatTick()
     if (ThrottleIsOpen("diag", DIAGNOSTIC_LOG_INTERVAL_MS))
     {
         ThrottleRestart("diag");
-        List<string> gm = GetGroupMembers();
+        List<string> groupMembers = GetGroupMembers();
         string info = "";
-        for (int i = 0; i < gm.Count; i++) 
-            info += gm[i] + "=" + HealthPct(gm[i]) + "% ";
-        Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + gm.Count + " | " + info);
+        for (int i = 0; i < groupMembers.Count; i++) 
+            info += groupMembers[i] + "=" + HealthPct(groupMembers[i]) + "% ";
+        Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + groupMembers.Count + " | " + info);
     }
 
     // Execute rotation priorities

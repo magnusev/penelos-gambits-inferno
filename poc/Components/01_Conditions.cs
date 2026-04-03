@@ -10,15 +10,15 @@ private bool IsInCombat()
 }
 
 // Returns true if spell is off cooldown (within 200ms threshold)
-private bool IsSpellReady(string s)
+private bool IsSpellReady(string spellName)
 {
-    return Inferno.SpellCooldown(s) <= 200;
+    return Inferno.SpellCooldown(spellName) <= 200;
 }
 
 // Returns true if the specified setting checkbox is enabled
-private bool IsSettingOn(string s)
+private bool IsSettingOn(string settingName)
 {
-    return GetCheckBox(s);
+    return GetCheckBox(settingName);
 }
 
 // Returns true if player has a Healthstone in inventory
@@ -34,45 +34,45 @@ private bool TargetIsEnemy()
 }
 
 // Returns true if unit's health is below the specified percentage
-private bool UnitUnder(string u, int p)
+private bool UnitUnder(string unit, int percent)
 {
-    return HealthPct(u) < p;
+    return HealthPct(unit) < percent;
 }
 
 // Returns true if at least n enemies are within 8 yards (melee range)
-private bool EnemiesInMelee(int n)
+private bool EnemiesInMelee(int count)
 {
-    return Inferno.EnemiesNearUnit(8, "player") >= n;
+    return Inferno.EnemiesNearUnit(8, "player") >= count;
 }
 
 // Returns true if player has at least n power of type t (mana, energy, rage, etc.)
-private bool PowerAtLeast(int n, int t)
+private bool PowerAtLeast(int amount, int powerType)
 {
-    return Inferno.Power("player", t) >= n;
+    return Inferno.Power("player", powerType) >= amount;
 }
 
 // Returns true if player has less than n power of type t (mana, energy, rage, etc.)
-private bool PowerLessThan(int n, int t)
+private bool PowerLessThan(int amount, int powerType)
 {
-    return Inferno.Power("player", t) < n;
+    return Inferno.Power("player", powerType) < amount;
 }
 
-// Returns true if at least min group members are alive and below pct health
-private bool GroupMembersUnder(int pct, int min)
+// Returns true if at least min group members are alive and below percent health
+private bool GroupMembersUnder(int percent, int minCount)
 {
-    return GetGroupMembers().Count(u => !Inferno.IsDead(u) && HealthPct(u) < pct) >= min;
+    return GetGroupMembers().Count(unit => !Inferno.IsDead(unit) && HealthPct(unit) < percent) >= minCount;
 }
 
 // Returns true if any alive ally has the specified debuff
-private bool AnyAllyHasDebuff(string d)
+private bool AnyAllyHasDebuff(string debuff)
 {
-    return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false));
+    return GetGroupMembers().Any(unit => !Inferno.IsDead(unit) && Inferno.HasDebuff(debuff, unit, false));
 }
 
 // Returns true if any alive ally has the specified debuff with at least the given stack count
-private bool AnyAllyHasDebuff(string d, int stacks)
+private bool AnyAllyHasDebuff(string debuff, int stacks)
 {
-    return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.DebuffStacks(d, u, false) >= stacks);
+    return GetGroupMembers().Any(unit => !Inferno.IsDead(unit) && Inferno.HasDebuff(debuff, unit, false) && Inferno.DebuffStacks(debuff, unit, false) >= stacks);
 }
 
 // Returns true if the spell can be cast while moving (either player is stationary or has instant-cast buff)

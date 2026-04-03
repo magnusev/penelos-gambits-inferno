@@ -21,23 +21,23 @@ private bool CastOnFocus(string unit, string macro)
     _queuedAction = macro; 
     return true; 
 }
-private bool CastPersonal(string s) { Inferno.Cast(s); return true; }
-private bool CastOnEnemy(string s) { Inferno.Cast(s); return true; }
+private bool CastPersonal(string spell) { Inferno.Cast(spell); return true; }
+private bool CastOnEnemy(string spell) { Inferno.Cast(spell); return true; }
 private bool ProcessQueue()
 {
     if (_queuedAction == null) return false;
-    string a = _queuedAction; 
+    string action = _queuedAction; 
     _queuedAction = null;
-    Inferno.Cast(a, QuickDelay: true);
+    Inferno.Cast(action, QuickDelay: true);
     return true;
 }
 private long NowMs() { return DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond; }
-private bool ThrottleIsOpen(string k, int ms) 
+private bool ThrottleIsOpen(string key, int milliseconds) 
 { 
-    if (!_throttleTimestamps.ContainsKey(k)) return true; 
-    return (NowMs() - _throttleTimestamps[k]) >= ms; 
+    if (!_throttleTimestamps.ContainsKey(key)) return true; 
+    return (NowMs() - _throttleTimestamps[key]) >= milliseconds; 
 }
-private void ThrottleRestart(string k) { _throttleTimestamps[k] = NowMs(); }
+private void ThrottleRestart(string key) { _throttleTimestamps[key] = NowMs(); }
 private void Log(string msg)
 {
     if (!GetCheckBox("Enable Logging")) return;
@@ -101,11 +101,11 @@ public override bool CombatTick()
     if (ThrottleIsOpen("diag", DIAGNOSTIC_LOG_INTERVAL_MS))
     {
         ThrottleRestart("diag");
-        List<string> gm = GetGroupMembers();
+        List<string> groupMembers = GetGroupMembers();
         string info = "";
-        for (int i = 0; i < gm.Count; i++) 
-            info += gm[i] + "=" + HealthPct(gm[i]) + "% ";
-        Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + gm.Count + " | " + info);
+        for (int i = 0; i < groupMembers.Count; i++) 
+            info += groupMembers[i] + "=" + HealthPct(groupMembers[i]) + "% ";
+        Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + groupMembers.Count + " | " + info);
     }
     int mapId = Inferno.GetMapID();
     if (RunDungeonGambits(mapId)) return true;
@@ -126,13 +126,13 @@ private bool IsInCombat()
 {
     return Inferno.InCombat("player");
 }
-private bool IsSpellReady(string s)
+private bool IsSpellReady(string spellName)
 {
-    return Inferno.SpellCooldown(s) <= 200;
+    return Inferno.SpellCooldown(spellName) <= 200;
 }
-private bool IsSettingOn(string s)
+private bool IsSettingOn(string settingName)
 {
-    return GetCheckBox(s);
+    return GetCheckBox(settingName);
 }
 private bool HasHealthstone()
 {
@@ -142,33 +142,33 @@ private bool TargetIsEnemy()
 {
     return Inferno.UnitCanAttack("player", "target");
 }
-private bool UnitUnder(string u, int p)
+private bool UnitUnder(string unit, int percent)
 {
-    return HealthPct(u) < p;
+    return HealthPct(unit) < percent;
 }
-private bool EnemiesInMelee(int n)
+private bool EnemiesInMelee(int count)
 {
-    return Inferno.EnemiesNearUnit(8, "player") >= n;
+    return Inferno.EnemiesNearUnit(8, "player") >= count;
 }
-private bool PowerAtLeast(int n, int t)
+private bool PowerAtLeast(int amount, int powerType)
 {
-    return Inferno.Power("player", t) >= n;
+    return Inferno.Power("player", powerType) >= amount;
 }
-private bool PowerLessThan(int n, int t)
+private bool PowerLessThan(int amount, int powerType)
 {
-    return Inferno.Power("player", t) < n;
+    return Inferno.Power("player", powerType) < amount;
 }
-private bool GroupMembersUnder(int pct, int min)
+private bool GroupMembersUnder(int percent, int minCount)
 {
-    return GetGroupMembers().Count(u => !Inferno.IsDead(u) && HealthPct(u) < pct) >= min;
+    return GetGroupMembers().Count(unit => !Inferno.IsDead(unit) && HealthPct(unit) < percent) >= minCount;
 }
-private bool AnyAllyHasDebuff(string d)
+private bool AnyAllyHasDebuff(string debuff)
 {
-    return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false));
+    return GetGroupMembers().Any(unit => !Inferno.IsDead(unit) && Inferno.HasDebuff(debuff, unit, false));
 }
-private bool AnyAllyHasDebuff(string d, int stacks)
+private bool AnyAllyHasDebuff(string debuff, int stacks)
 {
-    return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.DebuffStacks(d, u, false) >= stacks);
+    return GetGroupMembers().Any(unit => !Inferno.IsDead(unit) && Inferno.HasDebuff(debuff, unit, false) && Inferno.DebuffStacks(debuff, unit, false) >= stacks);
 }
 private bool CanCastWhileMoving(string spell)
 {
@@ -183,62 +183,62 @@ private bool CanCastWhileMoving(string spell)
 
 private List<string> GetGroupMembers()
 {
-    List<string> r = new List<string>();
+    List<string> result = new List<string>();
     if (Inferno.InRaid()) 
     { 
-        int sz = Inferno.GroupSize(); 
-        for (int i = 1; i <= sz; i++) 
+        int size = Inferno.GroupSize(); 
+        for (int i = 1; i <= size; i++) 
         { 
-            string tk = "raid" + i; 
-            if (Inferno.UnitName(tk) != "") r.Add(tk); 
+            string token = "raid" + i; 
+            if (Inferno.UnitName(token) != "") result.Add(token); 
         } 
     }
     else if (Inferno.InParty()) 
     { 
-        r.Add("player"); 
-        int sz = Inferno.GroupSize(); 
-        for (int i = 1; i < sz; i++) 
+        result.Add("player"); 
+        int size = Inferno.GroupSize(); 
+        for (int i = 1; i < size; i++) 
         { 
-            string tk = "party" + i; 
-            if (Inferno.UnitName(tk) != "") r.Add(tk); 
+            string token = "party" + i; 
+            if (Inferno.UnitName(token) != "") result.Add(token); 
         } 
     }
-    else { r.Add("player"); }
-    return r;
+    else { result.Add("player"); }
+    return result;
 }
-private string LowestAllyUnder(int pct, string spell)
+private string LowestAllyUnder(int percent, string spell)
 {
     return GetGroupMembers()
-        .Where(u => !Inferno.IsDead(u) && HealthPct(u) < pct && Inferno.CanCast(spell, u))
-        .OrderBy(u => HealthPct(u))
+        .Where(unit => !Inferno.IsDead(unit) && HealthPct(unit) < percent && Inferno.CanCast(spell, unit))
+        .OrderBy(unit => HealthPct(unit))
         .FirstOrDefault();
 }
 private string LowestAllyInRange(string spell)
 {
     return GetGroupMembers()
-        .Where(u => !Inferno.IsDead(u) && Inferno.CanCast(spell, u))
-        .OrderBy(u => HealthPct(u))
+        .Where(unit => !Inferno.IsDead(unit) && Inferno.CanCast(spell, unit))
+        .OrderBy(unit => HealthPct(unit))
         .FirstOrDefault();
 }
-private string GetAllyWithDebuff(string d, string spell)
+private string GetAllyWithDebuff(string debuff, string spell)
 {
     return GetGroupMembers()
-        .Where(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.SpellInRange(spell, u))
+        .Where(unit => !Inferno.IsDead(unit) && Inferno.HasDebuff(debuff, unit, false) && Inferno.SpellInRange(spell, unit))
         .FirstOrDefault();
 }
-private string GetAllyWithMostStacks(string d, string spell)
+private string GetAllyWithMostStacks(string debuff, string spell)
 {
     return GetGroupMembers()
-        .Where(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.SpellInRange(spell, u))
-        .OrderByDescending(u => Inferno.DebuffStacks(d, u, false))
+        .Where(unit => !Inferno.IsDead(unit) && Inferno.HasDebuff(debuff, unit, false) && Inferno.SpellInRange(spell, unit))
+        .OrderByDescending(unit => Inferno.DebuffStacks(debuff, unit, false))
         .FirstOrDefault();
 }
 
-private int HealthPct(string u) 
+private int HealthPct(string unit) 
 { 
-    int mx = Inferno.MaxHealth(u); 
-    if (mx < 1) mx = 1; 
-    return (Inferno.Health(u) * 100) / mx; 
+    int maxHealth = Inferno.MaxHealth(unit); 
+    if (maxHealth < 1) maxHealth = 1; 
+    return (Inferno.Health(unit) * 100) / maxHealth; 
 }
 
 private const int HOLY_POWER = 9;

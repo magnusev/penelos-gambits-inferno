@@ -7,62 +7,62 @@
 // -- Group Management --
 private List<string> GetGroupMembers()
 {
-    List<string> r = new List<string>();
+    List<string> result = new List<string>();
     if (Inferno.InRaid()) 
     { 
-        int sz = Inferno.GroupSize(); 
-        for (int i = 1; i <= sz; i++) 
+        int size = Inferno.GroupSize(); 
+        for (int i = 1; i <= size; i++) 
         { 
-            string tk = "raid" + i; 
-            if (Inferno.UnitName(tk) != "") r.Add(tk); 
+            string token = "raid" + i; 
+            if (Inferno.UnitName(token) != "") result.Add(token); 
         } 
     }
     else if (Inferno.InParty()) 
     { 
-        r.Add("player"); 
-        int sz = Inferno.GroupSize(); 
-        for (int i = 1; i < sz; i++) 
+        result.Add("player"); 
+        int size = Inferno.GroupSize(); 
+        for (int i = 1; i < size; i++) 
         { 
-            string tk = "party" + i; 
-            if (Inferno.UnitName(tk) != "") r.Add(tk); 
+            string token = "party" + i; 
+            if (Inferno.UnitName(token) != "") result.Add(token); 
         } 
     }
-    else { r.Add("player"); }
-    return r;
+    else { result.Add("player"); }
+    return result;
 }
 
 // -- Heal Selectors --
 // Use Inferno.CanCast to check GCD, resources, range, and spell known.
 // This prevents queuing spells that can't actually fire.
-private string LowestAllyUnder(int pct, string spell)
+private string LowestAllyUnder(int percent, string spell)
 {
     return GetGroupMembers()
-        .Where(u => !Inferno.IsDead(u) && HealthPct(u) < pct && Inferno.CanCast(spell, u))
-        .OrderBy(u => HealthPct(u))
+        .Where(unit => !Inferno.IsDead(unit) && HealthPct(unit) < percent && Inferno.CanCast(spell, unit))
+        .OrderBy(unit => HealthPct(unit))
         .FirstOrDefault();
 }
 
 private string LowestAllyInRange(string spell)
 {
     return GetGroupMembers()
-        .Where(u => !Inferno.IsDead(u) && Inferno.CanCast(spell, u))
-        .OrderBy(u => HealthPct(u))
+        .Where(unit => !Inferno.IsDead(unit) && Inferno.CanCast(spell, unit))
+        .OrderBy(unit => HealthPct(unit))
         .FirstOrDefault();
 }
 
 // -- Debuff Selectors --
-private string GetAllyWithDebuff(string d, string spell)
+private string GetAllyWithDebuff(string debuff, string spell)
 {
     return GetGroupMembers()
-        .Where(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.SpellInRange(spell, u))
+        .Where(unit => !Inferno.IsDead(unit) && Inferno.HasDebuff(debuff, unit, false) && Inferno.SpellInRange(spell, unit))
         .FirstOrDefault();
 }
 
-private string GetAllyWithMostStacks(string d, string spell)
+private string GetAllyWithMostStacks(string debuff, string spell)
 {
     return GetGroupMembers()
-        .Where(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.SpellInRange(spell, u))
-        .OrderByDescending(u => Inferno.DebuffStacks(d, u, false))
+        .Where(unit => !Inferno.IsDead(unit) && Inferno.HasDebuff(debuff, unit, false) && Inferno.SpellInRange(spell, unit))
+        .OrderByDescending(unit => Inferno.DebuffStacks(debuff, unit, false))
         .FirstOrDefault();
 }
 

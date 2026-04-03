@@ -19,28 +19,28 @@ private bool CastOnFocus(string unit, string macro)
     return true; 
 }
 
-private bool CastPersonal(string s) { Inferno.Cast(s); return true; }
-private bool CastOnEnemy(string s) { Inferno.Cast(s); return true; }
+private bool CastPersonal(string spell) { Inferno.Cast(spell); return true; }
+private bool CastOnEnemy(string spell) { Inferno.Cast(spell); return true; }
 
 private bool ProcessQueue()
 {
     if (_queuedAction == null) return false;
-    string a = _queuedAction; 
+    string action = _queuedAction; 
     _queuedAction = null;
-    Inferno.Cast(a, QuickDelay: true);
+    Inferno.Cast(action, QuickDelay: true);
     return true;
 }
 
 // -- Throttle System --
 private long NowMs() { return DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond; }
 
-private bool ThrottleIsOpen(string k, int ms) 
+private bool ThrottleIsOpen(string key, int milliseconds) 
 { 
-    if (!_throttleTimestamps.ContainsKey(k)) return true; 
-    return (NowMs() - _throttleTimestamps[k]) >= ms; 
+    if (!_throttleTimestamps.ContainsKey(key)) return true; 
+    return (NowMs() - _throttleTimestamps[key]) >= milliseconds; 
 }
 
-private void ThrottleRestart(string k) { _throttleTimestamps[k] = NowMs(); }
+private void ThrottleRestart(string key) { _throttleTimestamps[key] = NowMs(); }
 
 // -- Logging --
 private void Log(string msg)

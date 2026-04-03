@@ -3,10 +3,11 @@
 // ========================================
 // Simple helper functions used throughout the rotation
 
-private int HealthPct(string u) 
+// Returns the health percentage of a unit (0-100)
+private int HealthPct(string unit) 
 { 
-    int mx = Inferno.MaxHealth(u); 
-    if (mx < 1) mx = 1; 
-    return (Inferno.Health(u) * 100) / mx; 
+    int maxHealth = Inferno.MaxHealth(unit); 
+    if (maxHealth < 1) maxHealth = 1; 
+    return (Inferno.Health(unit) * 100) / maxHealth; 
 }
 
