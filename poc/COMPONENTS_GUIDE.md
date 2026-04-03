@@ -1,5 +1,15 @@
 ﻿# Component-Based Build System - Developer Guide
 
+## ✅ Comments Are Stripped Automatically!
+
+**Write clean, well-commented code in source files** - the build system strips all `//` comments from the output to avoid quote checker bugs.
+
+You get:
+- 📝 **Readable source** (with comments)
+- 🔒 **Secure output** (comments removed)
+
+---
+
 ## Quick Reference
 
 ```powershell

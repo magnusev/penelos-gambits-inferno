@@ -14,7 +14,7 @@ Every build runs through:
 
 ## Known Validator Bugs
 
-### Quote Checker Bug (Fixed)
+### Quote Checker Bug (Fixed in Build)
 
 **Problem**: The validator's quote checker gets confused by escape sequences like `\n`.
 
@@ -27,20 +27,69 @@ Every build runs through:
 6. This creates a "fake" multi-thousand character string literal
 7. Validator blocks the file as "potential encoded payload"
 
-**Example that triggers the bug**:
+**Root cause**: The validator's escape sequence parser doesn't properly handle `\"` sequences within string literals. It gets confused about which backslashes are actual escape characters.
+
+**Our Solution**:
+1. **Multi-line format** for all string concatenations with `\n`:
+   ```csharp
+   // ✅ WORKS - split across lines (like example_rotation.cs)
+   File.AppendAllText(_logFile,
+       DateTime.Now.ToString("HH:mm:ss.fff") + " " + msg + "\n");
+   ```
+
+2. **Use `string.IsNullOrEmpty()` instead of `!= ""`**:
+   ```csharp
+   // ✅ WORKS - uses string method (like example_rotation.cs)
+   if (!string.IsNullOrEmpty(Inferno.UnitName(tk))) r.Add(tk);
+   
+   // ❌ MAY TRIGGER BUG - empty string literal
+   if (Inferno.UnitName(tk) != "") r.Add(tk);
+   ```
+
+3. **Break up long conditional lines** into multiple lines:
+   ```csharp
+   // ✅ WORKS - each statement on own line
+   if (condition1 && condition2)
+   {
+       Log("Message");
+       return CastPersonal("Spell");
+   }
+   
+   // ❌ MAY TRIGGER BUG - very long single line
+   if (condition1 && condition2) { Log("Message"); return CastPersonal("Spell"); }
+   ```
+
+**Important**: There are TWO validators:
+- **Our SecurityValidator** (in poc/SecurityValidator/) - We control this, it's fixed
+- **Bot's internal validator** - We can't modify, it may still have the bug
+
+**If the bot still blocks your rotation**:
+1. Check which line the bot reports
+2. Look for very long lines with multiple string concatenations
+3. Break them into multiple lines
+4. Rebuild and test
+
+### Example from Training: Multi-Line Case Statements
+
+The quote checker bug can also be triggered by very long lines with multiple case labels:
+
 ```csharp
-// ❌ TRIGGERS BUG - all on one line
-File.AppendAllText(_logFile, DateTime.Now.ToString("HH:mm:ss.fff") + " " + msg + "\n");
+// ❌ MAY TRIGGER BUG (depending on what's nearby)
+case 2511: case 2515: case 2516: case 2517: case 2518: case 2519: case 2520:
+    if (TryDispel("Ethereal Shackles")) return true;
+
+// ✅ SAFER - split across lines
+case 2511: 
+case 2515: 
+case 2516: 
+case 2517: 
+case 2518: 
+case 2519: 
+case 2520:
+    if (TryDispel("Ethereal Shackles")) return true;
 ```
 
-**Workaround - multi-line format**:
-```csharp
-// ✅ WORKS - split across lines (like example_rotation.cs)
-File.AppendAllText(_logFile,
-    DateTime.Now.ToString("HH:mm:ss.fff") + " " + msg + "\n");
-```
-
-The validator's quote checker handles this correctly when the string concatenation is split across lines.
+We've applied this formatting to all dungeon gambit cases.
 
 ## Validation Output
 

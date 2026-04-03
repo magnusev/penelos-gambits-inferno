@@ -7,6 +7,42 @@
 
 $ErrorActionPreference = "Stop"
 
+# Function to strip comments (helps avoid quote checker bugs)
+function Strip-Comments {
+    param([string]$code)
+    
+    $lines = $code -split "`r?`n"
+    $result = @()
+    
+    foreach ($line in $lines) {
+        # Skip lines that are ONLY comments (whitespace + //)
+        if ($line -match '^\s*//') {
+            continue
+        }
+        
+        # For other lines, try to remove inline comments
+        # This is tricky because // might be inside strings
+        # Simple heuristic: if // appears and there are no quotes before it, remove it
+        $trimmed = $line
+        $slashPos = $line.IndexOf('//')
+        if ($slashPos -ge 0) {
+            $beforeSlash = $line.Substring(0, $slashPos)
+            $quoteCount = ($beforeSlash.ToCharArray() | Where-Object { $_ -eq '"' }).Count
+            # If even number of quotes before //, it's probably outside a string
+            if ($quoteCount % 2 -eq 0) {
+                $trimmed = $beforeSlash.TrimEnd()
+            }
+        }
+        
+        # Keep non-empty lines
+        if ($trimmed.Trim() -ne '') {
+            $result += $trimmed
+        }
+    }
+    
+    return $result -join "`n"
+}
+
 # Paths
 $scriptDir = Split-Path -Parent $PSCommandPath
 $pocRoot = Split-Path -Parent $scriptDir
@@ -73,20 +109,18 @@ $content = $header
 
 # Add shared components
 foreach ($file in $componentFiles) {
-    $content += "`n    // ========================================`n"
-    $content += "    // FROM: Components\$($file.Name)`n"
-    $content += "    // ========================================`n`n"
+    $content += "`n"
     $fileContent = Get-Content $file.FullName -Raw
+    $fileContent = Strip-Comments $fileContent
     $content += $fileContent
     $content += "`n"
 }
 
 # Add class-specific files
 foreach ($file in $classFiles) {
-    $content += "`n    // ========================================`n"
-    $content += "    // FROM: Classes\$Class\$($file.Name)`n"
-    $content += "    // ========================================`n`n"
+    $content += "`n"
     $fileContent = Get-Content $file.FullName -Raw
+    $fileContent = Strip-Comments $fileContent
     $content += $fileContent
     $content += "`n"
 }

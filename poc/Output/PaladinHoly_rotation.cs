@@ -10,23 +10,10 @@ namespace InfernoWow.Modules
 
 public class HolyPaladinPvE : Rotation
 {
-    // ========================================
-    // FROM: Components\00_Core.cs
-    // ========================================
-
-// ========================================
-// CORE: Queue System, Throttle, Logging
-// ========================================
-// Based on the old ActionQueuer pattern - simple and effective
-// The queue allows two-tick casting: focus on tick 1, cast on tick 2
-
 private string _queuedAction = null;
 private string _lastLoggedAction = null;
 private Dictionary<string, long> _throttleTimestamps = new Dictionary<string, long>();
 private string _logFile = null;
-
-// -- Queue System --
-// Matches old ActionQueuer.QueueAction: don't overwrite if already queued
 private bool CastOnFocus(string unit, string macro) 
 { 
     if (_queuedAction != null) return false;
@@ -34,10 +21,8 @@ private bool CastOnFocus(string unit, string macro)
     _queuedAction = macro; 
     return true; 
 }
-
 private bool CastPersonal(string s) { Inferno.Cast(s); return true; }
 private bool CastOnEnemy(string s) { Inferno.Cast(s); return true; }
-
 private bool ProcessQueue()
 {
     if (_queuedAction == null) return false;
@@ -46,23 +31,16 @@ private bool ProcessQueue()
     Inferno.Cast(a, QuickDelay: true);
     return true;
 }
-
-// -- Throttle System --
 private long NowMs() { return DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond; }
-
 private bool ThrottleIsOpen(string k, int ms) 
 { 
     if (!_throttleTimestamps.ContainsKey(k)) return true; 
     return (NowMs() - _throttleTimestamps[k]) >= ms; 
 }
-
 private void ThrottleRestart(string k) { _throttleTimestamps[k] = NowMs(); }
-
-// -- Logging --
 private void Log(string msg)
 {
     if (!GetCheckBox("Enable Logging")) return;
-    // Suppress duplicate log lines (e.g. "Casting Judgment" 30x in a row)
     if (msg == _lastLoggedAction && !msg.StartsWith("Tick:")) return;
     _lastLoggedAction = msg;
     Inferno.PrintMessage(msg, Color.White);
@@ -77,17 +55,6 @@ private void Log(string msg)
     }
 }
 
-
-
-    // ========================================
-    // FROM: Components\01_Conditions.cs
-    // ========================================
-
-// ========================================
-// REUSABLE CONDITIONS
-// ========================================
-// Simple boolean checks used across all heal/damage/dungeon gambits
-
 private bool IsInCombat() { return Inferno.InCombat("player"); }
 private bool IsSpellReady(string s) { return Inferno.SpellCooldown(s) <= 200; }
 private bool IsSettingOn(string s) { return GetCheckBox(s); }
@@ -97,23 +64,18 @@ private bool UnitUnder(string u, int p) { return HealthPct(u) < p; }
 private bool EnemiesInMelee(int n) { return Inferno.EnemiesNearUnit(8, "player") >= n; }
 private bool PowerAtLeast(int n, int t) { return Inferno.Power("player", t) >= n; }
 private bool PowerLessThan(int n, int t) { return Inferno.Power("player", t) < n; }
-
 private bool GroupMembersUnder(int pct, int min)
 {
     return GetGroupMembers().Count(u => !Inferno.IsDead(u) && HealthPct(u) < pct) >= min;
 }
-
 private bool AnyAllyHasDebuff(string d)
 {
     return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false));
 }
-
 private bool AnyAllyHasDebuff(string d, int stacks)
 {
     return GetGroupMembers().Any(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.DebuffStacks(d, u, false) >= stacks);
 }
-
-// Movement checks for cast-time spells
 private bool CanCastWhileMoving(string spell)
 {
     if (!Inferno.IsMoving("player")) return true;
@@ -122,19 +84,6 @@ private bool CanCastWhileMoving(string spell)
     return false;
 }
 
-
-
-    // ========================================
-    // FROM: Components\02_Selectors.cs
-    // ========================================
-
-// ========================================
-// UNIT SELECTORS
-// ========================================
-// Find the right target for heals, damage, dispels
-// Uses Inferno.CanCast() to ensure the spell can actually fire (GCD, range, resources)
-
-// -- Group Management --
 private List<string> GetGroupMembers()
 {
     List<string> r = new List<string>();
@@ -160,10 +109,6 @@ private List<string> GetGroupMembers()
     else { r.Add("player"); }
     return r;
 }
-
-// -- Heal Selectors --
-// Use Inferno.CanCast to check GCD, resources, range, and spell known.
-// This prevents queuing spells that can't actually fire.
 private string LowestAllyUnder(int pct, string spell)
 {
     return GetGroupMembers()
@@ -171,7 +116,6 @@ private string LowestAllyUnder(int pct, string spell)
         .OrderBy(u => HealthPct(u))
         .FirstOrDefault();
 }
-
 private string LowestAllyInRange(string spell)
 {
     return GetGroupMembers()
@@ -179,15 +123,12 @@ private string LowestAllyInRange(string spell)
         .OrderBy(u => HealthPct(u))
         .FirstOrDefault();
 }
-
-// -- Debuff Selectors --
 private string GetAllyWithDebuff(string d, string spell)
 {
     return GetGroupMembers()
         .Where(u => !Inferno.IsDead(u) && Inferno.HasDebuff(d, u, false) && Inferno.SpellInRange(spell, u))
         .FirstOrDefault();
 }
-
 private string GetAllyWithMostStacks(string d, string spell)
 {
     return GetGroupMembers()
@@ -196,17 +137,6 @@ private string GetAllyWithMostStacks(string d, string spell)
         .FirstOrDefault();
 }
 
-
-
-    // ========================================
-    // FROM: Components\03_Utilities.cs
-    // ========================================
-
-// ========================================
-// UTILITIES
-// ========================================
-// Simple helper functions used throughout the rotation
-
 private int HealthPct(string u) 
 { 
     int mx = Inferno.MaxHealth(u); 
@@ -214,27 +144,13 @@ private int HealthPct(string u)
     return (Inferno.Health(u) * 100) / mx; 
 }
 
-
-
-    // ========================================
-    // FROM: Classes\PaladinHoly\10_Config.cs
-    // ========================================
-
-// ========================================
-// PALADIN HOLY - CONFIGURATION
-// ========================================
-
-// Constants
 private const int HOLY_POWER = 9;
 private const int HEALTHSTONE_ID = 5512;
 private const int DIAGNOSTIC_LOG_INTERVAL_MS = 2000;
-
-// Holy Shock charge tracking (API returns 0 for cd/charges)
 private int _hsCharges = 2;
 private long _hsLastRechargeMs = 0;
 private const int HS_MAX_CHARGES = 2;
 private const int HS_RECHARGE_MS = 5000;
-
 public override void LoadSettings()
 {
     Settings.Add(new Setting("Enable Logging", true));
@@ -242,7 +158,6 @@ public override void LoadSettings()
     Settings.Add(new Setting("Do DPS", false));
     Settings.Add(new Setting("Healthstone HP %", 1, 100, 50));
 }
-
 public override void Initialize()
 {
     Spellbook.Add("Avenging Wrath"); 
@@ -257,7 +172,6 @@ public override void Initialize()
     Spellbook.Add("Light of Dawn");
     Spellbook.Add("Shield of the Righteous"); 
     Spellbook.Add("Word of Glory");
-
     Macros.Add("cast_fol", "/cast [@focus] Flash of Light");
     Macros.Add("cast_hl", "/cast [@focus] Holy Light");
     Macros.Add("cast_hs", "/cast [@focus] Holy Shock");
@@ -266,30 +180,23 @@ public override void Initialize()
     Macros.Add("cast_cleanse", "/cast [@focus] Cleanse");
     Macros.Add("cast_bof", "/cast [@focus] Blessing of Freedom");
     Macros.Add("focus_player", "/focus player");
-    for (int i = 1; i <= 4; i++) Macros.Add("focus_party" + i, "/focus party" + i);
-    for (int i = 1; i <= 28; i++) Macros.Add("focus_raid" + i, "/focus raid" + i);
+    for (int i = 1; i <= 4; i++)
+    {
+        Macros.Add("focus_party" + i, "/focus party" + i);
+    }
+    for (int i = 1; i <= 28; i++)
+    {
+        Macros.Add("focus_raid" + i, "/focus raid" + i);
+    }
     Macros.Add("target_enemy", "/targetenemy");
     Macros.Add("use_healthstone", "/use Healthstone");
-    
-    CustomFunctions.Add("HasHealthstone", "return GetItemCount(5512) > 0 and 1 or 0");
-
+    string hasHealthstoneCode = "return GetItemCount(5512) > 0 and 1 or 0";
+    CustomFunctions.Add("HasHealthstone", hasHealthstoneCode);
     _logFile = "penelos_paladin_holy_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
     Inferno.PrintMessage("Penelos Gambits - Holy Paladin loaded!", Color.Green);
     Log("Initialize complete");
 }
 
-
-
-    // ========================================
-    // FROM: Classes\PaladinHoly\11_Spells.cs
-    // ========================================
-
-// ========================================
-// PALADIN HOLY - SPELL-SPECIFIC LOGIC
-// ========================================
-
-// Holy Shock charge system (API is bugged, returns 0 for cd/charges)
-// We manually track charges and recharge timing
 private int HsChargesAvailable()
 {
     if (_hsCharges < HS_MAX_CHARGES)
@@ -305,7 +212,6 @@ private int HsChargesAvailable()
     }
     return _hsCharges;
 }
-
 private void UseHsCharge() 
 { 
     HsChargesAvailable(); 
@@ -314,25 +220,11 @@ private void UseHsCharge()
     if (_hsCharges == HS_MAX_CHARGES - 1) _hsLastRechargeMs = NowMs(); 
 }
 
-
-
-    // ========================================
-    // FROM: Classes\PaladinHoly\20_MainTick.cs
-    // ========================================
-
-// ========================================
-// PALADIN HOLY - MAIN TICK LOOP
-// ========================================
-
 public override bool CombatTick()
 {
     if (Inferno.IsDead("player")) return true;
     if (Inferno.GCD() != 0) return true;
-
-    // Process queued action first (matches ActionQueuer.CastQueuedActionIfExists)
     if (ProcessQueue()) return true;
-
-    // Periodic status log
     if (ThrottleIsOpen("diag", DIAGNOSTIC_LOG_INTERVAL_MS))
     {
         ThrottleRestart("diag");
@@ -341,157 +233,172 @@ public override bool CombatTick()
         for (int i = 0; i < gm.Count; i++) info += gm[i] + "=" + HealthPct(gm[i]) + "% ";
         Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + gm.Count + " | " + info);
     }
-
     int mapId = Inferno.GetMapID();
     if (RunDungeonGambits(mapId)) return true;
     if (RunHealGambits()) return true;
     if (RunDmgGambits()) return true;
-    
-    // Always return true to keep ticking (matches old PeneloRotation.Tick)
     return true;
 }
-
 public override bool OutOfCombatTick() { return CombatTick(); }
-
 public override void OnStop() { Log("Rotation stopped"); }
-
-
-
-    // ========================================
-    // FROM: Classes\PaladinHoly\30_HealGambits.cs
-    // ========================================
-
-// ========================================
-// PALADIN HOLY - HEAL PRIORITY
-// ========================================
 
 private bool RunHealGambits()
 {
-    // Healthstone if player under threshold (combat only)
     if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && Inferno.ItemCooldown(HEALTHSTONE_ID) == 0)
-    { Log("Using Healthstone (player " + HealthPct("player") + "%)"); Inferno.Cast("use_healthstone", QuickDelay: true); return true; }
-
-    // Divine Protection if player under 75% (combat only)
+    { 
+        Log("Using Healthstone (player " + HealthPct("player") + "%)"); 
+        Inferno.Cast("use_healthstone", QuickDelay: true); 
+        return true; 
+    }
     if (IsInCombat() && UnitUnder("player", 75) && Inferno.CanCast("Divine Protection"))
-    { Log("Casting Divine Protection (player " + HealthPct("player") + "%)"); return CastPersonal("Divine Protection"); }
-
-    // Avenging Wrath if 2+ under 60% (combat only)
+    { 
+        Log("Casting Divine Protection (player " + HealthPct("player") + "%)"); 
+        return CastPersonal("Divine Protection"); 
+    }
     if (IsInCombat() && GroupMembersUnder(60, 2) && Inferno.CanCast("Avenging Wrath"))
-    { Log("Casting Avenging Wrath"); return CastPersonal("Avenging Wrath"); }
-
-    // Divine Toll if 2+ under 80% and HolyPower < 3 (combat only)
+    { 
+        Log("Casting Avenging Wrath"); 
+        return CastPersonal("Avenging Wrath"); 
+    }
     if (IsInCombat() && GroupMembersUnder(80, 2) && PowerLessThan(3, HOLY_POWER))
-    { string t = LowestAllyInRange("Divine Toll"); if (t != null) { Log("Casting Divine Toll on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_dt"); } }
-
-    // Light of Dawn if 5+ under 95% and HP >= 4 (combat only, togglable)
+    { 
+        string t = LowestAllyInRange("Divine Toll"); 
+        if (t != null) 
+        { 
+            Log("Casting Divine Toll on " + t + " (" + HealthPct(t) + "%)"); 
+            return CastOnFocus(t, "cast_dt"); 
+        } 
+    }
     if (IsSettingOn("Use Light of Dawn") && IsInCombat() && GroupMembersUnder(95, 5) && PowerAtLeast(4, HOLY_POWER) && Inferno.CanCast("Light of Dawn"))
-    { Log("Casting Light of Dawn"); return CastPersonal("Light of Dawn"); }
-
-    // Word of Glory if lowest under 90% and HP >= 3
+    { 
+        Log("Casting Light of Dawn"); 
+        return CastPersonal("Light of Dawn"); 
+    }
     if (IsInCombat() && PowerAtLeast(3, HOLY_POWER))
-    { string t = LowestAllyUnder(90, "Word of Glory"); if (t != null) { Log("Casting Word of Glory on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_wog"); } }
-
-    // Holy Shock on lowest injured ally (manual charge tracking - API bug)
+    { 
+        string t = LowestAllyUnder(90, "Word of Glory"); 
+        if (t != null) 
+        { 
+            Log("Casting Word of Glory on " + t + " (" + HealthPct(t) + "%)"); 
+            return CastOnFocus(t, "cast_wog"); 
+        } 
+    }
     if (IsInCombat() && HsChargesAvailable() > 0)
-    { string t = LowestAllyUnder(95, "Holy Shock"); if (t != null) { Log("Casting Holy Shock on " + t + " (" + HealthPct(t) + "%) [charges=" + HsChargesAvailable() + "]"); UseHsCharge(); return CastOnFocus(t, "cast_hs"); } }
-
-    // Holy Light if lowest under 60%
+    { 
+        string t = LowestAllyUnder(95, "Holy Shock"); 
+        if (t != null) 
+        { 
+            Log("Casting Holy Shock on " + t + " (" + HealthPct(t) + "%) [charges=" + HsChargesAvailable() + "]"); 
+            UseHsCharge(); 
+            return CastOnFocus(t, "cast_hs"); 
+        } 
+    }
     if (IsInCombat() && CanCastWhileMoving("Holy Light"))
-    { string t = LowestAllyUnder(60, "Holy Light"); if (t != null) { Log("Casting Holy Light on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_hl"); } }
-
-    // Flash of Light if lowest under 95%
+    { 
+        string t = LowestAllyUnder(60, "Holy Light"); 
+        if (t != null) 
+        { 
+            Log("Casting Holy Light on " + t + " (" + HealthPct(t) + "%)"); 
+            return CastOnFocus(t, "cast_hl"); 
+        } 
+    }
     if (IsInCombat() && CanCastWhileMoving("Flash of Light"))
-    { string t = LowestAllyUnder(95, "Flash of Light"); if (t != null) { Log("Casting Flash of Light on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_fol"); } }
-
+    { 
+        string t = LowestAllyUnder(95, "Flash of Light"); 
+        if (t != null) 
+        { 
+            Log("Casting Flash of Light on " + t + " (" + HealthPct(t) + "%)"); 
+            return CastOnFocus(t, "cast_fol"); 
+        } 
+    }
     return false;
 }
-
-
-
-    // ========================================
-    // FROM: Classes\PaladinHoly\31_DmgGambits.cs
-    // ========================================
-
-// ========================================
-// PALADIN HOLY - DAMAGE PRIORITY
-// ========================================
 
 private bool RunDmgGambits()
 {
     if (IsSettingOn("Do DPS") && IsInCombat() && !TargetIsEnemy()) 
-    { Inferno.Cast("target_enemy", true); return true; }
-
+    { 
+        Inferno.Cast("target_enemy", true); 
+        return true; 
+    }
     if (IsSettingOn("Do DPS") && IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1) && Inferno.CanCast("Shield of the Righteous"))
-    { Log("Casting Shield of the Righteous"); return CastPersonal("Shield of the Righteous"); }
-
+    { 
+        Log("Casting Shield of the Righteous"); 
+        return CastPersonal("Shield of the Righteous"); 
+    }
     if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && Inferno.CanCast("Judgment", "target"))
-    { Log("Casting Judgment"); return CastOnEnemy("Judgment"); }
-
-    // Flash of Light filler - always have something to do
+    { 
+        Log("Casting Judgment"); 
+        return CastOnEnemy("Judgment"); 
+    }
     if (IsInCombat() && CanCastWhileMoving("Flash of Light"))
     {
         string t = LowestAllyInRange("Flash of Light");
-        if (t != null) { Log("Filler FoL on " + t + " (" + HealthPct(t) + "%)"); return CastOnFocus(t, "cast_fol"); }
-        Log("Filler FoL on player (fallback)"); return CastOnFocus("player", "cast_fol");
+        if (t != null) 
+        { 
+            Log("Filler FoL on " + t + " (" + HealthPct(t) + "%)"); 
+            return CastOnFocus(t, "cast_fol"); 
+        }
+        Log("Filler FoL on player (fallback)"); 
+        return CastOnFocus("player", "cast_fol");
     }
-
     return false;
 }
-
-
-
-    // ========================================
-    // FROM: Classes\PaladinHoly\32_DungeonGambits.cs
-    // ========================================
-
-// ========================================
-// PALADIN HOLY - DUNGEON MECHANICS
-// ========================================
 
 private bool RunDungeonGambits(int mapId)
 {
     if (!IsInCombat()) return false;
-    
     switch (mapId)
     {
-        case 480: // Proving Grounds
+        case 480:
             return TryDispel("Aqua Bomb");
-            
-        case 2511: case 2515: case 2516: case 2517: case 2518: case 2519: case 2520: // Algeth'ar Academy
+        case 2511: 
+        case 2515: 
+        case 2516: 
+        case 2517: 
+        case 2518: 
+        case 2519: 
+        case 2520:
             if (TryDispel("Ethereal Shackles")) return true;
             if (TryDispel("Consuming Void")) return true;
             if (TryBof("Ethereal Shackles")) return true;
             if (TryDispel("Holy Fire")) return true;
             return TryDispel("Polymorph");
-            
-        case 601: case 602: // Skyreach
+        case 601: 
+        case 602:
             return false;
-            
-        case 823: // Pit of Saron
+        case 823:
             if (TryDispel("Cryoshards")) return true;
             return TryDispelStacks("Rotting Strikes", 3);
-            
-        case 2492: case 2493: case 2494: case 2496: case 2497: case 2498: case 2499: // Maisara Caverns
+        case 2492: 
+        case 2493: 
+        case 2494: 
+        case 2496: 
+        case 2497: 
+        case 2498: 
+        case 2499:
             if (TryDispel("Poison Spray")) return true;
             if (TryDispel("Soul Torment")) return true;
             return TryDispel("Poison Blades");
-            
-        case 2501: // Windrunner Spire
+        case 2501:
             return TryDispel("Infected Pinions");
-            
-        case 2097: case 2098: case 2099: // Magister's Terrace
+        case 2097: 
+        case 2098: 
+        case 2099:
             if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
             { 
                 string t = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); 
-                if (t != null) { CastOnFocus(t, "cast_cleanse"); return true; } 
+                if (t != null) 
+                { 
+                    CastOnFocus(t, "cast_cleanse"); 
+                    return true; 
+                } 
             }
             return false;
-            
         default: 
             return false;
     }
 }
-
 private bool TryDispel(string debuff)
 {
     if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff)) return false;
@@ -500,7 +407,6 @@ private bool TryDispel(string debuff)
     CastOnFocus(t, "cast_cleanse");
     return true;
 }
-
 private bool TryDispelStacks(string debuff, int min)
 {
     if (!IsSpellReady("Cleanse") || !AnyAllyHasDebuff(debuff, min)) return false;
@@ -509,7 +415,6 @@ private bool TryDispelStacks(string debuff, int min)
     CastOnFocus(t, "cast_cleanse");
     return true;
 }
-
 private bool TryBof(string debuff)
 {
     if (!IsSpellReady("Blessing of Freedom") || !AnyAllyHasDebuff(debuff)) return false;
@@ -518,8 +423,6 @@ private bool TryBof(string debuff)
     CastOnFocus(t, "cast_bof");
     return true;
 }
-
-
 }
 
 }

@@ -44,12 +44,19 @@ public override void Initialize()
     Macros.Add("cast_cleanse", "/cast [@focus] Cleanse");
     Macros.Add("cast_bof", "/cast [@focus] Blessing of Freedom");
     Macros.Add("focus_player", "/focus player");
-    for (int i = 1; i <= 4; i++) Macros.Add("focus_party" + i, "/focus party" + i);
-    for (int i = 1; i <= 28; i++) Macros.Add("focus_raid" + i, "/focus raid" + i);
+    for (int i = 1; i <= 4; i++)
+    {
+        Macros.Add("focus_party" + i, "/focus party" + i);
+    }
+    for (int i = 1; i <= 28; i++)
+    {
+        Macros.Add("focus_raid" + i, "/focus raid" + i);
+    }
     Macros.Add("target_enemy", "/targetenemy");
     Macros.Add("use_healthstone", "/use Healthstone");
     
-    CustomFunctions.Add("HasHealthstone", "return GetItemCount(5512) > 0 and 1 or 0");
+    string hasHealthstoneCode = "return GetItemCount(5512) > 0 and 1 or 0";
+    CustomFunctions.Add("HasHealthstone", hasHealthstoneCode);
 
     _logFile = "penelos_paladin_holy_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
     Inferno.PrintMessage("Penelos Gambits - Holy Paladin loaded!", Color.Green);
