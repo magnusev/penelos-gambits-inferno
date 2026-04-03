@@ -307,7 +307,7 @@ private bool RunHealGambits()
     }
     if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") >= 1)
     { 
-        string target = LowestAllyUnder(80, "Holy Word: Serenity"); 
+        string target = LowestAllyUnder(90, "Holy Word: Serenity"); 
         if (target != null) 
         { 
             Log("Casting Holy Word: Serenity on " + target + " (" + HealthPct(target) + "%) [1 charge]"); 
