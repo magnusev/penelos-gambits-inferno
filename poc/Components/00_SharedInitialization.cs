@@ -24,14 +24,14 @@ private void InitializeFocusMacros()
 // Initializes common utility macros
 private void InitializeUtilityMacros()
 {
-    Macros.Add("target_enemy", "/targetenemy");
-    Macros.Add("use_healthstone", "/use Healthstone");
+    Macros.Add(MACRO_TARGET_ENEMY, "/targetenemy");
+    Macros.Add(MACRO_USE_HEALTHSTONE, "/use Healthstone");
 }
 
 // Initializes the Healthstone check custom function
 private void InitializeHealthstoneFunction()
 {
-    string hasHealthstoneCode = "return GetItemCount(5512) > 0 and 1 or 0";
+    string hasHealthstoneCode = "return GetItemCount(" + HEALTHSTONE_ID + ") > 0 and 1 or 0";
     CustomFunctions.Add("HasHealthstone", hasHealthstoneCode);
 }
 

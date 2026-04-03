@@ -6,7 +6,7 @@ private bool RunDmgGambits()
 {
     if (IsSettingOn("Do DPS") && IsInCombat() && !TargetIsEnemy()) 
     { 
-        Inferno.Cast("target_enemy", true); 
+        Inferno.Cast(MACRO_TARGET_ENEMY, true); 
         return true; 
     }
 

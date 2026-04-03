@@ -58,6 +58,11 @@ private void Log(string msg)
 private const int MANA = 0;
 private const int HEALTHSTONE_ID = 5512;
 private const int DIAGNOSTIC_LOG_INTERVAL_MS = 2000;
+private const string MACRO_TARGET_ENEMY = "target_enemy";
+private const string MACRO_USE_HEALTHSTONE = "use_healthstone";
+private const string MACRO_FOCUS_PLAYER = "focus_player";
+private const string MACRO_FOCUS_PREFIX_PARTY = "focus_party";
+private const string MACRO_FOCUS_PREFIX_RAID = "focus_raid";
 
 private void InitializeFocusMacros()
 {
@@ -73,12 +78,12 @@ private void InitializeFocusMacros()
 }
 private void InitializeUtilityMacros()
 {
-    Macros.Add("target_enemy", "/targetenemy");
-    Macros.Add("use_healthstone", "/use Healthstone");
+    Macros.Add(MACRO_TARGET_ENEMY, "/targetenemy");
+    Macros.Add(MACRO_USE_HEALTHSTONE, "/use Healthstone");
 }
 private void InitializeHealthstoneFunction()
 {
-    string hasHealthstoneCode = "return GetItemCount(5512) > 0 and 1 or 0";
+    string hasHealthstoneCode = "return GetItemCount(" + HEALTHSTONE_ID + ") > 0 and 1 or 0";
     CustomFunctions.Add("HasHealthstone", hasHealthstoneCode);
 }
 private void InitializeSharedComponents()
@@ -306,7 +311,7 @@ private bool RunHealGambits()
     if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && Inferno.ItemCooldown(HEALTHSTONE_ID) == 0)
     { 
         Log("Using Healthstone (player " + HealthPct("player") + "%)"); 
-        Inferno.Cast("use_healthstone", QuickDelay: true); 
+        Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
         return true; 
     }
     if (IsInCombat() && UnitUnder("player", 60) && Inferno.CanCast("Desperate Prayer"))
@@ -413,7 +418,7 @@ private bool RunDmgGambits()
 {
     if (IsSettingOn("Do DPS") && IsInCombat() && !TargetIsEnemy()) 
     { 
-        Inferno.Cast("target_enemy", true); 
+        Inferno.Cast(MACRO_TARGET_ENEMY, true); 
         return true; 
     }
     if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Mindgames", "target"))

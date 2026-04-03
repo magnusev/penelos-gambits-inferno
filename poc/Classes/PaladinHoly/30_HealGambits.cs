@@ -8,7 +8,7 @@ private bool RunHealGambits()
     if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && Inferno.ItemCooldown(HEALTHSTONE_ID) == 0)
     { 
         Log("Using Healthstone (player " + HealthPct("player") + "%)"); 
-        Inferno.Cast("use_healthstone", QuickDelay: true); 
+        Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
         return true; 
     }
 
