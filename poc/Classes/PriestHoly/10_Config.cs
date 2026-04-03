@@ -12,17 +12,17 @@ public override void LoadSettings()
 
 public override void Initialize()
 {
-    Spellbook.Add("Dispel Magic");
     Spellbook.Add("Flash Heal");
     Spellbook.Add("Holy Fire");
     Spellbook.Add("Holy Word: Chastise");
     Spellbook.Add("Holy Word: Serenity");
     Spellbook.Add("Prayer of Mending");
+    Spellbook.Add("Purify");
     Spellbook.Add("Smite");
 
     // Priest-specific macros
     Macros.Add("cast_pom", "/cast [@focus] Prayer of Mending");
-    Macros.Add("cast_dispel", "/cast [@focus] Dispel Magic");
+    Macros.Add("cast_purify", "/cast [@focus] Purify");
     Macros.Add("cast_flash_heal", "/cast [@focus] Flash Heal");
     Macros.Add("cast_serenity", "/cast [@focus] Holy Word: Serenity");
 

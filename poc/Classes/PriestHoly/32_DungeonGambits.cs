@@ -45,12 +45,12 @@ private bool RunDungeonGambits(int mapId)
         case 2097: 
         case 2098: 
         case 2099: // Magister's Terrace
-            if (IsSpellReady("Dispel Magic") && AnyAllyHasDebuff("Lasher Toxin", 2))
+            if (IsSpellReady("Purify") && AnyAllyHasDebuff("Lasher Toxin", 2))
             { 
-                string t = GetAllyWithMostStacks("Lasher Toxin", "Dispel Magic"); 
-                if (t != null) 
+                string target = GetAllyWithMostStacks("Lasher Toxin", "Purify"); 
+                if (target != null) 
                 { 
-                    CastOnFocus(t, "cast_dispel"); 
+                    CastOnFocus(target, "cast_purify"); 
                     return true; 
                 } 
             }
@@ -61,23 +61,23 @@ private bool RunDungeonGambits(int mapId)
     }
 }
 
-// Returns true if successfully cast dispel on an ally with the debuff
+// Returns true if successfully cast Purify on an ally with the debuff
 private bool TryDispel(string debuff)
 {
-    if (!IsSpellReady("Dispel Magic") || !AnyAllyHasDebuff(debuff)) return false;
-    string t = GetAllyWithDebuff(debuff, "Dispel Magic");
-    if (t == null) return false;
-    CastOnFocus(t, "cast_dispel");
+    if (!IsSpellReady("Purify") || !AnyAllyHasDebuff(debuff)) return false;
+    string target = GetAllyWithDebuff(debuff, "Purify");
+    if (target == null) return false;
+    CastOnFocus(target, "cast_purify");
     return true;
 }
 
-// Returns true if successfully cast dispel on ally with most stacks
+// Returns true if successfully cast Purify on ally with most stacks
 private bool TryDispelStacks(string debuff, int min)
 {
-    if (!IsSpellReady("Dispel Magic") || !AnyAllyHasDebuff(debuff, min)) return false;
-    string t = GetAllyWithMostStacks(debuff, "Dispel Magic");
-    if (t == null) return false;
-    CastOnFocus(t, "cast_dispel");
+    if (!IsSpellReady("Purify") || !AnyAllyHasDebuff(debuff, min)) return false;
+    string target = GetAllyWithMostStacks(debuff, "Purify");
+    if (target == null) return false;
+    CastOnFocus(target, "cast_purify");
     return true;
 }
 
