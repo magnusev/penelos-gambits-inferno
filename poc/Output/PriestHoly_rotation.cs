@@ -249,6 +249,8 @@ public override void LoadSettings()
 public override void Initialize()
 {
     Spellbook.Add("Dispel Magic");
+    Spellbook.Add("Holy Fire");
+    Spellbook.Add("Holy Word: Chastise");
     Spellbook.Add("Prayer of Mending");
     Spellbook.Add("Smite");
     Macros.Add("cast_pom", "/cast [@focus] Prayer of Mending");
@@ -269,7 +271,7 @@ private bool RunHealGambits()
         Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
         return true; 
     }
-    if (Inferno.CanCast("Prayer of Mending"))
+    if (IsInCombat() && Inferno.CanCast("Prayer of Mending"))
     { 
         string t = LowestAllyInRange("Prayer of Mending"); 
         if (t != null) 
@@ -287,6 +289,16 @@ private bool RunDmgGambits()
     { 
         Inferno.Cast(MACRO_TARGET_ENEMY, true); 
         return true; 
+    }
+    if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Holy Fire", "target"))
+    {
+        Log("Casting Holy Fire on target"); 
+        return CastOnEnemy("Holy Fire");
+    }
+    if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Holy Word: Chastise", "target"))
+    {
+        Log("Casting Holy Word: Chastise on target"); 
+        return CastOnEnemy("Holy Word: Chastise");
     }
     if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Smite", "target"))
     {

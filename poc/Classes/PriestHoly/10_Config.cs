@@ -13,6 +13,8 @@ public override void LoadSettings()
 public override void Initialize()
 {
     Spellbook.Add("Dispel Magic");
+    Spellbook.Add("Holy Fire");
+    Spellbook.Add("Holy Word: Chastise");
     Spellbook.Add("Prayer of Mending");
     Spellbook.Add("Smite");
 

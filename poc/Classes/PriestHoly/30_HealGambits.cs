@@ -13,7 +13,7 @@ private bool RunHealGambits()
     }
 
     // Prayer of Mending on lowest health player if off cooldown
-    if (Inferno.CanCast("Prayer of Mending"))
+    if (IsInCombat() && Inferno.CanCast("Prayer of Mending"))
     { 
         string t = LowestAllyInRange("Prayer of Mending"); 
         if (t != null) 
