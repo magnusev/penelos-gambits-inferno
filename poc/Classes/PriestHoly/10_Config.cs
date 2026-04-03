@@ -13,6 +13,7 @@ public override void LoadSettings()
 public override void Initialize()
 {
     Spellbook.Add("Flash Heal");
+    Spellbook.Add("Halo");
     Spellbook.Add("Holy Fire");
     Spellbook.Add("Holy Word: Chastise");
     Spellbook.Add("Holy Word: Serenity");

@@ -248,15 +248,16 @@ public override void LoadSettings()
 }
 public override void Initialize()
 {
-    Spellbook.Add("Dispel Magic");
     Spellbook.Add("Flash Heal");
+    Spellbook.Add("Halo");
     Spellbook.Add("Holy Fire");
     Spellbook.Add("Holy Word: Chastise");
     Spellbook.Add("Holy Word: Serenity");
     Spellbook.Add("Prayer of Mending");
+    Spellbook.Add("Purify");
     Spellbook.Add("Smite");
     Macros.Add("cast_pom", "/cast [@focus] Prayer of Mending");
-    Macros.Add("cast_dispel", "/cast [@focus] Dispel Magic");
+    Macros.Add("cast_purify", "/cast [@focus] Purify");
     Macros.Add("cast_flash_heal", "/cast [@focus] Flash Heal");
     Macros.Add("cast_serenity", "/cast [@focus] Holy Word: Serenity");
     InitializeSharedComponents();
@@ -310,6 +311,11 @@ private bool RunHealGambits()
             Log("Casting Flash Heal on " + target + " (" + HealthPct(target) + "%)"); 
             return CastOnFocus(target, "cast_flash_heal"); 
         } 
+    }
+    if (IsInCombat() && !Inferno.IsMoving("player") && GroupMembersUnder(90, 2) && Inferno.CanCast("Halo"))
+    { 
+        Log("Casting Halo (2+ members under 90%)"); 
+        return CastPersonal("Halo"); 
     }
     if (IsInCombat() && Inferno.CanCast("Prayer of Mending"))
     { 
@@ -384,12 +390,12 @@ private bool RunDungeonGambits(int mapId)
         case 2097: 
         case 2098: 
         case 2099:
-            if (IsSpellReady("Dispel Magic") && AnyAllyHasDebuff("Lasher Toxin", 2))
+            if (IsSpellReady("Purify") && AnyAllyHasDebuff("Lasher Toxin", 2))
             { 
-                string t = GetAllyWithMostStacks("Lasher Toxin", "Dispel Magic"); 
-                if (t != null) 
+                string target = GetAllyWithMostStacks("Lasher Toxin", "Purify"); 
+                if (target != null) 
                 { 
-                    CastOnFocus(t, "cast_dispel"); 
+                    CastOnFocus(target, "cast_purify"); 
                     return true; 
                 } 
             }
@@ -400,18 +406,18 @@ private bool RunDungeonGambits(int mapId)
 }
 private bool TryDispel(string debuff)
 {
-    if (!IsSpellReady("Dispel Magic") || !AnyAllyHasDebuff(debuff)) return false;
-    string t = GetAllyWithDebuff(debuff, "Dispel Magic");
-    if (t == null) return false;
-    CastOnFocus(t, "cast_dispel");
+    if (!IsSpellReady("Purify") || !AnyAllyHasDebuff(debuff)) return false;
+    string target = GetAllyWithDebuff(debuff, "Purify");
+    if (target == null) return false;
+    CastOnFocus(target, "cast_purify");
     return true;
 }
 private bool TryDispelStacks(string debuff, int min)
 {
-    if (!IsSpellReady("Dispel Magic") || !AnyAllyHasDebuff(debuff, min)) return false;
-    string t = GetAllyWithMostStacks(debuff, "Dispel Magic");
-    if (t == null) return false;
-    CastOnFocus(t, "cast_dispel");
+    if (!IsSpellReady("Purify") || !AnyAllyHasDebuff(debuff, min)) return false;
+    string target = GetAllyWithMostStacks(debuff, "Purify");
+    if (target == null) return false;
+    CastOnFocus(target, "cast_purify");
     return true;
 }
 }

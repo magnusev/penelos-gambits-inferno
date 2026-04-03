@@ -56,6 +56,13 @@ private bool RunHealGambits()
         } 
     }
 
+    // Halo if 2+ targets under 90% (cannot be cast while moving)
+    if (IsInCombat() && !Inferno.IsMoving("player") && GroupMembersUnder(90, 2) && Inferno.CanCast("Halo"))
+    { 
+        Log("Casting Halo (2+ members under 90%)"); 
+        return CastPersonal("Halo"); 
+    }
+
     // Prayer of Mending on lowest health player if off cooldown
     if (IsInCombat() && Inferno.CanCast("Prayer of Mending"))
     { 
