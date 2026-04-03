@@ -1,35 +1,49 @@
 ﻿// ========================================
-// PALADIN HOLY - MAIN TICK LOOP
+// SHARED MAIN TICK LOGIC
 // ========================================
+// Common tick loop structure for all healing rotations
 
 public override bool CombatTick()
 {
+    // Skip if player is dead
     if (Inferno.IsDead("player")) return true;
+    
+    // Wait for GCD to finish
     if (Inferno.GCD() != 0) return true;
 
-    // Process queued action first (matches ActionQueuer.CastQueuedActionIfExists)
+    // Process queued action first (two-tick casting pattern)
     if (ProcessQueue()) return true;
 
-    // Periodic status log
+    // Periodic diagnostic logging
     if (ThrottleIsOpen("diag", DIAGNOSTIC_LOG_INTERVAL_MS))
     {
         ThrottleRestart("diag");
         List<string> gm = GetGroupMembers();
         string info = "";
-        for (int i = 0; i < gm.Count; i++) info += gm[i] + "=" + HealthPct(gm[i]) + "% ";
+        for (int i = 0; i < gm.Count; i++) 
+            info += gm[i] + "=" + HealthPct(gm[i]) + "% ";
         Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + gm.Count + " | " + info);
     }
 
+    // Execute rotation priorities
     int mapId = Inferno.GetMapID();
     if (RunDungeonGambits(mapId)) return true;
     if (RunHealGambits()) return true;
     if (RunDmgGambits()) return true;
     
-    // Always return true to keep ticking (matches old PeneloRotation.Tick)
+    // Always return true to keep ticking
     return true;
 }
 
-public override bool OutOfCombatTick() { return CombatTick(); }
+// Use combat tick logic for out-of-combat as well
+public override bool OutOfCombatTick() 
+{ 
+    return CombatTick(); 
+}
 
-public override void OnStop() { Log("Rotation stopped"); }
+// Cleanup when rotation stops
+public override void OnStop() 
+{ 
+    Log("Rotation stopped"); 
+}
 

@@ -2,11 +2,8 @@
 // PALADIN HOLY - CONFIGURATION
 // ========================================
 
-// Constants
-private const int MANA = 0;
+// Paladin-specific constants
 private const int HOLY_POWER = 9;
-private const int HEALTHSTONE_ID = 5512;
-private const int DIAGNOSTIC_LOG_INTERVAL_MS = 2000;
 
 // Holy Shock charge tracking (API returns 0 for cd/charges)
 private int _hsCharges = 2;
@@ -37,6 +34,7 @@ public override void Initialize()
     Spellbook.Add("Shield of the Righteous"); 
     Spellbook.Add("Word of Glory");
 
+    // Paladin-specific macros
     Macros.Add("cast_fol", "/cast [@focus] Flash of Light");
     Macros.Add("cast_hl", "/cast [@focus] Holy Light");
     Macros.Add("cast_hs", "/cast [@focus] Holy Shock");
@@ -44,20 +42,9 @@ public override void Initialize()
     Macros.Add("cast_dt", "/cast [@focus] Divine Toll");
     Macros.Add("cast_cleanse", "/cast [@focus] Cleanse");
     Macros.Add("cast_bof", "/cast [@focus] Blessing of Freedom");
-    Macros.Add("focus_player", "/focus player");
-    for (int i = 1; i <= 4; i++)
-    {
-        Macros.Add("focus_party" + i, "/focus party" + i);
-    }
-    for (int i = 1; i <= 28; i++)
-    {
-        Macros.Add("focus_raid" + i, "/focus raid" + i);
-    }
-    Macros.Add("target_enemy", "/targetenemy");
-    Macros.Add("use_healthstone", "/use Healthstone");
-    
-    string hasHealthstoneCode = "return GetItemCount(5512) > 0 and 1 or 0";
-    CustomFunctions.Add("HasHealthstone", hasHealthstoneCode);
+
+    // Initialize shared components (focus macros, utility macros, healthstone function)
+    InitializeSharedComponents();
 
     _logFile = "penelos_paladin_holy_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
     Inferno.PrintMessage("Penelos Gambits - Holy Paladin loaded!", Color.Green);
