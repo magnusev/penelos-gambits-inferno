@@ -137,7 +137,7 @@ Write-Host "✅ Local output: $localFile" -ForegroundColor Green
 # Run security validation
 Write-Host "" 
 Write-Host "🔒 Running security validation..." -ForegroundColor Yellow
-$validatorProject = Join-Path $pocRoot "SecurityValidator\SecurityValidator.csproj"
+$validatorProject = Join-Path $pocRoot "Tools\SecurityValidator\SecurityValidator.csproj"
 if (Test-Path $validatorProject) {
     $validationResult = & dotnet run --project $validatorProject -- $localFile 2>&1
     $validationOutput = $validationResult -join "`n"
