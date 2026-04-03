@@ -248,6 +248,7 @@ public override void LoadSettings()
 }
 public override void Initialize()
 {
+    Spellbook.Add("Apotheosis");
     Spellbook.Add("Flash Heal");
     Spellbook.Add("Halo");
     Spellbook.Add("Holy Fire");
@@ -276,6 +277,11 @@ private bool RunHealGambits()
         Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
         return true; 
     }
+    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") == 0 && GroupMembersUnder(75, 1) && Inferno.CanCast("Apotheosis"))
+    { 
+        Log("Casting Apotheosis (0 Serenity charges, ally under 75%)"); 
+        return CastPersonal("Apotheosis"); 
+    }
     if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") >= 2)
     { 
         string target = LowestAllyInRange("Holy Word: Serenity"); 
@@ -284,6 +290,11 @@ private bool RunHealGambits()
             Log("Casting Holy Word: Serenity on " + target + " (" + HealthPct(target) + "%) [2 charges]"); 
             return CastOnFocus(target, "cast_serenity"); 
         } 
+    }
+    if (IsInCombat() && !Inferno.IsMoving("player") && GroupMembersUnder(90, 2) && Inferno.CanCast("Halo"))
+    { 
+        Log("Casting Halo (2+ members under 90%)"); 
+        return CastPersonal("Halo"); 
     }
     if (IsInCombat() && Inferno.HasBuff("Surge of Light", "player", true))
     { 
@@ -303,20 +314,6 @@ private bool RunHealGambits()
             return CastOnFocus(target, "cast_serenity"); 
         } 
     }
-    if (IsInCombat() && !Inferno.IsMoving("player"))
-    { 
-        string target = LowestAllyUnder(85, "Flash Heal"); 
-        if (target != null) 
-        { 
-            Log("Casting Flash Heal on " + target + " (" + HealthPct(target) + "%)"); 
-            return CastOnFocus(target, "cast_flash_heal"); 
-        } 
-    }
-    if (IsInCombat() && !Inferno.IsMoving("player") && GroupMembersUnder(90, 2) && Inferno.CanCast("Halo"))
-    { 
-        Log("Casting Halo (2+ members under 90%)"); 
-        return CastPersonal("Halo"); 
-    }
     if (IsInCombat() && Inferno.CanCast("Prayer of Mending"))
     { 
         string target = LowestAllyInRange("Prayer of Mending"); 
@@ -324,6 +321,15 @@ private bool RunHealGambits()
         { 
             Log("Casting Prayer of Mending on " + target + " (" + HealthPct(target) + "%)"); 
             return CastOnFocus(target, "cast_pom"); 
+        } 
+    }
+    if (IsInCombat() && !Inferno.IsMoving("player"))
+    { 
+        string target = LowestAllyUnder(85, "Flash Heal"); 
+        if (target != null) 
+        { 
+            Log("Casting Flash Heal on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_flash_heal"); 
         } 
     }
     return false;

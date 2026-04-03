@@ -11,6 +11,13 @@ private bool RunHealGambits()
         Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
         return true; 
     }
+    
+    // Apotheosis if 0 Serenity charges and player under 75% (instant cast, can cast while moving)
+    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") == 0 && GroupMembersUnder(75, 1) && Inferno.CanCast("Apotheosis"))
+    { 
+        Log("Casting Apotheosis (0 Serenity charges, ally under 75%)"); 
+        return CastPersonal("Apotheosis"); 
+    }
 
     // Holy Word: Serenity with 2 charges - cast on lowest HP party member (instant cast)
     if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") >= 2)
@@ -21,6 +28,13 @@ private bool RunHealGambits()
             Log("Casting Holy Word: Serenity on " + target + " (" + HealthPct(target) + "%) [2 charges]"); 
             return CastOnFocus(target, "cast_serenity"); 
         } 
+    }
+    
+    // Halo if 2+ targets under 90% (cannot be cast while moving)
+    if (IsInCombat() && !Inferno.IsMoving("player") && GroupMembersUnder(90, 2) && Inferno.CanCast("Halo"))
+    { 
+        Log("Casting Halo (2+ members under 90%)"); 
+        return CastPersonal("Halo"); 
     }
 
     // Surge of Light buff - cast instant Flash Heal on target under 90%
@@ -45,24 +59,6 @@ private bool RunHealGambits()
         } 
     }
 
-    // Flash Heal on target under 85% (cannot be cast while moving)
-    if (IsInCombat() && !Inferno.IsMoving("player"))
-    { 
-        string target = LowestAllyUnder(85, "Flash Heal"); 
-        if (target != null) 
-        { 
-            Log("Casting Flash Heal on " + target + " (" + HealthPct(target) + "%)"); 
-            return CastOnFocus(target, "cast_flash_heal"); 
-        } 
-    }
-
-    // Halo if 2+ targets under 90% (cannot be cast while moving)
-    if (IsInCombat() && !Inferno.IsMoving("player") && GroupMembersUnder(90, 2) && Inferno.CanCast("Halo"))
-    { 
-        Log("Casting Halo (2+ members under 90%)"); 
-        return CastPersonal("Halo"); 
-    }
-
     // Prayer of Mending on lowest health player if off cooldown
     if (IsInCombat() && Inferno.CanCast("Prayer of Mending"))
     { 
@@ -73,8 +69,18 @@ private bool RunHealGambits()
             return CastOnFocus(target, "cast_pom"); 
         } 
     }
-
-
+    
+    // Flash Heal on target under 85% (cannot be cast while moving)
+    if (IsInCombat() && !Inferno.IsMoving("player"))
+    { 
+        string target = LowestAllyUnder(85, "Flash Heal"); 
+        if (target != null) 
+        { 
+            Log("Casting Flash Heal on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_flash_heal"); 
+        } 
+    }
+    
     return false;
 }
 
