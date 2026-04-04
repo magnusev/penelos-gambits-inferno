@@ -1,12 +1,22 @@
 ﻿// ========================================
-// SHARED PRIEST - INTERRUPT LOGIC
+// UNIVERSAL - INTERRUPT LOGIC
 // ========================================
-// Used by Shadow Priest (Silence instead of Rebuke)
-// Requires: _rng, _lastCastingID, _interruptTargetPct variables in class config
+// Intelligent interrupt system with randomized timing
+// Requires: INTERRUPT_SPELL constant, _rng, _lastCastingID, _interruptTargetPct variables in class config
+// NOTE: Classes without interrupts can skip defining these - function will return false
 
 private bool HandleInterrupt()
 {
-    if (!IsSettingOn("Auto Interrupt")) return false;
+    // Skip if class doesn't have interrupt configured (healers, etc.)
+    try 
+    {
+        if (!IsSettingOn("Auto Interrupt")) return false;
+    }
+    catch 
+    {
+        // Setting doesn't exist - this class doesn't use interrupts
+        return false;
+    }
     
     int castingID = TargetCastingID();
     if (!TargetIsCasting())
@@ -33,15 +43,16 @@ private bool HandleInterrupt()
     
     int castPct = (elapsed * 100) / total;
     
-    // Interrupt at randomized percentage (Priests use Silence)
-    if (castPct >= _interruptTargetPct && Inferno.CanCast("Silence", IgnoreGCD: true))
+    // Interrupt at randomized percentage
+    if (castPct >= _interruptTargetPct && Inferno.CanCast(INTERRUPT_SPELL, IgnoreGCD: true))
     {
         Log("Interrupting at " + castPct + "% (target: " + _interruptTargetPct + "%)");
-        Inferno.Cast("Silence", QuickDelay: true);
+        Inferno.Cast(INTERRUPT_SPELL, QuickDelay: true);
         _lastCastingID = 0;
         return true;
     }
     
     return false;
 }
+
 

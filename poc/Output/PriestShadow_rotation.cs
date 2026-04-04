@@ -344,7 +344,14 @@ private int SpellCooldown(string spellName)
 
 private bool HandleInterrupt()
 {
-    if (!IsSettingOn("Auto Interrupt")) return false;
+    try 
+    {
+        if (!IsSettingOn("Auto Interrupt")) return false;
+    }
+    catch 
+    {
+        return false;
+    }
     int castingID = TargetCastingID();
     if (!TargetIsCasting())
     {
@@ -364,10 +371,10 @@ private bool HandleInterrupt()
     int total = elapsed + remaining;
     if (total <= 0) return false;
     int castPct = (elapsed * 100) / total;
-    if (castPct >= _interruptTargetPct && Inferno.CanCast("Silence", IgnoreGCD: true))
+    if (castPct >= _interruptTargetPct && Inferno.CanCast(INTERRUPT_SPELL, IgnoreGCD: true))
     {
         Log("Interrupting at " + castPct + "% (target: " + _interruptTargetPct + "%)");
-        Inferno.Cast("Silence", QuickDelay: true);
+        Inferno.Cast(INTERRUPT_SPELL, QuickDelay: true);
         _lastCastingID = 0;
         return true;
     }
@@ -410,6 +417,7 @@ private bool HandleRacials()
 }
 
 private const int INSANITY = 13;
+private const string INTERRUPT_SPELL = "Silence";
 private Random _rng = new Random();
 private int _lastCastingID = 0;
 private int _interruptTargetPct = 0;

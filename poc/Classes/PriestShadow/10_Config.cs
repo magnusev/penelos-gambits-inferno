@@ -4,6 +4,7 @@
 
 // Shadow-specific constants
 private const int INSANITY = 13;
+private const string INTERRUPT_SPELL = "Silence";
 
 // Interrupt tracking
 private Random _rng = new Random();
@@ -106,4 +107,5 @@ public override void Initialize()
     Inferno.PrintMessage("Penelos Gambits - Shadow Priest loaded!", Color.DarkViolet);
     Log("Initialize complete");
 }
+
 

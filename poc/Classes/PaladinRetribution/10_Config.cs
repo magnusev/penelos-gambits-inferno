@@ -4,6 +4,7 @@
 
 // Retribution-specific constants
 private const int HOLY_POWER = 9;
+private const string INTERRUPT_SPELL = "Rebuke";
 
 // Interrupt tracking
 private Random _rng = new Random();

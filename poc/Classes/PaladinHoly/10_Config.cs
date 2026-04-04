@@ -11,10 +11,6 @@ private long _hsLastRechargeMs = 0;
 private const int HS_MAX_CHARGES = 2;
 private const int HS_RECHARGE_MS = 5000;
 
-// Interrupt tracking (required by shared Paladin components, but not actively used by Holy)
-private Random _rng = new Random();
-private int _lastCastingID = 0;
-private int _interruptTargetPct = 0;
 
 public override void LoadSettings()
 {

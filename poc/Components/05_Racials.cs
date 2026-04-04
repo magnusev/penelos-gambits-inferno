@@ -1,7 +1,7 @@
 ﻿// ========================================
-// SHARED PRIEST - RACIAL ABILITIES
+// UNIVERSAL - RACIAL ABILITIES
 // ========================================
-// Used by all Priest specs
+// Used by all classes
 
 private bool HandleRacials()
 {
