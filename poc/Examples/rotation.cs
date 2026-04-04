@@ -5,454 +5,350 @@ using InfernoWow.API;
 
 namespace InfernoWow.Modules
 {
-    /// <summary>
-    /// Shadow Priest - Translated from SimulationCraft Midnight APL
-    /// Hero trees: Archon (Halo) vs Voidweaver (Void Torrent) auto-detected.
-    /// Sub-rotations: cds, main (ST), aoe (3+ targets)
-    /// Core: Insanity management, DoT maintenance (VT/SWP/SWM), Voidform/PI sync,
-    /// Tentacle Slam, Mind Blast charge usage, MFI procs, channel protection.
-    /// </summary>
-    public class ShadowPriestRotation : Rotation
+    public class HolyPaladinPvpRotation : Rotation
     {
-        List<string> Abilities = new List<string> {
-            "Shadow Word: Death", "Shadow Word: Pain", "Vampiric Touch",
-            "Mind Blast", "Void Torrent", "Mind Flay", "Tentacle Slam",
-            "Shadow Word: Madness", "Void Blast", "Void Volley",
-            "Mind Flay: Insanity", "Mindbender", "Halo",
-            "Voidform", "Power Infusion", "Voidwraith",
-        };
-        List<string> TalentChecks = new List<string> {
-            "Void Torrent", "Halo", "Voidform", "Mind Devourer",
-            "Invoked Nightmare", "Void Apparitions", "Maddening Tentacles",
-            "Inescapable Torment", "Devour Matter", "Deathspeaker",
-            "Idol of Y'Shaarj", "Shadowfiend", "Distorted Reality",
-        };
-        List<string> DefensiveSpells = new List<string> {
-            "Dispersion", "Vampiric Embrace", "Desperate Prayer",
-            "Power Word: Shield",
-        };
-        List<string> UtilitySpells = new List<string> {
-            "Silence", "Power Word: Fortitude", "Shadowform",
+        private readonly List<string> Abilities = new List<string>
+        {
+            "Holy Shock", "Flash of Light", "Holy Light", "Light of Dawn", "Word of Glory",
+            "Judgment", "Crusader Strike", "Divine Toll", "Avenging Crusader", "Lay on Hands",
+            "Blessing of Protection", "Blessing of Sacrifice", "Blessing of Freedom", 
+            "Hammer of Justice", "Cleanse", "Beacon of Light", "Divine Shield", "Holy Prism"
         };
 
         const int HealthstoneItemID = 5512;
-        const int InsanityPowerType = 13;
+
         private Random _rng = new Random();
         private int _lastCastingID = 0;
         private int _interruptTargetPct = 0;
 
         public override void LoadSettings()
         {
-            Settings.Add(new Setting("=== Shadow Priest ==="));
-            Settings.Add(new Setting("Use Voidform", true));
-            Settings.Add(new Setting("Use Halo", true));
-            Settings.Add(new Setting("Use Power Infusion", true));
+            Settings.Add(new Setting("=== Holy Paladin PVP Arena ==="));
+            Settings.Add(new Setting("Use Avenging Crusader", true));
+            Settings.Add(new Setting("Use Divine Toll", true));
             Settings.Add(new Setting("Use Trinkets", true));
-            Settings.Add(new Setting("Auto Shadowform", true));
-            Settings.Add(new Setting("Auto Power Word: Fortitude", true));
-            Settings.Add(new Setting("AoE enemy count threshold", 2, 10, 3));
             Settings.Add(new Setting("=== Defensives ==="));
             Settings.Add(new Setting("Use Defensives", true));
-            Settings.Add(new Setting("Dispersion HP %", 1, 100, 25));
-            Settings.Add(new Setting("Vampiric Embrace HP %", 1, 100, 50));
-            Settings.Add(new Setting("Desperate Prayer HP %", 1, 100, 60));
-            Settings.Add(new Setting("Power Word: Shield HP %", 1, 100, 70));
-            Settings.Add(new Setting("Healthstone HP %", 1, 100, 50));
+            Settings.Add(new Setting("Auto Blessing of Protection < 30%", true));
+            Settings.Add(new Setting("Auto Blessing of Sacrifice < 40%", true));           // Set to 40%
+            Settings.Add(new Setting("Auto Lay on Hands < 25%", true));
+            Settings.Add(new Setting("Auto Word of Glory < 80%", true));
+            Settings.Add(new Setting("Auto Flash of Light on Infusion Proc < 88%", true));
+            Settings.Add(new Setting("Protect Focus", true));
+            Settings.Add(new Setting("Healthstone HP %", 1, 100, 45));
             Settings.Add(new Setting("=== Interrupt ==="));
-            Settings.Add(new Setting("Auto Interrupt", true));
+            Settings.Add(new Setting("Auto Hammer of Justice", true));
             Settings.Add(new Setting("Interrupt at cast % (min)", 0, 100, 40));
-            Settings.Add(new Setting("Interrupt at cast % (max)", 0, 100, 90));
+            Settings.Add(new Setting("Interrupt at cast % (max)", 0, 100, 85));
         }
 
         public override void Initialize()
         {
-            Inferno.PrintMessage("             //////////////////////////////////////", Color.DarkViolet);
-            Inferno.PrintMessage("             //   SHADOW - PRIEST (MID) V2.00    //", Color.DarkViolet);
-            Inferno.PrintMessage("             //   ARCHON / VOIDWEAVER            //", Color.DarkViolet);
-            Inferno.PrintMessage("             //////////////////////////////////////", Color.DarkViolet);
-            string addonCmd = Inferno.GetAddonName().Length >= 5 ? Inferno.GetAddonName().Substring(0, 5).ToLower() : Inferno.GetAddonName().ToLower();
-            Inferno.PrintMessage("Ready! Use /" + addonCmd + " toggle to pause/resume.", Color.LimeGreen);
-            Inferno.PrintMessage("Toggle CDs: /" + addonCmd + " NoCDs | Force ST: /" + addonCmd + " ForceST", Color.Yellow);
-            Inferno.Latency = 250;
+            Inferno.PrintMessage("             //////////////////////////////////////", Color.DarkSlateGray);
+            Inferno.PrintMessage("             //   HOLY PALADIN - ARENA PVP     //", Color.DarkSlateGray);
+            Inferno.PrintMessage("             //   Smart Group Emergency Heals   //", Color.DarkSlateGray);
+            Inferno.PrintMessage("             //////////////////////////////////////", Color.DarkSlateGray);
+
+            Inferno.PrintMessage("Holy Paladin Arena loaded! Sacrifice at 40% HP.", Color.LimeGreen);
+            Inferno.Latency = 185;
+
             foreach (string s in Abilities) Spellbook.Add(s);
-            foreach (string s in TalentChecks) Spellbook.Add(s);
-            foreach (string s in DefensiveSpells) Spellbook.Add(s);
-            foreach (string s in UtilitySpells) Spellbook.Add(s);
+
             Macros.Add("use_healthstone", "/use Healthstone");
             Macros.Add("trinket1", "/use 13");
             Macros.Add("trinket2", "/use 14");
+
             CustomFunctions.Add("HasHealthstone", "return GetItemCount(5512) > 0 and 1 or 0");
-            CustomFunctions.Add("PetIsActive", "return (UnitExists('pet') and not UnitIsDead('pet')) and 1 or 0");
-            // Racial abilities
-            foreach (string r in new string[] { "Berserking", "Blood Fury", "Ancestral Call", "Fireblood", "Lights Judgment" }) Spellbook.Add(r);
-            CustomCommands.Add("NoCDs"); CustomCommands.Add("nocds");
-            CustomCommands.Add("ForceST"); CustomCommands.Add("forcest");
+            CustomCommands.Add("NoCDs");
+            CustomCommands.Add("ForceST");
         }
 
-        public override bool OutOfCombatTick()
-        {
-            if (HandlePowerWordFortitude()) return true;
-            if (HandleShadowformOOC()) return true;
-            return false;
-        }
+        public override bool OutOfCombatTick() { return false; }
 
         public override bool CombatTick()
         {
             if (Inferno.IsDead("player") || Inferno.IsGhost("player")) return false;
             if (HandleDefensives()) return true;
             if (HandleInterrupt()) return true;
+            if (Inferno.IsChanneling("player")) return false;
 
-            // Don't interrupt Void Torrent or Mind Flay: Insanity channels
-            if (Inferno.IsChanneling("player"))
-            {
-                string castName = Inferno.CastingName("player");
-                if (castName == "Void Torrent" || castName == "Mind Flay: Insanity")
-                    return false;
-            }
+            if (HandleTrinkets()) return true;
 
-            // Don't interrupt cast-time trinkets
-            string _castName = Inferno.CastingName("player");
-            if (_castName.Contains("Puzzle Box") || _castName.Contains("Emberwing")) return false;
+            bool inCrusader = HasBuff("Avenging Crusader");
 
-            if (HandleShadowform()) return true;
-            if (HandlePowerWordFortitude()) return true;
-            if (!Inferno.UnitCanAttack("player", "target")) return false;
-                        if (HandleTrinkets()) return true;
-
-            // Racial damage CDs
-            if ((HasBuff("Voidform") || HasBuff("Dark Ascension")) && HandleRacials()) return true;
-
-            int enemies = Inferno.EnemiesNearUnit(10f, "target");
-            if (enemies < 1) enemies = 1; if ((Inferno.IsCustomCodeOn("ForceST") || Inferno.IsCustomCodeOn("forcest"))) enemies = 1;
-
-            // Cooldowns (shared across builds)
-            if (HandleCooldowns()) return true;
-
-            // Route to AoE or ST
-            if (enemies >= GetSlider("AoE enemy count threshold"))
-                return AoERotation(enemies);
-            return MainRotation(enemies);
-        }
-
-        // =====================================================================
-        // COOLDOWNS (actions.cds)
-        // =====================================================================
-        bool HandleCooldowns()
-        {
-            if ((Inferno.IsCustomCodeOn("NoCDs") || Inferno.IsCustomCodeOn("nocds"))) return false;
-            bool dotsUp = HasDotsUp();
-            bool vfUp = HasBuff("Voidform");
-            bool hasVoidformTalent = Inferno.IsSpellKnown("Voidform");
-            bool piUp = Inferno.BuffRemaining("Power Infusion") > GCD();
-
-            // halo (Archon — on CD)
-            if (GetCheckBox("Use Halo") && CastCD("Halo")) return true;
-
-            // voidform,if=dots up
-            if (GetCheckBox("Use Voidform") && !vfUp && dotsUp && CastCD("Voidform")) return true;
-
-            // power_infusion,if=(voidform up or no voidform talent) & PI not up
-            if (GetCheckBox("Use Power Infusion") && (vfUp || !hasVoidformTalent) && !piUp)
-            {
-                if (Inferno.CanCast("Power Infusion", IgnoreGCD: true))
-                { Inferno.Cast("Power Infusion", QuickDelay: true); return true; }
-            }
+            if (HandleCooldowns(inCrusader)) return true;
+            if (HandleHealing()) return true;
+            if (HandleDamage()) return true;
 
             return false;
         }
 
-        // =====================================================================
-        // MAIN ST ROTATION (actions.main)
-        // =====================================================================
-        bool MainRotation(int enemies)
-        {
-            int insanity = GetInsanity();
-            int insanityDeficit = GetInsanityDeficit();
-            int gcdMax = GetGCDMax();
-            int targetHpPct = GetTargetHealthPct();
-            bool dotsUp = HasDotsUp();
-            bool mindDevourer = HasBuff("Mind Devourer");
-            bool entropicRift = HasBuff("Entropic Rift");
-            bool hasMDTalent = Inferno.IsSpellKnown("Mind Devourer");
-            bool hasDevourMatter = Inferno.IsSpellKnown("Devour Matter");
-            bool hasInvokedNightmare = Inferno.IsSpellKnown("Invoked Nightmare");
-            bool hasVoidApparitions = Inferno.IsSpellKnown("Void Apparitions");
-            bool hasMaddeningTentacles = Inferno.IsSpellKnown("Maddening Tentacles");
-            bool hasInescapableTorment = Inferno.IsSpellKnown("Inescapable Torment");
-            int swmRemaining = Inferno.DebuffRemaining("Shadow Word: Madness");
-            int swmCost = 40;
-
-            // shadow_word_death — force Devour Matter in execute
-            if (hasDevourMatter && targetHpPct <= 20)
-                if (Cast("Shadow Word: Death")) return true;
-
-            // shadow_word_madness — don't overcap insanity
-            if (swmRemaining <= gcdMax || insanityDeficit <= 35 || mindDevourer || (entropicRift && swmCost > 0))
-                if (Cast("Shadow Word: Madness")) return true;
-
-            // void_volley
-            if (Cast("Void Volley")) return true;
-
-            // void_blast
-            if (Cast("Void Blast")) return true;
-
-            // tentacle_slam — refresh VT or prevent charge cap
-            if (IsVTRefreshable() || Inferno.FullRechargeTime("Tentacle Slam", 20000) <= GCDMAX() * 2)
-                if (Cast("Tentacle Slam")) return true;
-
-            // void_torrent,if=dots_up
-            if (dotsUp && Cast("Void Torrent")) return true;
-
-            // shadow_word_pain with Invoked Nightmare
-            if (hasInvokedNightmare && IsSWPRefreshable() && HasVTOnTarget())
-                if (Cast("Shadow Word: Pain")) return true;
-
-            // mind_blast,if=(!mind_devourer or no talent)
-            if (!mindDevourer || !hasMDTalent)
-                if (Cast("Mind Blast")) return true;
-
-            // mind_flay_insanity
-            if (HasBuff("Mind Flay: Insanity") && Cast("Mind Flay: Insanity")) return true;
-
-            // tentacle_slam — Void Apparitions / Maddening Tentacles value
-            if (hasVoidApparitions || hasMaddeningTentacles)
-            {
-                bool madOk = !hasMaddeningTentacles || (insanity + 6) >= swmCost || Inferno.DebuffRemaining("Shadow Word: Madness") == 0;
-                if (madOk && Cast("Tentacle Slam")) return true;
-            }
-
-            // vampiric_touch,if=refreshable
-            if (IsVTRefreshable() && Cast("Vampiric Touch")) return true;
-
-            // shadow_word_death — with Inescapable Torment or in execute
-            int executeThreshold = 20 + (Inferno.IsSpellKnown("Deathspeaker") ? 15 : 0);
-            bool petUp = Inferno.CustomFunction("PetIsActive") == 1;
-            if ((petUp && hasInescapableTorment) || (targetHpPct < executeThreshold && Inferno.IsSpellKnown("Shadowfiend") && Inferno.IsSpellKnown("Idol of Y'Shaarj")))
-                if (Cast("Shadow Word: Death")) return true;
-
-            // mind_flay filler (don't recast during a Mind Flay channel)
-            if (Inferno.CastingName("player") != "Mind Flay" && Cast("Mind Flay")) return true;
-
-            // Movement fallbacks
-            if (Cast("Tentacle Slam")) return true;
-            if (targetHpPct < 20 && Cast("Shadow Word: Death")) return true;
-            if (Cast("Shadow Word: Death")) return true;
-            if (Cast("Shadow Word: Pain")) return true;
-
-            return false;
-        }
-
-        // =====================================================================
-        // AOE ROTATION (actions.aoe, 3+ targets)
-        // =====================================================================
-        bool AoERotation(int enemies)
-        {
-            int insanity = GetInsanity();
-            int insanityDeficit = GetInsanityDeficit();
-            int gcdMax = GetGCDMax();
-            int targetHpPct = GetTargetHealthPct();
-            bool mindDevourer = HasBuff("Mind Devourer");
-            bool entropicRift = HasBuff("Entropic Rift");
-            bool hasMDTalent = Inferno.IsSpellKnown("Mind Devourer");
-            bool hasDevourMatter = Inferno.IsSpellKnown("Devour Matter");
-            bool hasInvokedNightmare = Inferno.IsSpellKnown("Invoked Nightmare");
-            bool hasVoidApparitions = Inferno.IsSpellKnown("Void Apparitions");
-            bool hasMaddeningTentacles = Inferno.IsSpellKnown("Maddening Tentacles");
-            bool hasInescapableTorment = Inferno.IsSpellKnown("Inescapable Torment");
-            int swmRemaining = Inferno.DebuffRemaining("Shadow Word: Madness");
-            int swmCost = 40;
-
-            // shadow_word_death — force Devour Matter
-            if (hasDevourMatter && targetHpPct <= 20)
-                if (Cast("Shadow Word: Death")) return true;
-
-            // shadow_word_madness — don't overcap
-            if (swmRemaining <= gcdMax || insanityDeficit <= 35 || mindDevourer || (entropicRift && swmCost > 0))
-                if (Cast("Shadow Word: Madness")) return true;
-
-            // void_volley
-            if (Cast("Void Volley")) return true;
-
-            // void_blast
-            if (Cast("Void Blast")) return true;
-
-            // tentacle_slam — spread VT / Void Apparitions / Maddening Tentacles
-            if (hasVoidApparitions || hasMaddeningTentacles || IsVTRefreshable())
-            {
-                bool madOk = !hasMaddeningTentacles || (insanity + 6) >= swmCost || Inferno.DebuffRemaining("Shadow Word: Madness") == 0;
-                if (madOk && Cast("Tentacle Slam")) return true;
-            }
-
-            // void_torrent,if=dots_up
-            if (HasDotsUp() && Cast("Void Torrent")) return true;
-
-            // shadow_word_pain with Invoked Nightmare
-            if (hasInvokedNightmare && IsSWPRefreshable() && HasVTOnTarget())
-                if (Cast("Shadow Word: Pain")) return true;
-
-            // mind_blast,if=(!mind_devourer or no talent)
-            if (!mindDevourer || !hasMDTalent)
-                if (Cast("Mind Blast")) return true;
-
-            // mind_flay_insanity
-            if (HasBuff("Mind Flay: Insanity") && Cast("Mind Flay: Insanity")) return true;
-
-            // vampiric_touch,if=refreshable
-            if (IsVTRefreshable() && Cast("Vampiric Touch")) return true;
-
-            // shadow_word_death — execute or Inescapable Torment
-            bool petUp = Inferno.CustomFunction("PetIsActive") == 1;
-            if ((petUp && hasInescapableTorment) || targetHpPct < 20)
-                if (Cast("Shadow Word: Death")) return true;
-
-            // mind_flay filler
-            if (Inferno.CastingName("player") != "Mind Flay" && Cast("Mind Flay")) return true;
-
-            // Movement fallbacks
-            if (Cast("Tentacle Slam")) return true;
-            if (Cast("Shadow Word: Death")) return true;
-            if (Cast("Shadow Word: Pain")) return true;
-
-            return false;
-        }
-
-        // =====================================================================
-        // DEFENSIVES / INTERRUPT / TRINKETS
-        // =====================================================================
         bool HandleDefensives()
         {
             if (!GetCheckBox("Use Defensives")) return false;
+
+            // Emergency saves: Sacrifice at 40%, Lay on Hands at 25%
+            if (GetCheckBox("Auto Blessing of Sacrifice < 40%"))
+                if (HandleAutoBlessingOfSacrifice()) return true;
+
+            if (GetCheckBox("Auto Lay on Hands < 25%") && GetPlayerHealthPct() < 25 && Inferno.CanCast("Lay on Hands", IgnoreGCD: true))
+            {
+                Inferno.Cast("Lay on Hands", QuickDelay: true);
+                Inferno.PrintMessage(">> Lay on Hands", Color.Green);
+                return true;
+            }
+
+            if (GetCheckBox("Auto Blessing of Protection < 30%") && GetPlayerHealthPct() < 30 && Inferno.CanCast("Blessing of Protection", IgnoreGCD: true))
+            {
+                Inferno.Cast("Blessing of Protection", QuickDelay: true);
+                Inferno.PrintMessage(">> BoP", Color.Green);
+                return true;
+            }
+
             int hpPct = GetPlayerHealthPct();
-            if (hpPct <= GetSlider("Dispersion HP %") && Inferno.CanCast("Dispersion"))
-            { Inferno.Cast("Dispersion"); return true; }
-            if (hpPct <= GetSlider("Vampiric Embrace HP %") && Inferno.CanCast("Vampiric Embrace", IgnoreGCD: true))
-            { Inferno.Cast("Vampiric Embrace", QuickDelay: true); return true; }
-            if (hpPct <= GetSlider("Desperate Prayer HP %") && Inferno.CanCast("Desperate Prayer", IgnoreGCD: true))
-            { Inferno.Cast("Desperate Prayer", QuickDelay: true); return true; }
             if (hpPct <= GetSlider("Healthstone HP %") && Inferno.CustomFunction("HasHealthstone") == 1 && Inferno.ItemCooldown(HealthstoneItemID) == 0)
-            { Inferno.Cast("use_healthstone", QuickDelay: true); return true; }
-            if (hpPct <= GetSlider("Power Word: Shield HP %") && Inferno.BuffRemaining("Power Word: Shield") < GCD() && Inferno.CanCast("Power Word: Shield"))
-            { Inferno.Cast("Power Word: Shield"); return true; }
+            {
+                Inferno.Cast("use_healthstone", QuickDelay: true);
+                return true;
+            }
+
+            return false;
+        }
+
+        // Scans Focus + Party1-3 + Self and applies Sacrifice to the lowest HP below 40%
+        bool HandleAutoBlessingOfSacrifice()
+        {
+            if (!Inferno.CanCast("Blessing of Sacrifice")) return false;
+
+            string bestUnit = "";
+            int lowestHp = 101;
+
+            // Check Focus
+            if (GetCheckBox("Protect Focus"))
+            {
+                int hp = GetUnitHealthPct("focus");
+                if (hp > 0 && hp < lowestHp)
+                {
+                    lowestHp = hp;
+                    bestUnit = "focus";
+                }
+            }
+
+            // Check Party 1-3
+            for (int i = 1; i <= 3; i++)
+            {
+                string unit = "party" + i;
+                int hp = GetUnitHealthPct(unit);
+                if (hp > 0 && hp < lowestHp)
+                {
+                    lowestHp = hp;
+                    bestUnit = unit;
+                }
+            }
+
+            // Check Self
+            int selfHp = GetPlayerHealthPct();
+            if (selfHp < lowestHp)
+            {
+                lowestHp = selfHp;
+                bestUnit = "player";
+            }
+
+            if (!string.IsNullOrEmpty(bestUnit) && lowestHp < 40)
+            {
+                Inferno.Cast("Blessing of Sacrifice", QuickDelay: true);
+                Inferno.PrintMessage(">> Blessing of Sacrifice on " + bestUnit + " (" + lowestHp + "%)", Color.Green);
+                return true;
+            }
+
+            return false;
+        }
+
+        bool HandleCooldowns(bool inCrusader)
+        {
+            if (Inferno.IsCustomCodeOn("NoCDs")) return false;
+
+            if (GetCheckBox("Use Avenging Crusader") && Inferno.UnitCanAttack("player", "target") && Inferno.CanCast("Avenging Crusader"))
+                if (Cast("Avenging Crusader")) return true;
+
+            if (GetCheckBox("Use Divine Toll") && Inferno.CanCast("Divine Toll"))
+                if (Cast("Divine Toll")) return true;
+
+            return false;
+        }
+
+        bool HandleHealing()
+        {
+            if (GetCheckBox("Auto Word of Glory < 80%"))
+                if (HandleWordOfGlory()) return true;
+
+            if (GetCheckBox("Auto Flash of Light on Infusion Proc < 88%") && HasBuff("Infusion of Light") && Inferno.CanCast("Flash of Light"))
+                if (HandleInfusionOfLightProc()) return true;
+
+            int playerHp = GetPlayerHealthPct();
+
+            if (Inferno.CanCast("Holy Shock"))
+                if (Cast("Holy Shock")) return true;
+
+            if (playerHp < 70 && Inferno.CanCast("Flash of Light"))
+                if (Cast("Flash of Light")) return true;
+
+            if (Inferno.CanCast("Light of Dawn"))
+                if (Cast("Light of Dawn")) return true;
+
+            return false;
+        }
+
+        bool HandleWordOfGlory()
+        {
+            if (!Inferno.CanCast("Word of Glory")) return false;
+
+            string bestUnit = "";
+            int lowestHp = 101;
+
+            if (GetCheckBox("Protect Focus"))
+            {
+                int hp = GetUnitHealthPct("focus");
+                if (hp > 0 && hp < lowestHp) { lowestHp = hp; bestUnit = "focus"; }
+            }
+
+            for (int i = 1; i <= 3; i++)
+            {
+                string unit = "party" + i;
+                int hp = GetUnitHealthPct(unit);
+                if (hp > 0 && hp < lowestHp) { lowestHp = hp; bestUnit = unit; }
+            }
+
+            int selfHp = GetPlayerHealthPct();
+            if (selfHp < lowestHp) { lowestHp = selfHp; bestUnit = "player"; }
+
+            if (!string.IsNullOrEmpty(bestUnit) && lowestHp < 80)
+            {
+                Inferno.Cast("Word of Glory", QuickDelay: true);
+                Inferno.PrintMessage(">> Word of Glory on " + bestUnit + " (" + lowestHp + "%)", Color.LightGreen);
+                return true;
+            }
+
+            return false;
+        }
+
+        bool HandleInfusionOfLightProc()
+        {
+            if (!HasBuff("Infusion of Light") || !Inferno.CanCast("Flash of Light")) return false;
+
+            string bestUnit = "";
+            int lowestHp = 101;
+
+            if (GetCheckBox("Protect Focus"))
+            {
+                int hp = GetUnitHealthPct("focus");
+                if (hp > 0 && hp < lowestHp) { lowestHp = hp; bestUnit = "focus"; }
+            }
+
+            for (int i = 1; i <= 3; i++)
+            {
+                string unit = "party" + i;
+                int hp = GetUnitHealthPct(unit);
+                if (hp > 0 && hp < lowestHp) { lowestHp = hp; bestUnit = unit; }
+            }
+
+            int selfHp = GetPlayerHealthPct();
+            if (selfHp < lowestHp) { lowestHp = selfHp; bestUnit = "player"; }
+
+            if (!string.IsNullOrEmpty(bestUnit) && lowestHp < 88)
+            {
+                Inferno.Cast("Flash of Light", QuickDelay: true);
+                Inferno.PrintMessage(">> Flash of Light (Infusion) on " + bestUnit + " (" + lowestHp + "%)", Color.LightBlue);
+                return true;
+            }
+
+            return false;
+        }
+
+        int GetUnitHealthPct(string unit)
+        {
+            int hp = Inferno.Health(unit);
+            int maxHp = Inferno.MaxHealth(unit);
+            if (maxHp < 1) return 0;
+            return (hp * 100) / maxHp;
+        }
+
+        bool HandleDamage()
+        {
+            if (Inferno.CanCast("Judgment"))
+                if (Cast("Judgment")) return true;
+
+            if (Inferno.CanCast("Crusader Strike"))
+                if (Cast("Crusader Strike")) return true;
+
             return false;
         }
 
         bool HandleInterrupt()
         {
-            if (!GetCheckBox("Auto Interrupt")) return false;
+            if (!GetCheckBox("Auto Hammer of Justice")) return false;
+
             int castingID = Inferno.CastingID("target");
-            if (castingID == 0 || !Inferno.IsInterruptable("target")) { _lastCastingID = 0; return false; }
-            if (castingID != _lastCastingID) { _lastCastingID = castingID; int minPct = GetSlider("Interrupt at cast % (min)"); int maxPct = GetSlider("Interrupt at cast % (max)"); if (maxPct < minPct) maxPct = minPct; _interruptTargetPct = _rng.Next(minPct, maxPct + 1); }
-            int elapsed = Inferno.CastingElapsed("target"); int remaining = Inferno.CastingRemaining("target"); int total = elapsed + remaining; if (total <= 0) return false;
-            if ((elapsed * 100 / total) >= _interruptTargetPct && Inferno.CanCast("Silence", IgnoreGCD: true))
-            { Inferno.Cast("Silence", QuickDelay: true); _lastCastingID = 0; return true; }
+            if (castingID == 0 || !Inferno.IsInterruptable("target"))
+            {
+                _lastCastingID = 0;
+                return false;
+            }
+
+            if (castingID != _lastCastingID)
+            {
+                _lastCastingID = castingID;
+                int minPct = GetSlider("Interrupt at cast % (min)");
+                int maxPct = GetSlider("Interrupt at cast % (max)");
+                if (maxPct < minPct) maxPct = minPct;
+                _interruptTargetPct = _rng.Next(minPct, maxPct + 1);
+            }
+
+            int elapsed = Inferno.CastingElapsed("target");
+            int remaining = Inferno.CastingRemaining("target");
+            int total = elapsed + remaining;
+            if (total <= 0) return false;
+
+            int castPct = (elapsed * 100) / total;
+            if (castPct >= _interruptTargetPct && Inferno.CanCast("Hammer of Justice", IgnoreGCD: true))
+            {
+                Inferno.Cast("Hammer of Justice", QuickDelay: true);
+                _lastCastingID = 0;
+                return true;
+            }
             return false;
         }
 
         bool HandleTrinkets()
         {
-            if (!GetCheckBox("Use Trinkets") || (Inferno.IsCustomCodeOn("NoCDs") || Inferno.IsCustomCodeOn("nocds"))) return false;
-            bool vfUp = HasBuff("Voidform");
-            bool piUp = Inferno.BuffRemaining("Power Infusion") >= 10000;
-            bool riftUp = HasBuff("Entropic Rift");
-            if (!vfUp && !piUp && !riftUp) return false;
+            if (!GetCheckBox("Use Trinkets") || Inferno.IsCustomCodeOn("NoCDs")) return false;
+            if (!HasBuff("Avenging Crusader")) return false;
+
             if (Inferno.CanUseEquippedItem(13)) { Inferno.Cast("trinket1"); return true; }
             if (Inferno.CanUseEquippedItem(14)) { Inferno.Cast("trinket2"); return true; }
             return false;
         }
 
-        bool HandleShadowform()
-        {
-            if (!GetCheckBox("Auto Shadowform")) return false;
-            // Shadowform is infinite — use Inferno.HasBuff
-            if (!Inferno.HasBuff("Shadowform") && Inferno.CanCast("Shadowform"))
-            { Inferno.Cast("Shadowform"); return true; }
-            return false;
-        }
-
-        bool HandleShadowformOOC()
-        {
-            if (!GetCheckBox("Auto Shadowform")) return false;
-            if (!Inferno.UnitCanAttack("player", "target")) return false;
-            if (!Inferno.HasBuff("Shadowform") && Inferno.CanCast("Shadowform"))
-            { Inferno.Cast("Shadowform"); return true; }
-            return false;
-        }
-
-        bool HandlePowerWordFortitude()
-        {
-            if (!GetCheckBox("Auto Power Word: Fortitude")) return false;
-            if (Inferno.BuffRemaining("Power Word: Fortitude") < GCD() && Inferno.CanCast("Power Word: Fortitude"))
-            { Inferno.Cast("Power Word: Fortitude"); return true; }
-            return false;
-        }
-
-        // =====================================================================
-        // HELPERS
-        // =====================================================================
         int GCD() { return Inferno.GCD(); }
-        int GCDMAX() { int g = (int)(1500f / (1f + Inferno.Haste("player") / 100f)); return g < 750 ? 750 : g; }
-        bool HasBuff(string n) { return Inferno.BuffRemaining(n) > GCD(); }
 
-        bool HandleRacials()
-        {
-            if ((Inferno.IsCustomCodeOn("NoCDs") || Inferno.IsCustomCodeOn("nocds"))) return false;
-            if (Inferno.CanCast("Berserking", IgnoreGCD: true)) { Inferno.Cast("Berserking", QuickDelay: true); return true; }
-            if (Inferno.CanCast("Blood Fury", IgnoreGCD: true)) { Inferno.Cast("Blood Fury", QuickDelay: true); return true; }
-            if (Inferno.CanCast("Ancestral Call", IgnoreGCD: true)) { Inferno.Cast("Ancestral Call", QuickDelay: true); return true; }
-            if (Inferno.CanCast("Fireblood", IgnoreGCD: true)) { Inferno.Cast("Fireblood", QuickDelay: true); return true; }
-            if (Inferno.CanCast("Lights Judgment")) { Inferno.Cast("Lights Judgment"); return true; }
-            return false;
-        }
-        int GetPlayerHealthPct() { int hp = Inferno.Health("player"); int m = Inferno.MaxHealth("player"); if (m < 1) m = 1; return (hp * 100) / m; }
-        int GetTargetHealthPct() { int hp = Inferno.Health("target"); int m = Inferno.MaxHealth("target"); if (m < 1) m = 1; return (hp * 100) / m; }
+        bool HasBuff(string name) { return Inferno.BuffRemaining(name) > GCD(); }
 
-        int GetGCDMax()
+        int GetPlayerHealthPct()
         {
-            int gcdMax = (int)(1500f / (1f + Inferno.Haste("player") / 100f));
-            if (gcdMax < 750) gcdMax = 750;
-            return gcdMax;
+            int hp = Inferno.Health("player");
+            int maxHp = Inferno.MaxHealth("player");
+            if (maxHp < 1) maxHp = 1;
+            return (hp * 100) / maxHp;
         }
 
-        // Insanity prediction: account for in-flight casts
-        int GetInsanity()
+        bool Cast(string name)
         {
-            int insanity = Inferno.Power("player", InsanityPowerType);
-            string casting = Inferno.CastingName("player");
-            if (casting == "Vampiric Touch") insanity += 4;
-            if (casting == "Mind Blast") insanity += 6;
-            if (casting == "Void Blast") insanity += 6;
-            return insanity;
-        }
-
-        int GetInsanityDeficit() { return Inferno.MaxPower("player", InsanityPowerType) - GetInsanity(); }
-
-        // VT prediction: if currently casting VT, treat it as applied
-        bool HasVTOnTarget()
-        {
-            if (Inferno.CastingName("player") == "Vampiric Touch") return true;
-            return Inferno.DebuffRemaining("Vampiric Touch") > GCD();
-        }
-
-        bool IsVTRefreshable()
-        {
-            if (Inferno.CastingName("player") == "Vampiric Touch") return false;
-            return Inferno.DebuffRemaining("Vampiric Touch") < 6300; // 30% of 21s pandemic
-        }
-
-        bool IsSWPRefreshable() { return Inferno.DebuffRemaining("Shadow Word: Pain") < 4800; } // 30% of 16s
-
-        bool HasDotsUp() { return HasVTOnTarget() && Inferno.DebuffRemaining("Shadow Word: Pain") > GCD(); }
-
-        bool Cast(string n)
-        {
-            if (Inferno.CanCast(n)) { Inferno.Cast(n); Inferno.PrintMessage(">> " + n, Color.White); return true; }
-            return false;
-        }
-
-        bool CastCD(string n)
-        {
-            if ((Inferno.IsCustomCodeOn("NoCDs") || Inferno.IsCustomCodeOn("nocds"))) return false;
-            if (Inferno.CanCast(n)) { Inferno.Cast(n); Inferno.PrintMessage(">> " + n, Color.White); return true; }
+            if (Inferno.CanCast(name))
+            {
+                Inferno.Cast(name);
+                Inferno.PrintMessage(">> " + name, Color.White);
+                return true;
+            }
             return false;
         }
     }

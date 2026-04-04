@@ -1,0 +1,45 @@
+﻿// ========================================
+// PRIEST DISCIPLINE PVP - COMBAT TICK
+// ========================================
+
+public override bool CombatTick()
+{
+    // Skip if player is dead
+    if (Inferno.IsDead("player") || Inferno.IsGhost("player")) return false;
+    
+    // Priority 1: Defensives
+    if (HandleDefensives()) return true;
+    
+    // Priority 2: Interrupts
+    if (HandleInterrupt()) return true;
+    
+    // Skip if channeling
+    if (IsChanneling()) return false;
+    
+    // Priority 3: Trinkets
+    if (HandleTrinkets()) return true;
+    
+    // Determine burst window
+    bool inRift = HasBuff("Entropic Rift") || SpellCooldown("Mind Blast") <= GCD() + 2500;
+    bool inBurst = HasBuff("Power Infusion") || HasBuff("Evangelism") || inRift;
+    
+    // Priority 4: Cooldowns
+    if (HandleCooldowns(inBurst)) return true;
+    
+    // Priority 5: Damage/Atonement rotation
+    if (HandleDamage(inRift, inBurst)) return true;
+    
+    return false;
+}
+
+public override bool OutOfCombatTick()
+{
+    // No specific out-of-combat logic for PvP
+    return false;
+}
+
+public override void OnStop() 
+{ 
+    Log("Rotation stopped"); 
+}
+

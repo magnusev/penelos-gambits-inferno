@@ -421,6 +421,10 @@ private int _hsCharges = 2;
 private long _hsLastRechargeMs = 0;
 private const int HS_MAX_CHARGES = 2;
 private const int HS_RECHARGE_MS = 5000;
+private Random _rng = new Random();
+private int _lastCastingID = 0;
+private int _interruptTargetPct = 0;
+private const string INTERRUPT_SPELL = "";
 public override void LoadSettings()
 {
     Settings.Add(new Setting("Enable Logging", true));

@@ -2,7 +2,11 @@
 // PRIEST HOLY - CONFIGURATION
 // ========================================
 
-// Priest has no class-specific constants beyond shared ones
+// Interrupt tracking (defined for universal component, but not actively used by healers)
+private Random _rng = new Random();
+private int _lastCastingID = 0;
+private int _interruptTargetPct = 0;
+private const string INTERRUPT_SPELL = ""; // Healers don't interrupt
 
 public override void LoadSettings()
 {

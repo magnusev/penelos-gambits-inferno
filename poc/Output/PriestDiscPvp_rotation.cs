@@ -8,7 +8,7 @@ using InfernoWow.API;
 namespace InfernoWow.Modules
 {
 
-public class HolyPriestPvE : Rotation
+public class DisciplinePriestPvP : Rotation
 {
 private string _queuedAction = null;
 private string _lastLoggedAction = null;
@@ -416,226 +416,299 @@ private bool HandleRacials()
     return false;
 }
 
+private string LowestArenaAlly(int maxCount = 3)
+{
+    string lowestUnit = "";
+    int lowestHp = 101;
+    if (IsSettingOn("Protect Focus"))
+    {
+        int focusHp = GetUnitHealthPct("focus");
+        if (focusHp > 0 && focusHp < lowestHp)
+        {
+            lowestHp = focusHp;
+            lowestUnit = "focus";
+        }
+    }
+    for (int i = 1; i <= maxCount; i++)
+    {
+        string unit = "party" + i;
+        int hp = GetUnitHealthPct(unit);
+        if (hp > 0 && hp < lowestHp)
+        {
+            lowestHp = hp;
+            lowestUnit = unit;
+        }
+    }
+    int selfHp = HealthPct("player");
+    if (selfHp < lowestHp)
+    {
+        lowestHp = selfHp;
+        lowestUnit = "player";
+    }
+    return lowestUnit;
+}
+private string LowestArenaAllyUnder(int threshold, int maxCount = 3)
+{
+    string lowestUnit = "";
+    int lowestHp = 101;
+    if (IsSettingOn("Protect Focus"))
+    {
+        int focusHp = GetUnitHealthPct("focus");
+        if (focusHp > 0 && focusHp < threshold && focusHp < lowestHp)
+        {
+            lowestHp = focusHp;
+            lowestUnit = "focus";
+        }
+    }
+    for (int i = 1; i <= maxCount; i++)
+    {
+        string unit = "party" + i;
+        int hp = GetUnitHealthPct(unit);
+        if (hp > 0 && hp < threshold && hp < lowestHp)
+        {
+            lowestHp = hp;
+            lowestUnit = unit;
+        }
+    }
+    int selfHp = HealthPct("player");
+    if (selfHp < threshold && selfHp < lowestHp)
+    {
+        lowestHp = selfHp;
+        lowestUnit = "player";
+    }
+    return lowestUnit;
+}
+private int GetUnitHealthPct(string unit)
+{
+    int maxHealth = Inferno.MaxHealth(unit);
+    if (maxHealth < 1) return 0;
+    return (Inferno.Health(unit) * 100) / maxHealth;
+}
+
+private const int INSANITY = 13;
+private const string INTERRUPT_SPELL = "Silence";
 private Random _rng = new Random();
 private int _lastCastingID = 0;
 private int _interruptTargetPct = 0;
-private const string INTERRUPT_SPELL = "";
 public override void LoadSettings()
 {
+    Settings.Add(new Setting("=== Discipline Priest (VOIDWEAVER ARENA) ==="));
     Settings.Add(new Setting("Enable Logging", true));
-    Settings.Add(new Setting("Healthstone HP %", 1, 100, 50));
+    Settings.Add(new Setting("Use Power Infusion", true));
+    Settings.Add(new Setting("Use Evangelism Burst", true));
+    Settings.Add(new Setting("Use Trinkets", true));
+    Settings.Add(new Setting("Auto Radiance on Proc Only", true));
+    Settings.Add(new Setting("=== Defensives ==="));
+    Settings.Add(new Setting("Use Defensives", true));
+    Settings.Add(new Setting("Auto Pain Suppression < 55%", true));
+    Settings.Add(new Setting("Auto Flash Heal on Surge of Light < 88%", true));
+    Settings.Add(new Setting("Auto Desperate Prayer < 35%", true));
+    Settings.Add(new Setting("Auto Leap of Faith < 25%", true));
+    Settings.Add(new Setting("Protect Focus", true));
+    Settings.Add(new Setting("Healthstone HP %", 1, 100, 45));
+    Settings.Add(new Setting("=== Interrupt / Control ==="));
+    Settings.Add(new Setting("Auto Interrupt", true));
+    Settings.Add(new Setting("Interrupt at cast % (min)", 0, 100, 35));
+    Settings.Add(new Setting("Interrupt at cast % (max)", 0, 100, 85));
 }
 public override void Initialize()
 {
-    Spellbook.Add("Apotheosis");
-    Spellbook.Add("Flash Heal");
-    Spellbook.Add("Halo");
-    Spellbook.Add("Holy Fire");
-    Spellbook.Add("Holy Word: Chastise");
-    Spellbook.Add("Holy Word: Serenity");
-    Spellbook.Add("Prayer of Mending");
-    Spellbook.Add("Purify");
+    Spellbook.Add("Evangelism");
+    Spellbook.Add("Mind Blast");
+    Spellbook.Add("Penance");
+    Spellbook.Add("Power Infusion");
+    Spellbook.Add("Power Word: Radiance");
+    Spellbook.Add("Purge the Wicked");
+    Spellbook.Add("Shadow Word: Death");
+    Spellbook.Add("Shadow Word: Pain");
     Spellbook.Add("Smite");
-    Macros.Add("cast_pom", "/cast [@focus] Prayer of Mending");
-    Macros.Add("cast_purify", "/cast [@focus] Purify");
-    Macros.Add("cast_flash_heal", "/cast [@focus] Flash Heal");
-    Macros.Add("cast_serenity", "/cast [@focus] Holy Word: Serenity");
+    Spellbook.Add("Void Blast");
+    Spellbook.Add("Voidwraith");
+    Spellbook.Add("Phase Shift");
+    Spellbook.Add("Purge the Wicked");
+    Spellbook.Add("Ultimate Radiance");
+    Spellbook.Add("Desperate Prayer");
+    Spellbook.Add("Dispel Magic");
+    Spellbook.Add("Flash Heal");
+    Spellbook.Add("Leap of Faith");
+    Spellbook.Add("Mass Dispel");
+    Spellbook.Add("Pain Suppression");
+    Spellbook.Add("Psychic Scream");
+    Spellbook.Add("Silence");
+    Spellbook.Add("Ancestral Call");
+    Spellbook.Add("Berserking");
+    Spellbook.Add("Blood Fury");
+    Spellbook.Add("Fireblood");
+    Spellbook.Add("Lights Judgment");
+    Macros.Add("trinket1", "/use 13");
+    Macros.Add("trinket2", "/use 14");
+    CustomFunctions.Add("PetIsActive", "return (UnitExists('pet') and not UnitIsDead('pet')) and 1 or 0");
     InitializeSharedComponents();
-    _logFile = "penelos_priest_holy_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
-    Inferno.PrintMessage("Penelos Gambits - Holy Priest loaded!", Color.Green);
+    CustomCommands.Add("NoCDs");
+    CustomCommands.Add("ForceST");
+    Inferno.Latency = 195;
+    _logFile = "penelos_priest_disc_pvp_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
+    Inferno.PrintMessage("Penelos Gambits - Discipline Priest PvP loaded!", Color.DarkSlateGray);
     Log("Initialize complete");
 }
 
+private bool CastOnUnit(string spellName, string unit)
+{
+    if (CanCast(spellName, unit))
+    {
+        Log("Casting " + spellName + " on " + unit);
+        Inferno.Cast(spellName, QuickDelay: true);
+        return true;
+    }
+    return false;
+}
+private bool CastOffensive(string spellName)
+{
+    if (CanCast(spellName, "target"))
+    {
+        Log("Casting " + spellName);
+        return CastOnEnemy(spellName);
+    }
+    return false;
+}
+private bool CastCooldown(string spellName)
+{
+    if (IsCustomCommandOn("NoCDs")) return false;
+    if (CanCastSpell(spellName))
+    {
+        Log("Casting " + spellName + " (cooldown)");
+        return CastPersonal(spellName);
+    }
+    return false;
+}
 
+private bool HandleDefensives()
+{
+    if (!IsSettingOn("Use Defensives")) return false;
+    if (IsSettingOn("Auto Desperate Prayer < 35%") && HealthPct("player") < 35 && Inferno.CanCast("Desperate Prayer", IgnoreGCD: true))
+    {
+        Log("Casting Desperate Prayer (player " + HealthPct("player") + "%)");
+        Inferno.Cast("Desperate Prayer", QuickDelay: true);
+        return true;
+    }
+    if (IsSettingOn("Auto Pain Suppression < 55%") && CanCastSpell("Pain Suppression"))
+    {
+        string target = LowestArenaAllyUnder(55);
+        if (!string.IsNullOrEmpty(target))
+        {
+            Log("Casting Pain Suppression on " + target + " (" + GetUnitHealthPct(target) + "%)");
+            return CastOnUnit("Pain Suppression", target);
+        }
+    }
+    if (IsSettingOn("Auto Leap of Faith < 25%") && CanCastSpell("Leap of Faith"))
+    {
+        string target = LowestArenaAllyUnder(25);
+        if (!string.IsNullOrEmpty(target) && target != "player")
+        {
+            Log("Casting Leap of Faith on " + target + " (" + GetUnitHealthPct(target) + "%) - EMERGENCY");
+            return CastOnUnit("Leap of Faith", target);
+        }
+    }
+    if (HealthPct("player") <= GetSlider("Healthstone HP %") && HasHealthstone() && IsItemReady(HEALTHSTONE_ID))
+    {
+        Log("Using Healthstone (player " + HealthPct("player") + "%)");
+        Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true);
+        return true;
+    }
+    return false;
+}
+
+private bool HandleCooldowns(bool inBurst)
+{
+    if (IsCustomCommandOn("NoCDs")) return false;
+    if (IsSettingOn("Use Power Infusion") && CastCooldown("Power Infusion"))
+        return true;
+    if (IsSettingOn("Use Evangelism Burst") && inBurst && CastCooldown("Evangelism"))
+        return true;
+    return false;
+}
+private bool HandleTrinkets()
+{
+    if (!IsSettingOn("Use Trinkets") || IsCustomCommandOn("NoCDs"))
+        return false;
+    if (!HasBuff("Power Infusion") && !HasBuff("Entropic Rift"))
+        return false;
+    if (CanUseTrinket(13))
+    {
+        Log("Using Trinket 1");
+        Inferno.Cast("trinket1");
+        return true;
+    }
+    if (CanUseTrinket(14))
+    {
+        Log("Using Trinket 2");
+        Inferno.Cast("trinket2");
+        return true;
+    }
+    return false;
+}
 
 public override bool CombatTick()
 {
-    if (Inferno.IsDead("player")) return true;
-    if (Inferno.GCD() != 0) return true;
-    if (ProcessQueue()) return true;
-    if (ThrottleIsOpen("diag", DIAGNOSTIC_LOG_INTERVAL_MS))
-    {
-        ThrottleRestart("diag");
-        List<string> groupMembers = GetGroupMembers();
-        string info = "";
-        int maxLog = groupMembers.Count > 5 ? 5 : groupMembers.Count;
-        for (int i = 0; i < maxLog; i++)
-            info += groupMembers[i] + "=" + HealthPct(groupMembers[i]) + "% ";
-        if (groupMembers.Count > 5)
-            info += "... (" + (groupMembers.Count - 5) + " more)";
-        Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + groupMembers.Count + " | " + info);
-    }
-    int mapId = Inferno.GetMapID();
-    if (RunDungeonGambits(mapId)) return true;
-    if (RunHealGambits()) return true;
-    if (RunDmgGambits()) return true;
-    return true;
+    if (Inferno.IsDead("player") || Inferno.IsGhost("player")) return false;
+    if (HandleDefensives()) return true;
+    if (HandleInterrupt()) return true;
+    if (IsChanneling()) return false;
+    if (HandleTrinkets()) return true;
+    bool inRift = HasBuff("Entropic Rift") || SpellCooldown("Mind Blast") <= GCD() + 2500;
+    bool inBurst = HasBuff("Power Infusion") || HasBuff("Evangelism") || inRift;
+    if (HandleCooldowns(inBurst)) return true;
+    if (HandleDamage(inRift, inBurst)) return true;
+    return false;
 }
-public override bool OutOfCombatTick() 
-{ 
-    return CombatTick(); 
+public override bool OutOfCombatTick()
+{
+    return false;
 }
 public override void OnStop() 
 { 
     Log("Rotation stopped"); 
 }
 
-private bool RunHealGambits()
+private bool HandleDamage(bool inRift, bool inBurst)
 {
-    if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && IsItemReady(HEALTHSTONE_ID))
-    { 
-        Log("Using Healthstone (player " + HealthPct("player") + "%)"); 
-        Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
-        return true; 
+    if (IsSettingOn("Auto Radiance on Proc Only") && HasBuff("Ultimate Radiance") && CanCastSpell("Power Word: Radiance"))
+    {
+        Log("Casting Power Word: Radiance (proc)");
+        return CastPersonal("Power Word: Radiance");
     }
-    if (IsInCombat() && SpellCharges("Holy Word: Serenity") == 0 && GroupMembersUnder(75, 1) && CanCastSpell("Apotheosis"))
-    { 
-        Log("Casting Apotheosis (0 Serenity charges, ally under 75%)"); 
-        return CastPersonal("Apotheosis"); 
+    if (IsSettingOn("Auto Flash Heal on Surge of Light < 88%") && HasBuff("Surge of Light") && CanCastSpell("Flash Heal"))
+    {
+        string target = LowestArenaAllyUnder(88);
+        if (!string.IsNullOrEmpty(target))
+        {
+            Log("Casting Flash Heal (Surge) on " + target + " (" + GetUnitHealthPct(target) + "%)");
+            return CastOnUnit("Flash Heal", target);
+        }
     }
-    if (IsInCombat() && SpellCharges("Holy Word: Serenity") >= 2)
-    { 
-        string target = LowestAllyInRange("Holy Word: Serenity"); 
-        if (target != null) 
-        { 
-            Log("Casting Holy Word: Serenity on " + target + " (" + HealthPct(target) + "%) [2 charges]"); 
-            return CastOnFocus(target, "cast_serenity"); 
-        } 
+    if (CastOffensive("Shadow Word: Death"))
+        return true;
+    if (CastOffensive("Mind Blast"))
+        return true;
+    if (inRift && CastOffensive("Void Blast"))
+        return true;
+    if (CastOffensive("Penance"))
+        return true;
+    if (IsTalentKnown("Purge the Wicked") && DebuffRemaining("Purge the Wicked") < GCD())
+    {
+        if (CastOffensive("Purge the Wicked")) 
+            return true;
     }
-    if (IsInCombat() && !IsMoving() && GroupMembersUnder(90, 2) && CanCastSpell("Halo"))
-    { 
-        Log("Casting Halo (2+ members under 90%)"); 
-        return CastPersonal("Halo"); 
+    if (DebuffRemaining("Shadow Word: Pain") < GCD())
+    {
+        if (CastOffensive("Shadow Word: Pain"))
+            return true;
     }
-    if (IsInCombat() && HasBuff("Surge of Light"))
-    { 
-        string target = LowestAllyUnder(90, "Flash Heal"); 
-        if (target != null) 
-        { 
-            Log("Casting Flash Heal (Surge of Light) on " + target + " (" + HealthPct(target) + "%)"); 
-            return CastOnFocus(target, "cast_flash_heal"); 
-        } 
-    }
-    if (IsInCombat() && SpellCharges("Holy Word: Serenity") >= 1)
-    { 
-        string target = LowestAllyUnder(90, "Holy Word: Serenity"); 
-        if (target != null) 
-        { 
-            Log("Casting Holy Word: Serenity on " + target + " (" + HealthPct(target) + "%) [1 charge]"); 
-            return CastOnFocus(target, "cast_serenity"); 
-        } 
-    }
-    if (IsInCombat() && CanCastSpell("Prayer of Mending"))
-    { 
-        string target = LowestAllyInRange("Prayer of Mending"); 
-        if (target != null) 
-        { 
-            Log("Casting Prayer of Mending on " + target + " (" + HealthPct(target) + "%)"); 
-            return CastOnFocus(target, "cast_pom"); 
-        } 
-    }
-    if (IsInCombat() && !IsMoving())
-    { 
-        string target = LowestAllyUnder(85, "Flash Heal"); 
-        if (target != null) 
-        { 
-            Log("Casting Flash Heal on " + target + " (" + HealthPct(target) + "%)"); 
-            return CastOnFocus(target, "cast_flash_heal"); 
-        } 
-    }
+    if (CastOffensive("Voidwraith"))
+        return true;
+    if (CastOffensive("Smite"))
+        return true;
     return false;
-}
-
-private bool RunDmgGambits()
-{
-    if (IsInCombat() && !TargetIsEnemy()) 
-    { 
-        Inferno.Cast(MACRO_TARGET_ENEMY, true); 
-        return true; 
-    }
-    if (IsInCombat() && TargetIsEnemy() && CanCast("Holy Fire", "target"))
-    {
-        Log("Casting Holy Fire on target"); 
-        return CastOnEnemy("Holy Fire");
-    }
-    if (IsInCombat() && TargetIsEnemy() && CanCast("Holy Word: Chastise", "target"))
-    {
-        Log("Casting Holy Word: Chastise on target"); 
-        return CastOnEnemy("Holy Word: Chastise");
-    }
-    if (IsInCombat() && TargetIsEnemy() && CanCast("Smite", "target"))
-    {
-        Log("Casting Smite on target"); 
-        return CastOnEnemy("Smite");
-    }
-    return false;
-}
-
-private bool RunDungeonGambits(int mapId)
-{
-    if (!IsInCombat()) return false;
-    switch (mapId)
-    {
-        case MAP_PROVING_GROUNDS:
-            return TryDispel("Aqua Bomb");
-        case MAP_ALGETHAR_ACADEMY_1:
-        case MAP_ALGETHAR_ACADEMY_2:
-        case MAP_ALGETHAR_ACADEMY_3:
-        case MAP_ALGETHAR_ACADEMY_4:
-        case MAP_ALGETHAR_ACADEMY_5:
-        case MAP_ALGETHAR_ACADEMY_6:
-        case MAP_ALGETHAR_ACADEMY_7:
-            if (TryDispel("Consuming Void")) return true;
-            return TryDispel("Polymorph");
-        case MAP_SKYREACH_1:
-        case MAP_SKYREACH_2:
-            return false;
-        case MAP_PIT_OF_SARON:
-            return TryDispel("Cryoshards");
-        case MAP_MAISARA_CAVERNS_1:
-        case MAP_MAISARA_CAVERNS_2:
-        case MAP_MAISARA_CAVERNS_3:
-        case MAP_MAISARA_CAVERNS_4:
-        case MAP_MAISARA_CAVERNS_5:
-        case MAP_MAISARA_CAVERNS_6:
-        case MAP_MAISARA_CAVERNS_7:
-            if (TryDispel("Poison Spray")) return true;
-            if (TryDispel("Soul Torment")) return true;
-            return TryDispel("Poison Blades");
-        case MAP_WINDRUNNER_SPIRE:
-            return TryDispel("Infected Pinions");
-        case MAP_MAGISTERS_TERRACE_1:
-        case MAP_MAGISTERS_TERRACE_2:
-        case MAP_MAGISTERS_TERRACE_3:
-            if (IsSpellReady("Purify") && AnyAllyHasDebuff("Lasher Toxin", 2))
-            { 
-                string target = GetAllyWithMostStacks("Lasher Toxin", "Purify"); 
-                if (target != null) 
-                { 
-                    CastOnFocus(target, "cast_purify"); 
-                    return true; 
-                } 
-            }
-            return false;
-        default: 
-            return false;
-    }
-}
-private bool TryDispel(string debuff)
-{
-    if (!IsSpellReady("Purify") || !AnyAllyHasDebuff(debuff)) return false;
-    string target = GetAllyWithDebuff(debuff, "Purify");
-    if (target == null) return false;
-    CastOnFocus(target, "cast_purify");
-    return true;
-}
-private bool TryDispelStacks(string debuff, int min)
-{
-    if (!IsSpellReady("Purify") || !AnyAllyHasDebuff(debuff, min)) return false;
-    string target = GetAllyWithMostStacks(debuff, "Purify");
-    if (target == null) return false;
-    CastOnFocus(target, "cast_purify");
-    return true;
 }
 }
 

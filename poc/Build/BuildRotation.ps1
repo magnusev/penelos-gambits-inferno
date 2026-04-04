@@ -100,6 +100,15 @@ if (Test-Path $classFamilyComponentDir) {
     $componentFiles = @($componentFiles) + @($classFamilyFiles)
 }
 
+# Add PvP components if class name contains "Pvp"
+if ($Class -match "Pvp") {
+    $pvpComponentDir = Join-Path $componentsDir "PvP"
+    if (Test-Path $pvpComponentDir) {
+        $pvpFiles = Get-ChildItem "$pvpComponentDir\*.cs" | Sort-Object Name
+        $componentFiles = @($componentFiles) + @($pvpFiles)
+    }
+}
+
 $classFiles = Get-ChildItem "$classDir\*.cs" | Sort-Object Name
 
 if ($componentFiles.Count -eq 0) {
@@ -113,6 +122,9 @@ Write-Host "📦 Combining files:" -ForegroundColor White
 Get-ChildItem "$componentsDir\*.cs" | Sort-Object Name | ForEach-Object { Write-Host "   ✓ Components\$($_.Name)" -ForegroundColor Gray }
 if (Test-Path $classFamilyComponentDir) {
     Get-ChildItem "$classFamilyComponentDir\*.cs" | Sort-Object Name | ForEach-Object { Write-Host "   ✓ Components\$classFamily\$($_.Name)" -ForegroundColor Gray }
+}
+if ($Class -match "Pvp" -and (Test-Path (Join-Path $componentsDir "PvP"))) {
+    Get-ChildItem (Join-Path $componentsDir "PvP\*.cs") | Sort-Object Name | ForEach-Object { Write-Host "   ✓ Components\PvP\$($_.Name)" -ForegroundColor Gray }
 }
 $classFiles | ForEach-Object { Write-Host "   ✓ Classes\$Class\$($_.Name)" -ForegroundColor Gray }
 
