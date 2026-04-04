@@ -55,6 +55,29 @@ private void Log(string msg)
     }
 }
 
+private const int MAP_PROVING_GROUNDS = 480;
+private const int MAP_ALGETHAR_ACADEMY_1 = 2511;
+private const int MAP_ALGETHAR_ACADEMY_2 = 2515;
+private const int MAP_ALGETHAR_ACADEMY_3 = 2516;
+private const int MAP_ALGETHAR_ACADEMY_4 = 2517;
+private const int MAP_ALGETHAR_ACADEMY_5 = 2518;
+private const int MAP_ALGETHAR_ACADEMY_6 = 2519;
+private const int MAP_ALGETHAR_ACADEMY_7 = 2520;
+private const int MAP_SKYREACH_1 = 601;
+private const int MAP_SKYREACH_2 = 602;
+private const int MAP_PIT_OF_SARON = 823;
+private const int MAP_MAISARA_CAVERNS_1 = 2492;
+private const int MAP_MAISARA_CAVERNS_2 = 2493;
+private const int MAP_MAISARA_CAVERNS_3 = 2494;
+private const int MAP_MAISARA_CAVERNS_4 = 2496;
+private const int MAP_MAISARA_CAVERNS_5 = 2497;
+private const int MAP_MAISARA_CAVERNS_6 = 2498;
+private const int MAP_MAISARA_CAVERNS_7 = 2499;
+private const int MAP_WINDRUNNER_SPIRE = 2501;
+private const int MAP_MAGISTERS_TERRACE_1 = 2097;
+private const int MAP_MAGISTERS_TERRACE_2 = 2098;
+private const int MAP_MAGISTERS_TERRACE_3 = 2099;
+
 private const int MANA = 0;
 private const int HEALTHSTONE_ID = 5512;
 private const int DIAGNOSTIC_LOG_INTERVAL_MS = 2000;
@@ -318,8 +341,11 @@ public override bool CombatTick()
         ThrottleRestart("diag");
         List<string> groupMembers = GetGroupMembers();
         string info = "";
-        for (int i = 0; i < groupMembers.Count; i++) 
+        int maxLog = groupMembers.Count > 5 ? 5 : groupMembers.Count;
+        for (int i = 0; i < maxLog; i++)
             info += groupMembers[i] + "=" + HealthPct(groupMembers[i]) + "% ";
+        if (groupMembers.Count > 5)
+            info += "... (" + (groupMembers.Count - 5) + " more)";
         Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + groupMembers.Count + " | " + info);
     }
     int mapId = Inferno.GetMapID();
@@ -433,37 +459,37 @@ private bool RunDungeonGambits(int mapId)
     if (!IsInCombat()) return false;
     switch (mapId)
     {
-        case 480:
+        case MAP_PROVING_GROUNDS:
             return TryDispel("Aqua Bomb");
-        case 2511: 
-        case 2515: 
-        case 2516: 
-        case 2517: 
-        case 2518: 
-        case 2519: 
-        case 2520:
+        case MAP_ALGETHAR_ACADEMY_1:
+        case MAP_ALGETHAR_ACADEMY_2:
+        case MAP_ALGETHAR_ACADEMY_3:
+        case MAP_ALGETHAR_ACADEMY_4:
+        case MAP_ALGETHAR_ACADEMY_5:
+        case MAP_ALGETHAR_ACADEMY_6:
+        case MAP_ALGETHAR_ACADEMY_7:
             if (TryDispel("Consuming Void")) return true;
             return TryDispel("Polymorph");
-        case 601: 
-        case 602:
+        case MAP_SKYREACH_1:
+        case MAP_SKYREACH_2:
             return false;
-        case 823:
+        case MAP_PIT_OF_SARON:
             return TryDispel("Cryoshards");
-        case 2492: 
-        case 2493: 
-        case 2494: 
-        case 2496: 
-        case 2497: 
-        case 2498: 
-        case 2499:
+        case MAP_MAISARA_CAVERNS_1:
+        case MAP_MAISARA_CAVERNS_2:
+        case MAP_MAISARA_CAVERNS_3:
+        case MAP_MAISARA_CAVERNS_4:
+        case MAP_MAISARA_CAVERNS_5:
+        case MAP_MAISARA_CAVERNS_6:
+        case MAP_MAISARA_CAVERNS_7:
             if (TryDispel("Poison Spray")) return true;
             if (TryDispel("Soul Torment")) return true;
             return TryDispel("Poison Blades");
-        case 2501:
+        case MAP_WINDRUNNER_SPIRE:
             return TryDispel("Infected Pinions");
-        case 2097: 
-        case 2098: 
-        case 2099:
+        case MAP_MAGISTERS_TERRACE_1:
+        case MAP_MAGISTERS_TERRACE_2:
+        case MAP_MAGISTERS_TERRACE_3:
             if (IsSpellReady("Purify") && AnyAllyHasDebuff("Lasher Toxin", 2))
             { 
                 string target = GetAllyWithMostStacks("Lasher Toxin", "Purify"); 

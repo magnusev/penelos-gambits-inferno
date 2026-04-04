@@ -19,8 +19,12 @@ public override bool CombatTick()
         ThrottleRestart("diag");
         List<string> groupMembers = GetGroupMembers();
         string info = "";
-        for (int i = 0; i < groupMembers.Count; i++) 
+        // Only log first 5 members to avoid security validator issues with long strings
+        int maxLog = groupMembers.Count > 5 ? 5 : groupMembers.Count;
+        for (int i = 0; i < maxLog; i++)
             info += groupMembers[i] + "=" + HealthPct(groupMembers[i]) + "% ";
+        if (groupMembers.Count > 5)
+            info += "... (" + (groupMembers.Count - 5) + " more)";
         Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + groupMembers.Count + " | " + info);
     }
 

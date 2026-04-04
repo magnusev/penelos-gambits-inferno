@@ -8,43 +8,43 @@ private bool RunDungeonGambits(int mapId)
     
     switch (mapId)
     {
-        case 480: // Proving Grounds
+        case MAP_PROVING_GROUNDS:
             return TryDispel("Aqua Bomb");
             
-        case 2511: 
-        case 2515: 
-        case 2516: 
-        case 2517: 
-        case 2518: 
-        case 2519: 
-        case 2520: // Algeth'ar Academy
+        case MAP_ALGETHAR_ACADEMY_1:
+        case MAP_ALGETHAR_ACADEMY_2:
+        case MAP_ALGETHAR_ACADEMY_3:
+        case MAP_ALGETHAR_ACADEMY_4:
+        case MAP_ALGETHAR_ACADEMY_5:
+        case MAP_ALGETHAR_ACADEMY_6:
+        case MAP_ALGETHAR_ACADEMY_7:
             if (TryDispel("Consuming Void")) return true;
             return TryDispel("Polymorph");
             
-        case 601: 
-        case 602: // Skyreach
+        case MAP_SKYREACH_1:
+        case MAP_SKYREACH_2:
             return false;
             
-        case 823: // Pit of Saron
+        case MAP_PIT_OF_SARON:
             return TryDispel("Cryoshards");
             
-        case 2492: 
-        case 2493: 
-        case 2494: 
-        case 2496: 
-        case 2497: 
-        case 2498: 
-        case 2499: // Maisara Caverns
+        case MAP_MAISARA_CAVERNS_1:
+        case MAP_MAISARA_CAVERNS_2:
+        case MAP_MAISARA_CAVERNS_3:
+        case MAP_MAISARA_CAVERNS_4:
+        case MAP_MAISARA_CAVERNS_5:
+        case MAP_MAISARA_CAVERNS_6:
+        case MAP_MAISARA_CAVERNS_7:
             if (TryDispel("Poison Spray")) return true;
             if (TryDispel("Soul Torment")) return true;
             return TryDispel("Poison Blades");
             
-        case 2501: // Windrunner Spire
+        case MAP_WINDRUNNER_SPIRE:
             return TryDispel("Infected Pinions");
             
-        case 2097: 
-        case 2098: 
-        case 2099: // Magister's Terrace
+        case MAP_MAGISTERS_TERRACE_1:
+        case MAP_MAGISTERS_TERRACE_2:
+        case MAP_MAGISTERS_TERRACE_3:
             if (IsSpellReady("Purify") && AnyAllyHasDebuff("Lasher Toxin", 2))
             { 
                 string target = GetAllyWithMostStacks("Lasher Toxin", "Purify"); 
