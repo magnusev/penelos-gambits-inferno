@@ -129,3 +129,52 @@ private bool CanCastWhileMoving(string spell)
     return false;
 }
 
+// Returns true if target is casting an interruptible spell
+private bool TargetIsCasting()
+{
+    return Inferno.CastingID("target") != 0 && Inferno.IsInterruptable("target");
+}
+
+// Returns elapsed time of target's current cast (in milliseconds)
+private int CastingElapsed()
+{
+    return Inferno.CastingElapsed("target");
+}
+
+// Returns remaining time of target's current cast (in milliseconds)
+private int CastingRemaining()
+{
+    return Inferno.CastingRemaining("target");
+}
+
+// Returns the current casting ID of the target
+private int TargetCastingID()
+{
+    return Inferno.CastingID("target");
+}
+
+// Returns true if player is currently channeling
+private bool IsChanneling()
+{
+    return Inferno.IsChanneling("player");
+}
+
+// Returns the name of the spell player is currently casting
+private string PlayerCastingName()
+{
+    return Inferno.CastingName("player");
+}
+
+// Returns true if a trinket slot can be used
+private bool CanUseTrinket(int slot)
+{
+    return Inferno.CanUseEquippedItem(slot);
+}
+
+// Returns true if custom command is toggled on
+private bool IsCustomCommandOn(string command)
+{
+    return Inferno.IsCustomCodeOn(command);
+}
+
+

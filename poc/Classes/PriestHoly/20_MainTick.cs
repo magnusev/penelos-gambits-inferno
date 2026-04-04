@@ -1,7 +1,6 @@
 ﻿// ========================================
-// SHARED MAIN TICK LOGIC
+// PRIEST HOLY - MAIN TICK LOOP
 // ========================================
-// Common tick loop structure for all healing rotations
 
 public override bool CombatTick()
 {

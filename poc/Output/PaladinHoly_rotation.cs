@@ -93,35 +93,6 @@ private void InitializeSharedComponents()
     InitializeHealthstoneFunction();
 }
 
-public override bool CombatTick()
-{
-    if (Inferno.IsDead("player")) return true;
-    if (Inferno.GCD() != 0) return true;
-    if (ProcessQueue()) return true;
-    if (ThrottleIsOpen("diag", DIAGNOSTIC_LOG_INTERVAL_MS))
-    {
-        ThrottleRestart("diag");
-        List<string> groupMembers = GetGroupMembers();
-        string info = "";
-        for (int i = 0; i < groupMembers.Count; i++) 
-            info += groupMembers[i] + "=" + HealthPct(groupMembers[i]) + "% ";
-        Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + groupMembers.Count + " | " + info);
-    }
-    int mapId = Inferno.GetMapID();
-    if (RunDungeonGambits(mapId)) return true;
-    if (RunHealGambits()) return true;
-    if (RunDmgGambits()) return true;
-    return true;
-}
-public override bool OutOfCombatTick() 
-{ 
-    return CombatTick(); 
-}
-public override void OnStop() 
-{ 
-    Log("Rotation stopped"); 
-}
-
 private bool IsInCombat()
 {
     return Inferno.InCombat("player");
@@ -204,6 +175,38 @@ private bool CanCastWhileMoving(string spell)
         return true;
     return false;
 }
+private bool TargetIsCasting()
+{
+    return Inferno.CastingID("target") != 0 && Inferno.IsInterruptable("target");
+}
+private int CastingElapsed()
+{
+    return Inferno.CastingElapsed("target");
+}
+private int CastingRemaining()
+{
+    return Inferno.CastingRemaining("target");
+}
+private int TargetCastingID()
+{
+    return Inferno.CastingID("target");
+}
+private bool IsChanneling()
+{
+    return Inferno.IsChanneling("player");
+}
+private string PlayerCastingName()
+{
+    return Inferno.CastingName("player");
+}
+private bool CanUseTrinket(int slot)
+{
+    return Inferno.CanUseEquippedItem(slot);
+}
+private bool IsCustomCommandOn(string command)
+{
+    return Inferno.IsCustomCodeOn(command);
+}
 
 private List<string> GetGroupMembers()
 {
@@ -263,6 +266,18 @@ private int HealthPct(string unit)
     int maxHealth = Inferno.MaxHealth(unit); 
     if (maxHealth < 1) maxHealth = 1; 
     return (Inferno.Health(unit) * 100) / maxHealth; 
+}
+private int PowerCurrent(int powerType)
+{
+    return Inferno.Power("player", powerType);
+}
+private int GCD()
+{
+    return Inferno.GCD();
+}
+private int BuffRemaining(string buffName, string unit = "player")
+{
+    return Inferno.BuffRemaining(buffName, unit, true);
 }
 
 private const int HOLY_POWER = 9;
@@ -325,6 +340,35 @@ private void UseHsCharge()
     _hsCharges = _hsCharges - 1; 
     if (_hsCharges < 0) _hsCharges = 0; 
     if (_hsCharges == HS_MAX_CHARGES - 1) _hsLastRechargeMs = NowMs(); 
+}
+
+public override bool CombatTick()
+{
+    if (Inferno.IsDead("player")) return true;
+    if (Inferno.GCD() != 0) return true;
+    if (ProcessQueue()) return true;
+    if (ThrottleIsOpen("diag", DIAGNOSTIC_LOG_INTERVAL_MS))
+    {
+        ThrottleRestart("diag");
+        List<string> groupMembers = GetGroupMembers();
+        string info = "";
+        for (int i = 0; i < groupMembers.Count; i++) 
+            info += groupMembers[i] + "=" + HealthPct(groupMembers[i]) + "% ";
+        Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + groupMembers.Count + " | " + info);
+    }
+    int mapId = Inferno.GetMapID();
+    if (RunDungeonGambits(mapId)) return true;
+    if (RunHealGambits()) return true;
+    if (RunDmgGambits()) return true;
+    return true;
+}
+public override bool OutOfCombatTick() 
+{ 
+    return CombatTick(); 
+}
+public override void OnStop() 
+{ 
+    Log("Rotation stopped"); 
 }
 
 private bool RunHealGambits()

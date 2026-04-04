@@ -13,6 +13,7 @@ Write-Host ""
 # Define all classes to build
 $classes = @(
     @{ Class = "PaladinHoly"; ClassName = "HolyPaladinPvE" }
+    @{ Class = "PaladinProtection"; ClassName = "ProtectionPaladinPvE" }
     @{ Class = "PriestHoly"; ClassName = "HolyPriestPvE" }
     # Add more classes here as you create them:
     # @{ Class = "DruidRestoration"; ClassName = "RestorationDruidPvE" }
