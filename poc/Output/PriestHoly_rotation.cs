@@ -302,6 +302,20 @@ private int PowerCurrent(int powerType)
 {
     return Inferno.Power("player", powerType);
 }
+private int PowerMax(int powerType)
+{
+    return Inferno.MaxPower("player", powerType);
+}
+private int TargetHealthPct()
+{
+    int maxHealth = Inferno.MaxHealth("target");
+    if (maxHealth < 1) maxHealth = 1;
+    return (Inferno.Health("target") * 100) / maxHealth;
+}
+private int FullRechargeTime(string spellName, int baseRecharge)
+{
+    return Inferno.FullRechargeTime(spellName, baseRecharge);
+}
 private int GCD()
 {
     return Inferno.GCD();
@@ -326,6 +340,73 @@ private int CombatTime()
 private int SpellCooldown(string spellName)
 {
     return Inferno.SpellCooldown(spellName);
+}
+
+private bool HandleInterrupt()
+{
+    if (!IsSettingOn("Auto Interrupt")) return false;
+    int castingID = TargetCastingID();
+    if (!TargetIsCasting())
+    {
+        _lastCastingID = 0;
+        return false;
+    }
+    if (castingID != _lastCastingID)
+    {
+        _lastCastingID = castingID;
+        int minPct = GetSlider("Interrupt at cast % (min)");
+        int maxPct = GetSlider("Interrupt at cast % (max)");
+        if (maxPct < minPct) maxPct = minPct;
+        _interruptTargetPct = _rng.Next(minPct, maxPct + 1);
+    }
+    int elapsed = CastingElapsed();
+    int remaining = CastingRemaining();
+    int total = elapsed + remaining;
+    if (total <= 0) return false;
+    int castPct = (elapsed * 100) / total;
+    if (castPct >= _interruptTargetPct && Inferno.CanCast("Silence", IgnoreGCD: true))
+    {
+        Log("Interrupting at " + castPct + "% (target: " + _interruptTargetPct + "%)");
+        Inferno.Cast("Silence", QuickDelay: true);
+        _lastCastingID = 0;
+        return true;
+    }
+    return false;
+}
+
+private bool HandleRacials()
+{
+    if (IsCustomCommandOn("NoCDs")) return false;
+    if (Inferno.CanCast("Berserking", IgnoreGCD: true))
+    {
+        Log("Casting Berserking (racial)");
+        Inferno.Cast("Berserking", QuickDelay: true);
+        return true;
+    }
+    if (Inferno.CanCast("Blood Fury", IgnoreGCD: true))
+    {
+        Log("Casting Blood Fury (racial)");
+        Inferno.Cast("Blood Fury", QuickDelay: true);
+        return true;
+    }
+    if (Inferno.CanCast("Ancestral Call", IgnoreGCD: true))
+    {
+        Log("Casting Ancestral Call (racial)");
+        Inferno.Cast("Ancestral Call", QuickDelay: true);
+        return true;
+    }
+    if (Inferno.CanCast("Fireblood", IgnoreGCD: true))
+    {
+        Log("Casting Fireblood (racial)");
+        Inferno.Cast("Fireblood", QuickDelay: true);
+        return true;
+    }
+    if (CanCast("Lights Judgment", "target"))
+    {
+        Log("Casting Lights Judgment (racial)");
+        return CastOnEnemy("Lights Judgment");
+    }
+    return false;
 }
 
 public override void LoadSettings()

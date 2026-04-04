@@ -302,6 +302,20 @@ private int PowerCurrent(int powerType)
 {
     return Inferno.Power("player", powerType);
 }
+private int PowerMax(int powerType)
+{
+    return Inferno.MaxPower("player", powerType);
+}
+private int TargetHealthPct()
+{
+    int maxHealth = Inferno.MaxHealth("target");
+    if (maxHealth < 1) maxHealth = 1;
+    return (Inferno.Health("target") * 100) / maxHealth;
+}
+private int FullRechargeTime(string spellName, int baseRecharge)
+{
+    return Inferno.FullRechargeTime(spellName, baseRecharge);
+}
 private int GCD()
 {
     return Inferno.GCD();

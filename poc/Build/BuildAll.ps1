@@ -16,6 +16,7 @@ $classes = @(
     @{ Class = "PaladinProtection"; ClassName = "ProtectionPaladinPvE" }
     @{ Class = "PaladinRetribution"; ClassName = "RetributionPaladinPvE" }
     @{ Class = "PriestHoly"; ClassName = "HolyPriestPvE" }
+    @{ Class = "PriestShadow"; ClassName = "ShadowPriestPvE" }
     # Add more classes here as you create them:
     # @{ Class = "DruidRestoration"; ClassName = "RestorationDruidPvE" }
 )

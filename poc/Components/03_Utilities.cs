@@ -17,6 +17,26 @@ private int PowerCurrent(int powerType)
     return Inferno.Power("player", powerType);
 }
 
+// Returns the maximum power value for a power type
+private int PowerMax(int powerType)
+{
+    return Inferno.MaxPower("player", powerType);
+}
+
+// Returns target's health percentage (0-100)
+private int TargetHealthPct()
+{
+    int maxHealth = Inferno.MaxHealth("target");
+    if (maxHealth < 1) maxHealth = 1;
+    return (Inferno.Health("target") * 100) / maxHealth;
+}
+
+// Returns the full recharge time for a charge-based spell
+private int FullRechargeTime(string spellName, int baseRecharge)
+{
+    return Inferno.FullRechargeTime(spellName, baseRecharge);
+}
+
 // Returns the remaining GCD time in milliseconds
 private int GCD()
 {
