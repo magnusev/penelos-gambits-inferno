@@ -1,6 +1,8 @@
 ﻿// ========================================
-// PALADIN PROTECTION - INTERRUPT LOGIC
+// SHARED PALADIN - INTERRUPT LOGIC
 // ========================================
+// Used by all Paladin specs (Holy, Protection, Retribution)
+// Requires: _rng, _lastCastingID, _interruptTargetPct variables in class config
 
 private bool HandleInterrupt()
 {

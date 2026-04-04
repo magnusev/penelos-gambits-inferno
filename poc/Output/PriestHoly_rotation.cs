@@ -230,6 +230,14 @@ private bool IsCustomCommandOn(string command)
 {
     return Inferno.IsCustomCodeOn(command);
 }
+private bool IsTalentKnown(string talentName)
+{
+    return Inferno.IsSpellKnown(talentName);
+}
+private int EnemiesNearPlayer()
+{
+    return Inferno.EnemiesNearUnit(8f, "player");
+}
 
 private List<string> GetGroupMembers()
 {
@@ -298,9 +306,26 @@ private int GCD()
 {
     return Inferno.GCD();
 }
+private int GCDMAX()
+{
+    int gcd = (int)(1500f / (1f + Inferno.Haste("player") / 100f));
+    return gcd < 750 ? 750 : gcd;
+}
 private int BuffRemaining(string buffName, string unit = "player")
 {
     return Inferno.BuffRemaining(buffName, unit, true);
+}
+private int DebuffRemaining(string debuffName, string unit = "target")
+{
+    return Inferno.DebuffRemaining(debuffName, unit, true);
+}
+private int CombatTime()
+{
+    return Inferno.CombatTime();
+}
+private int SpellCooldown(string spellName)
+{
+    return Inferno.SpellCooldown(spellName);
 }
 
 public override void LoadSettings()

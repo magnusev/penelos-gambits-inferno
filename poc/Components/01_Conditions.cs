@@ -177,4 +177,16 @@ private bool IsCustomCommandOn(string command)
     return Inferno.IsCustomCodeOn(command);
 }
 
+// Returns true if a talent/spell is known (for conditional talent checks)
+private bool IsTalentKnown(string talentName)
+{
+    return Inferno.IsSpellKnown(talentName);
+}
+
+// Returns the number of enemies near player (8 yard range)
+private int EnemiesNearPlayer()
+{
+    return Inferno.EnemiesNearUnit(8f, "player");
+}
+
 

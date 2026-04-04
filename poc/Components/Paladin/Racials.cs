@@ -1,7 +1,7 @@
-﻿
-/// ========================================
-// PALADIN PROTECTION - RACIAL ABILITIES
+﻿// ========================================
+// SHARED PALADIN - RACIAL ABILITIES
 // ========================================
+// Used by all Paladin specs (Holy, Protection, Retribution)
 
 private bool HandleRacials()
 {

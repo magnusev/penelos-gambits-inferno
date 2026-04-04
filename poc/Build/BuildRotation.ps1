@@ -91,6 +91,15 @@ $footer = @"
 
 # Get all component files (sorted by name - 00_, 01_, etc.)
 $componentFiles = Get-ChildItem "$componentsDir\*.cs" | Sort-Object Name
+
+# Add class-specific component folder if it exists (e.g., Components/Paladin for all Paladin specs)
+$classFamily = $Class -replace '(Paladin|Priest|Druid|Shaman|Mage|Warlock|Rogue|Warrior|Hunter|DeathKnight|DemonHunter|Monk|Evoker).*', '$1'
+$classFamilyComponentDir = Join-Path $componentsDir $classFamily
+if (Test-Path $classFamilyComponentDir) {
+    $classFamilyFiles = Get-ChildItem "$classFamilyComponentDir\*.cs" | Sort-Object Name
+    $componentFiles = @($componentFiles) + @($classFamilyFiles)
+}
+
 $classFiles = Get-ChildItem "$classDir\*.cs" | Sort-Object Name
 
 if ($componentFiles.Count -eq 0) {
@@ -101,7 +110,10 @@ if ($classFiles.Count -eq 0) {
 }
 
 Write-Host "📦 Combining files:" -ForegroundColor White
-$componentFiles | ForEach-Object { Write-Host "   ✓ Components\$($_.Name)" -ForegroundColor Gray }
+Get-ChildItem "$componentsDir\*.cs" | Sort-Object Name | ForEach-Object { Write-Host "   ✓ Components\$($_.Name)" -ForegroundColor Gray }
+if (Test-Path $classFamilyComponentDir) {
+    Get-ChildItem "$classFamilyComponentDir\*.cs" | Sort-Object Name | ForEach-Object { Write-Host "   ✓ Components\$classFamily\$($_.Name)" -ForegroundColor Gray }
+}
 $classFiles | ForEach-Object { Write-Host "   ✓ Classes\$Class\$($_.Name)" -ForegroundColor Gray }
 
 # Build the content

@@ -23,9 +23,34 @@ private int GCD()
     return Inferno.GCD();
 }
 
+// Returns the maximum GCD duration with haste (750ms floor)
+private int GCDMAX()
+{
+    int gcd = (int)(1500f / (1f + Inferno.Haste("player") / 100f));
+    return gcd < 750 ? 750 : gcd;
+}
+
 // Returns remaining duration of a buff in milliseconds
 private int BuffRemaining(string buffName, string unit = "player")
 {
     return Inferno.BuffRemaining(buffName, unit, true);
+}
+
+// Returns remaining duration of a debuff in milliseconds
+private int DebuffRemaining(string debuffName, string unit = "target")
+{
+    return Inferno.DebuffRemaining(debuffName, unit, true);
+}
+
+// Returns time since combat started in milliseconds
+private int CombatTime()
+{
+    return Inferno.CombatTime();
+}
+
+// Returns spell cooldown in milliseconds
+private int SpellCooldown(string spellName)
+{
+    return Inferno.SpellCooldown(spellName);
 }
 

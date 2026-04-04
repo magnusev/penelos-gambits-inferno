@@ -8,7 +8,7 @@ using InfernoWow.API;
 namespace InfernoWow.Modules
 {
 
-public class ProtectionPaladinPvE : Rotation
+public class RetributionPaladinPvE : Rotation
 {
 private string _queuedAction = null;
 private string _lastLoggedAction = null;
@@ -401,16 +401,19 @@ private int _lastCastingID = 0;
 private int _interruptTargetPct = 0;
 public override void LoadSettings()
 {
-    Settings.Add(new Setting("=== Protection Paladin ==="));
+    Settings.Add(new Setting("=== Retribution Paladin ==="));
     Settings.Add(new Setting("Enable Logging", true));
+    Settings.Add(new Setting("=== Offensive Cooldowns ==="));
     Settings.Add(new Setting("Use Avenging Wrath", true));
+    Settings.Add(new Setting("Use Wake of Ashes", true));
+    Settings.Add(new Setting("Use Execution Sentence", true));
     Settings.Add(new Setting("Use Trinkets", true));
     Settings.Add(new Setting("=== Defensives ==="));
     Settings.Add(new Setting("Use Defensives", true));
+    Settings.Add(new Setting("Divine Shield HP %", 1, 100, 15));
+    Settings.Add(new Setting("Lay on Hands HP %", 1, 100, 20));
     Settings.Add(new Setting("Word of Glory HP %", 1, 100, 50));
-    Settings.Add(new Setting("Ardent Defender HP %", 1, 100, 35));
-    Settings.Add(new Setting("Guardian of Ancient Kings HP %", 1, 100, 25));
-    Settings.Add(new Setting("Lay on Hands HP %", 1, 100, 15));
+    Settings.Add(new Setting("Shield of Vengeance HP %", 1, 100, 70));
     Settings.Add(new Setting("Healthstone HP %", 1, 100, 50));
     Settings.Add(new Setting("=== Interrupt ==="));
     Settings.Add(new Setting("Auto Interrupt", true));
@@ -419,24 +422,33 @@ public override void LoadSettings()
 }
 public override void Initialize()
 {
-    Spellbook.Add("Avenger's Shield");
     Spellbook.Add("Avenging Wrath");
-    Spellbook.Add("Blessed Hammer");
-    Spellbook.Add("Consecration");
+    Spellbook.Add("Blade of Justice");
+    Spellbook.Add("Crusader Strike");
+    Spellbook.Add("Divine Storm");
     Spellbook.Add("Divine Toll");
+    Spellbook.Add("Execution Sentence");
     Spellbook.Add("Hammer of Light");
-    Spellbook.Add("Hammer of the Righteous");
     Spellbook.Add("Hammer of Wrath");
-    Spellbook.Add("Holy Armaments");
     Spellbook.Add("Judgment");
-    Spellbook.Add("Shield of the Righteous");
-    Spellbook.Add("Ardent Defender");
+    Spellbook.Add("Templar Slash");
+    Spellbook.Add("Templar Strike");
+    Spellbook.Add("Templar's Verdict");
+    Spellbook.Add("Wake of Ashes");
+    Spellbook.Add("Art of War");
+    Spellbook.Add("Crusading Strikes");
+    Spellbook.Add("Empyrean Power");
+    Spellbook.Add("Holy Flames");
+    Spellbook.Add("Light's Guidance");
+    Spellbook.Add("Radiant Glory");
+    Spellbook.Add("Righteous Cause");
+    Spellbook.Add("Walk Into Light");
     Spellbook.Add("Divine Shield");
-    Spellbook.Add("Guardian of Ancient Kings");
     Spellbook.Add("Lay on Hands");
+    Spellbook.Add("Shield of Vengeance");
     Spellbook.Add("Word of Glory");
-    Spellbook.Add("Devotion Aura");
     Spellbook.Add("Rebuke");
+    Spellbook.Add("Retribution Aura");
     Spellbook.Add("Ancestral Call");
     Spellbook.Add("Berserking");
     Spellbook.Add("Blood Fury");
@@ -447,8 +459,9 @@ public override void Initialize()
     InitializeSharedComponents();
     CustomCommands.Add("NoCDs");
     CustomCommands.Add("ForceST");
-    _logFile = "penelos_paladin_prot_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
-    Inferno.PrintMessage("Penelos Gambits - Protection Paladin loaded!", Color.Gold);
+    Inferno.Latency = 250;
+    _logFile = "penelos_paladin_ret_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log";
+    Inferno.PrintMessage("Penelos Gambits - Retribution Paladin loaded!", Color.Gold);
     Log("Initialize complete");
 }
 
@@ -457,6 +470,16 @@ private bool CastOffensive(string spellName)
     if (CanCast(spellName, "target"))
     {
         Log("Casting " + spellName);
+        return CastOnEnemy(spellName);
+    }
+    return false;
+}
+private bool CastCooldown(string spellName)
+{
+    if (IsCustomCommandOn("NoCDs")) return false;
+    if (CanCast(spellName, "target"))
+    {
+        Log("Casting " + spellName + " (cooldown)");
         return CastOnEnemy(spellName);
     }
     return false;
@@ -482,13 +505,13 @@ private bool HandleDefensives()
     if (!IsSettingOn("Use Defensives")) return false;
     int playerHp = HealthPct("player");
     int holyPower = PowerCurrent(HOLY_POWER);
+    if (playerHp <= GetSlider("Divine Shield HP %") && CastDefensive("Divine Shield"))
+        return true;
     if (playerHp <= GetSlider("Lay on Hands HP %") && CastDefensive("Lay on Hands"))
         return true;
-    if (playerHp <= GetSlider("Guardian of Ancient Kings HP %") && !HasBuff("Guardian of Ancient Kings") && CastDefensive("Guardian of Ancient Kings"))
-        return true;
-    if (playerHp <= GetSlider("Ardent Defender HP %") && CastDefensive("Ardent Defender"))
-        return true;
     if (playerHp <= GetSlider("Word of Glory HP %") && holyPower >= 3 && CastDefensive("Word of Glory", offGCD: false))
+        return true;
+    if (playerHp <= GetSlider("Shield of Vengeance HP %") && CastDefensive("Shield of Vengeance"))
         return true;
     if (playerHp <= GetSlider("Healthstone HP %") && HasHealthstone() && IsItemReady(HEALTHSTONE_ID))
     {
@@ -501,10 +524,10 @@ private bool HandleDefensives()
 
 public override bool OutOfCombatTick()
 {
-    if (!HasBuff("Devotion Aura") && CanCastSpell("Devotion Aura"))
+    if (!HasBuff("Retribution Aura") && CanCastSpell("Retribution Aura"))
     {
-        Log("Casting Devotion Aura (out of combat)");
-        return CastPersonal("Devotion Aura");
+        Log("Casting Retribution Aura (out of combat)");
+        return CastPersonal("Retribution Aura");
     }
     return false;
 }
@@ -512,16 +535,17 @@ public override bool OutOfCombatTick()
 public override bool CombatTick()
 {
     if (Inferno.IsDead("player") || Inferno.IsGhost("player")) return false;
-    if (GCD() != 0) return true;
     if (HandleDefensives()) return true;
     if (HandleInterrupt()) return true;
     if (!TargetIsEnemy()) return false;
-    if (HandleRacials()) return true;
     if (IsChanneling()) return false;
     string castName = PlayerCastingName();
     if (castName.Contains("Puzzle Box") || castName.Contains("Emberwing")) 
         return false;
-    if (RunRotation()) return true;
+    if ((HasBuff("Avenging Wrath") || HasBuff("Crusade")) && HandleRacials()) 
+        return true;
+    if (HandleCooldowns()) return true;
+    if (RunGenerators()) return true;
     return false;
 }
 public override void OnStop() 
@@ -529,43 +553,113 @@ public override void OnStop()
     Log("Rotation stopped"); 
 }
 
-private bool RunRotation()
+private bool HandleCooldowns()
+{
+    if (IsCustomCommandOn("NoCDs")) return false;
+    if (IsSettingOn("Use Trinkets") && HasBuff("Avenging Wrath"))
+    {
+        if (CanUseTrinket(13))
+        {
+            Log("Using Trinket 1");
+            Inferno.Cast("trinket1");
+            return true;
+        }
+        if (CanUseTrinket(14))
+        {
+            Log("Using Trinket 2");
+            Inferno.Cast("trinket2");
+            return true;
+        }
+    }
+    if (IsSettingOn("Use Execution Sentence") && SpellCooldown("Wake of Ashes") < GCDMAX() 
+        && (!IsTalentKnown("Holy Flames") || DebuffRemaining("Expurgation") > GCD()))
+    {
+        if (CastOffensive("Execution Sentence")) return true;
+    }
+    if (IsSettingOn("Use Avenging Wrath") && !IsTalentKnown("Radiant Glory")
+        && (!IsTalentKnown("Holy Flames") || DebuffRemaining("Expurgation") > GCD())
+        && (!IsTalentKnown("Light's Guidance") || DebuffRemaining("Judgment") > GCD()))
+    {
+        if (CastCooldown("Avenging Wrath")) return true;
+    }
+    return false;
+}
+
+private bool RunFinishers()
+{
+    int enemies = EnemiesNearPlayer();
+    if (enemies < 1) enemies = 1;
+    if (IsCustomCommandOn("ForceST")) 
+        enemies = 1;
+    bool canDivineStorm = (enemies >= 3 || HasBuff("Empyrean Power")) && !HasBuff("Empyrean Legacy");
+    bool hasHammerOfLight = HasBuff("Hammer of Light");
+    if (hasHammerOfLight)
+    {
+        if (HasBuff("Avenging Wrath") || BuffRemaining("Hammer of Light") < GCDMAX() * 2)
+        {
+            if (CastOffensive("Wake of Ashes")) return true;
+        }
+    }
+    if (canDivineStorm && !hasHammerOfLight)
+    {
+        if (CastOffensive("Divine Storm")) return true;
+    }
+    if (!hasHammerOfLight)
+    {
+        if (CastOffensive("Templar's Verdict")) return true;
+    }
+    return false;
+}
+
+private bool RunGenerators()
 {
     int holyPower = PowerCurrent(HOLY_POWER);
-    if (!IsCustomCommandOn("NoCDs"))
+    if ((holyPower >= 5 && SpellCooldown("Wake of Ashes") > 0) || BuffRemaining("Hammer of Light") < GCDMAX() * 2)
     {
-        if (IsSettingOn("Use Avenging Wrath") && CastOffensive("Avenging Wrath"))
-            return true;
-        if (IsSettingOn("Use Trinkets") && HasBuff("Avenging Wrath"))
+        if (RunFinishers()) return true;
+    }
+    if (IsTalentKnown("Holy Flames") && DebuffRemaining("Expurgation") < GCD() && CombatTime() < 5000)
+    {
+        if (CastOffensive("Blade of Justice")) return true;
+    }
+    if (IsTalentKnown("Light's Guidance") && DebuffRemaining("Judgment") < GCD() && CombatTime() < 5000)
+    {
+        if (CastOffensive("Judgment")) return true;
+    }
+    if (IsSettingOn("Use Wake of Ashes"))
+    {
+        bool holdForNoCDs = IsCustomCommandOn("NoCDs") && IsTalentKnown("Radiant Glory") && IsTalentKnown("Divine Toll");
+        if (!holdForNoCDs && (SpellCooldown("Avenging Wrath") > 6000 || IsTalentKnown("Radiant Glory")))
         {
-            if (CanUseTrinket(13))
-            {
-                Log("Using Trinket 1");
-                Inferno.Cast("trinket1");
-                return true;
-            }
-            if (CanUseTrinket(14))
-            {
-                Log("Using Trinket 2");
-                Inferno.Cast("trinket2");
-                return true;
-            }
+            if (CastOffensive("Wake of Ashes")) return true;
         }
+    }
+    if (!(IsCustomCommandOn("NoCDs") && IsTalentKnown("Radiant Glory")))
+    {
+        if (CastOffensive("Divine Toll")) return true;
+    }
+    if ((HasBuff("Art of War") || HasBuff("Righteous Cause")) 
+        && (!IsTalentKnown("Walk Into Light") || !HasBuff("Avenging Wrath")))
+    {
+        if (CastOffensive("Blade of Justice")) return true;
     }
     if (holyPower >= 3)
     {
-        if (CastOffensive("Hammer of Light")) return true;
-        if (CastOffensive("Shield of the Righteous")) return true;
+        if (RunFinishers()) return true;
     }
-    if (CastOffensive("Holy Armaments")) return true;
-    if (CastOffensive("Avenger's Shield")) return true;
-    if (CastOffensive("Judgment")) return true;
-    if (CastOffensive("Divine Toll")) return true;
+    if (IsTalentKnown("Walk Into Light"))
+    {
+        if (CastOffensive("Hammer of Wrath")) return true;
+    }
+    if (CastOffensive("Blade of Justice")) return true;
     if (CastOffensive("Hammer of Wrath")) return true;
-    if (CastOffensive("Blessed Hammer")) return true;
-    if (CastOffensive("Hammer of the Righteous")) return true;
-    if (BuffRemaining("Consecration") < GCD() && CastOffensive("Consecration"))
-        return true;
+    if (CastOffensive("Judgment")) return true;
+    if (CastOffensive("Templar Strike")) return true;
+    if (CastOffensive("Templar Slash")) return true;
+    if (!IsTalentKnown("Crusading Strikes"))
+    {
+        if (CastOffensive("Crusader Strike")) return true;
+    }
     return false;
 }
 }
