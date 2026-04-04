@@ -130,6 +130,30 @@ private bool IsSpellReady(string spellName)
 {
     return Inferno.SpellCooldown(spellName) <= 200;
 }
+private bool CanCast(string spellName, string target = "target")
+{
+    return Inferno.CanCast(spellName, target);
+}
+private bool CanCastSpell(string spellName)
+{
+    return Inferno.CanCast(spellName);
+}
+private int SpellCharges(string spellName)
+{
+    return Inferno.SpellCharges(spellName);
+}
+private bool HasBuff(string buffName, string unit = "player")
+{
+    return Inferno.HasBuff(buffName, unit, true);
+}
+private bool IsMoving()
+{
+    return Inferno.IsMoving("player");
+}
+private bool IsItemReady(int itemId)
+{
+    return Inferno.ItemCooldown(itemId) == 0;
+}
 private bool IsSettingOn(string settingName)
 {
     return GetCheckBox(settingName);
@@ -172,11 +196,11 @@ private bool AnyAllyHasDebuff(string debuff, int stacks)
 }
 private bool CanCastWhileMoving(string spell)
 {
-    if (!Inferno.IsMoving("player"))
+    if (!IsMoving())
         return true;
-    if (spell == "Flash of Light" && Inferno.HasBuff("Infusion of Light", "player", true))
+    if (spell == "Flash of Light" && HasBuff("Infusion of Light"))
         return true;
-    if (spell == "Holy Light" && Inferno.HasBuff("Hand of Divinity", "player", true))
+    if (spell == "Holy Light" && HasBuff("Hand of Divinity"))
         return true;
     return false;
 }
@@ -271,18 +295,18 @@ public override void Initialize()
 
 private bool RunHealGambits()
 {
-    if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && Inferno.ItemCooldown(HEALTHSTONE_ID) == 0)
+    if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && IsItemReady(HEALTHSTONE_ID))
     { 
         Log("Using Healthstone (player " + HealthPct("player") + "%)"); 
         Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
         return true; 
     }
-    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") == 0 && GroupMembersUnder(75, 1) && Inferno.CanCast("Apotheosis"))
+    if (IsInCombat() && SpellCharges("Holy Word: Serenity") == 0 && GroupMembersUnder(75, 1) && CanCastSpell("Apotheosis"))
     { 
         Log("Casting Apotheosis (0 Serenity charges, ally under 75%)"); 
         return CastPersonal("Apotheosis"); 
     }
-    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") >= 2)
+    if (IsInCombat() && SpellCharges("Holy Word: Serenity") >= 2)
     { 
         string target = LowestAllyInRange("Holy Word: Serenity"); 
         if (target != null) 
@@ -291,12 +315,12 @@ private bool RunHealGambits()
             return CastOnFocus(target, "cast_serenity"); 
         } 
     }
-    if (IsInCombat() && !Inferno.IsMoving("player") && GroupMembersUnder(90, 2) && Inferno.CanCast("Halo"))
+    if (IsInCombat() && !IsMoving() && GroupMembersUnder(90, 2) && CanCastSpell("Halo"))
     { 
         Log("Casting Halo (2+ members under 90%)"); 
         return CastPersonal("Halo"); 
     }
-    if (IsInCombat() && Inferno.HasBuff("Surge of Light", "player", true))
+    if (IsInCombat() && HasBuff("Surge of Light"))
     { 
         string target = LowestAllyUnder(90, "Flash Heal"); 
         if (target != null) 
@@ -305,7 +329,7 @@ private bool RunHealGambits()
             return CastOnFocus(target, "cast_flash_heal"); 
         } 
     }
-    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") >= 1)
+    if (IsInCombat() && SpellCharges("Holy Word: Serenity") >= 1)
     { 
         string target = LowestAllyUnder(90, "Holy Word: Serenity"); 
         if (target != null) 
@@ -314,7 +338,7 @@ private bool RunHealGambits()
             return CastOnFocus(target, "cast_serenity"); 
         } 
     }
-    if (IsInCombat() && Inferno.CanCast("Prayer of Mending"))
+    if (IsInCombat() && CanCastSpell("Prayer of Mending"))
     { 
         string target = LowestAllyInRange("Prayer of Mending"); 
         if (target != null) 
@@ -323,7 +347,7 @@ private bool RunHealGambits()
             return CastOnFocus(target, "cast_pom"); 
         } 
     }
-    if (IsInCombat() && !Inferno.IsMoving("player"))
+    if (IsInCombat() && !IsMoving())
     { 
         string target = LowestAllyUnder(85, "Flash Heal"); 
         if (target != null) 
@@ -342,17 +366,17 @@ private bool RunDmgGambits()
         Inferno.Cast(MACRO_TARGET_ENEMY, true); 
         return true; 
     }
-    if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Holy Fire", "target"))
+    if (IsInCombat() && TargetIsEnemy() && CanCast("Holy Fire", "target"))
     {
         Log("Casting Holy Fire on target"); 
         return CastOnEnemy("Holy Fire");
     }
-    if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Holy Word: Chastise", "target"))
+    if (IsInCombat() && TargetIsEnemy() && CanCast("Holy Word: Chastise", "target"))
     {
         Log("Casting Holy Word: Chastise on target"); 
         return CastOnEnemy("Holy Word: Chastise");
     }
-    if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Smite", "target"))
+    if (IsInCombat() && TargetIsEnemy() && CanCast("Smite", "target"))
     {
         Log("Casting Smite on target"); 
         return CastOnEnemy("Smite");

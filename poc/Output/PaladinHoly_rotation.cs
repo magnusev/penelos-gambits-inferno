@@ -130,6 +130,30 @@ private bool IsSpellReady(string spellName)
 {
     return Inferno.SpellCooldown(spellName) <= 200;
 }
+private bool CanCast(string spellName, string target = "target")
+{
+    return Inferno.CanCast(spellName, target);
+}
+private bool CanCastSpell(string spellName)
+{
+    return Inferno.CanCast(spellName);
+}
+private int SpellCharges(string spellName)
+{
+    return Inferno.SpellCharges(spellName);
+}
+private bool HasBuff(string buffName, string unit = "player")
+{
+    return Inferno.HasBuff(buffName, unit, true);
+}
+private bool IsMoving()
+{
+    return Inferno.IsMoving("player");
+}
+private bool IsItemReady(int itemId)
+{
+    return Inferno.ItemCooldown(itemId) == 0;
+}
 private bool IsSettingOn(string settingName)
 {
     return GetCheckBox(settingName);
@@ -172,11 +196,11 @@ private bool AnyAllyHasDebuff(string debuff, int stacks)
 }
 private bool CanCastWhileMoving(string spell)
 {
-    if (!Inferno.IsMoving("player"))
+    if (!IsMoving())
         return true;
-    if (spell == "Flash of Light" && Inferno.HasBuff("Infusion of Light", "player", true))
+    if (spell == "Flash of Light" && HasBuff("Infusion of Light"))
         return true;
-    if (spell == "Holy Light" && Inferno.HasBuff("Hand of Divinity", "player", true))
+    if (spell == "Holy Light" && HasBuff("Hand of Divinity"))
         return true;
     return false;
 }
@@ -305,71 +329,71 @@ private void UseHsCharge()
 
 private bool RunHealGambits()
 {
-    if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && Inferno.ItemCooldown(HEALTHSTONE_ID) == 0)
+    if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && IsItemReady(HEALTHSTONE_ID))
     { 
         Log("Using Healthstone (player " + HealthPct("player") + "%)"); 
         Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
         return true; 
     }
-    if (IsInCombat() && UnitUnder("player", 75) && Inferno.CanCast("Divine Protection"))
+    if (IsInCombat() && UnitUnder("player", 75) && CanCastSpell("Divine Protection"))
     { 
         Log("Casting Divine Protection (player " + HealthPct("player") + "%)"); 
         return CastPersonal("Divine Protection"); 
     }
-    if (IsInCombat() && GroupMembersUnder(60, 2) && Inferno.CanCast("Avenging Wrath"))
+    if (IsInCombat() && GroupMembersUnder(60, 2) && CanCastSpell("Avenging Wrath"))
     { 
         Log("Casting Avenging Wrath"); 
         return CastPersonal("Avenging Wrath"); 
     }
     if (IsInCombat() && GroupMembersUnder(80, 2) && PowerLessThan(3, HOLY_POWER))
     { 
-        string t = LowestAllyInRange("Divine Toll"); 
-        if (t != null) 
+        string target = LowestAllyInRange("Divine Toll"); 
+        if (target != null) 
         { 
-            Log("Casting Divine Toll on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_dt"); 
+            Log("Casting Divine Toll on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_dt"); 
         } 
     }
-    if (IsSettingOn("Use Light of Dawn") && IsInCombat() && GroupMembersUnder(95, 5) && PowerAtLeast(4, HOLY_POWER) && Inferno.CanCast("Light of Dawn"))
+    if (IsSettingOn("Use Light of Dawn") && IsInCombat() && GroupMembersUnder(95, 5) && PowerAtLeast(4, HOLY_POWER) && CanCastSpell("Light of Dawn"))
     { 
         Log("Casting Light of Dawn"); 
         return CastPersonal("Light of Dawn"); 
     }
     if (IsInCombat() && PowerAtLeast(3, HOLY_POWER))
     { 
-        string t = LowestAllyUnder(90, "Word of Glory"); 
-        if (t != null) 
+        string target = LowestAllyUnder(90, "Word of Glory"); 
+        if (target != null) 
         { 
-            Log("Casting Word of Glory on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_wog"); 
+            Log("Casting Word of Glory on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_wog"); 
         } 
     }
     if (IsInCombat() && HsChargesAvailable() > 0)
     { 
-        string t = LowestAllyUnder(95, "Holy Shock"); 
-        if (t != null) 
+        string target = LowestAllyUnder(95, "Holy Shock"); 
+        if (target != null) 
         { 
-            Log("Casting Holy Shock on " + t + " (" + HealthPct(t) + "%) [charges=" + HsChargesAvailable() + "]"); 
+            Log("Casting Holy Shock on " + target + " (" + HealthPct(target) + "%) [charges=" + HsChargesAvailable() + "]"); 
             UseHsCharge(); 
-            return CastOnFocus(t, "cast_hs"); 
+            return CastOnFocus(target, "cast_hs"); 
         } 
     }
     if (IsInCombat() && CanCastWhileMoving("Holy Light") && PowerAtLeast(20000, MANA))
     { 
-        string t = LowestAllyUnder(60, "Holy Light"); 
-        if (t != null) 
+        string target = LowestAllyUnder(60, "Holy Light"); 
+        if (target != null) 
         { 
-            Log("Casting Holy Light on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_hl"); 
+            Log("Casting Holy Light on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_hl"); 
         } 
     }
     if (IsInCombat() && CanCastWhileMoving("Flash of Light"))
     { 
-        string t = LowestAllyUnder(95, "Flash of Light"); 
-        if (t != null) 
+        string target = LowestAllyUnder(95, "Flash of Light"); 
+        if (target != null) 
         { 
-            Log("Casting Flash of Light on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_fol"); 
+            Log("Casting Flash of Light on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_fol"); 
         } 
     }
     return false;
@@ -382,23 +406,23 @@ private bool RunDmgGambits()
         Inferno.Cast(MACRO_TARGET_ENEMY, true); 
         return true; 
     }
-    if (IsSettingOn("Do DPS") && IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1) && Inferno.CanCast("Shield of the Righteous"))
+    if (IsSettingOn("Do DPS") && IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1) && CanCastSpell("Shield of the Righteous"))
     { 
         Log("Casting Shield of the Righteous"); 
         return CastPersonal("Shield of the Righteous"); 
     }
-    if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && Inferno.CanCast("Judgment", "target"))
+    if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && CanCast("Judgment", "target"))
     { 
         Log("Casting Judgment"); 
         return CastOnEnemy("Judgment"); 
     }
     if (IsInCombat() && CanCastWhileMoving("Flash of Light"))
     {
-        string t = LowestAllyInRange("Flash of Light");
-        if (t != null) 
+        string target = LowestAllyInRange("Flash of Light");
+        if (target != null) 
         { 
-            Log("Filler FoL on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_fol"); 
+            Log("Filler FoL on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_fol"); 
         }
         Log("Filler FoL on player (fallback)"); 
         return CastOnFocus("player", "cast_fol");

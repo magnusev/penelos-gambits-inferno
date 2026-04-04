@@ -15,6 +15,42 @@ private bool IsSpellReady(string spellName)
     return Inferno.SpellCooldown(spellName) <= 200;
 }
 
+// Returns true if spell can be cast on a target
+private bool CanCast(string spellName, string target = "target")
+{
+    return Inferno.CanCast(spellName, target);
+}
+
+// Returns true if spell can be cast (without target check)
+private bool CanCastSpell(string spellName)
+{
+    return Inferno.CanCast(spellName);
+}
+
+// Returns the number of charges available for a spell
+private int SpellCharges(string spellName)
+{
+    return Inferno.SpellCharges(spellName);
+}
+
+// Returns true if unit has the specified buff
+private bool HasBuff(string buffName, string unit = "player")
+{
+    return Inferno.HasBuff(buffName, unit, true);
+}
+
+// Returns true if player is currently moving
+private bool IsMoving()
+{
+    return Inferno.IsMoving("player");
+}
+
+// Returns true if item is off cooldown
+private bool IsItemReady(int itemId)
+{
+    return Inferno.ItemCooldown(itemId) == 0;
+}
+
 // Returns true if the specified setting checkbox is enabled
 private bool IsSettingOn(string settingName)
 {
@@ -79,15 +115,15 @@ private bool AnyAllyHasDebuff(string debuff, int stacks)
 private bool CanCastWhileMoving(string spell)
 {
     // Not moving = can cast anything
-    if (!Inferno.IsMoving("player"))
+    if (!IsMoving())
         return true;
 
     // Flash of Light becomes instant with Infusion of Light
-    if (spell == "Flash of Light" && Inferno.HasBuff("Infusion of Light", "player", true))
+    if (spell == "Flash of Light" && HasBuff("Infusion of Light"))
         return true;
 
     // Holy Light becomes instant with Hand of Divinity
-    if (spell == "Holy Light" && Inferno.HasBuff("Hand of Divinity", "player", true))
+    if (spell == "Holy Light" && HasBuff("Hand of Divinity"))
         return true;
 
     return false;

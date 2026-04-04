@@ -12,21 +12,21 @@ private bool RunDmgGambits()
     }
 
     // Holy Fire (highest priority damage spell)
-    if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Holy Fire", "target"))
+    if (IsInCombat() && TargetIsEnemy() && CanCast("Holy Fire", "target"))
     {
         Log("Casting Holy Fire on target"); 
         return CastOnEnemy("Holy Fire");
     }
 
     // Holy Word: Chastise (second priority)
-    if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Holy Word: Chastise", "target"))
+    if (IsInCombat() && TargetIsEnemy() && CanCast("Holy Word: Chastise", "target"))
     {
         Log("Casting Holy Word: Chastise on target"); 
         return CastOnEnemy("Holy Word: Chastise");
     }
 
     // Smite (filler)
-    if (IsInCombat() && TargetIsEnemy() && Inferno.CanCast("Smite", "target"))
+    if (IsInCombat() && TargetIsEnemy() && CanCast("Smite", "target"))
     {
         Log("Casting Smite on target"); 
         return CastOnEnemy("Smite");

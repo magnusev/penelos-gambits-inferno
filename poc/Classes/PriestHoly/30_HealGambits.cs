@@ -5,7 +5,7 @@
 private bool RunHealGambits()
 {
     // Healthstone if player under threshold (combat only)
-    if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && Inferno.ItemCooldown(HEALTHSTONE_ID) == 0)
+    if (IsInCombat() && UnitUnder("player", GetSlider("Healthstone HP %")) && HasHealthstone() && IsItemReady(HEALTHSTONE_ID))
     { 
         Log("Using Healthstone (player " + HealthPct("player") + "%)"); 
         Inferno.Cast(MACRO_USE_HEALTHSTONE, QuickDelay: true); 
@@ -13,14 +13,14 @@ private bool RunHealGambits()
     }
     
     // Apotheosis if 0 Serenity charges and player under 75% (instant cast, can cast while moving)
-    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") == 0 && GroupMembersUnder(75, 1) && Inferno.CanCast("Apotheosis"))
+    if (IsInCombat() && SpellCharges("Holy Word: Serenity") == 0 && GroupMembersUnder(75, 1) && CanCastSpell("Apotheosis"))
     { 
         Log("Casting Apotheosis (0 Serenity charges, ally under 75%)"); 
         return CastPersonal("Apotheosis"); 
     }
 
     // Holy Word: Serenity with 2 charges - cast on lowest HP party member (instant cast)
-    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") >= 2)
+    if (IsInCombat() && SpellCharges("Holy Word: Serenity") >= 2)
     { 
         string target = LowestAllyInRange("Holy Word: Serenity"); 
         if (target != null) 
@@ -31,14 +31,14 @@ private bool RunHealGambits()
     }
     
     // Halo if 2+ targets under 90% (cannot be cast while moving)
-    if (IsInCombat() && !Inferno.IsMoving("player") && GroupMembersUnder(90, 2) && Inferno.CanCast("Halo"))
+    if (IsInCombat() && !IsMoving() && GroupMembersUnder(90, 2) && CanCastSpell("Halo"))
     { 
         Log("Casting Halo (2+ members under 90%)"); 
         return CastPersonal("Halo"); 
     }
 
     // Surge of Light buff - cast instant Flash Heal on target under 90%
-    if (IsInCombat() && Inferno.HasBuff("Surge of Light", "player", true))
+    if (IsInCombat() && HasBuff("Surge of Light"))
     { 
         string target = LowestAllyUnder(90, "Flash Heal"); 
         if (target != null) 
@@ -49,7 +49,7 @@ private bool RunHealGambits()
     }
 
     // Holy Word: Serenity with 1 charge - cast on target under 90%
-    if (IsInCombat() && Inferno.SpellCharges("Holy Word: Serenity") >= 1)
+    if (IsInCombat() && SpellCharges("Holy Word: Serenity") >= 1)
     { 
         string target = LowestAllyUnder(90, "Holy Word: Serenity"); 
         if (target != null) 
@@ -60,7 +60,7 @@ private bool RunHealGambits()
     }
 
     // Prayer of Mending on lowest health player if off cooldown
-    if (IsInCombat() && Inferno.CanCast("Prayer of Mending"))
+    if (IsInCombat() && CanCastSpell("Prayer of Mending"))
     { 
         string target = LowestAllyInRange("Prayer of Mending"); 
         if (target != null) 
@@ -71,7 +71,7 @@ private bool RunHealGambits()
     }
     
     // Flash Heal on target under 85% (cannot be cast while moving)
-    if (IsInCombat() && !Inferno.IsMoving("player"))
+    if (IsInCombat() && !IsMoving())
     { 
         string target = LowestAllyUnder(85, "Flash Heal"); 
         if (target != null) 

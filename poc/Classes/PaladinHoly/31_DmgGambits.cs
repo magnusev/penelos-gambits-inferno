@@ -10,13 +10,13 @@ private bool RunDmgGambits()
         return true; 
     }
 
-    if (IsSettingOn("Do DPS") && IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1) && Inferno.CanCast("Shield of the Righteous"))
+    if (IsSettingOn("Do DPS") && IsInCombat() && PowerAtLeast(4, HOLY_POWER) && EnemiesInMelee(1) && CanCastSpell("Shield of the Righteous"))
     { 
         Log("Casting Shield of the Righteous"); 
         return CastPersonal("Shield of the Righteous"); 
     }
 
-    if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && Inferno.CanCast("Judgment", "target"))
+    if (IsSettingOn("Do DPS") && IsInCombat() && TargetIsEnemy() && PowerLessThan(4, HOLY_POWER) && CanCast("Judgment", "target"))
     { 
         Log("Casting Judgment"); 
         return CastOnEnemy("Judgment"); 
@@ -25,11 +25,11 @@ private bool RunDmgGambits()
     // Flash of Light filler - always have something to do
     if (IsInCombat() && CanCastWhileMoving("Flash of Light"))
     {
-        string t = LowestAllyInRange("Flash of Light");
-        if (t != null) 
+        string target = LowestAllyInRange("Flash of Light");
+        if (target != null) 
         { 
-            Log("Filler FoL on " + t + " (" + HealthPct(t) + "%)"); 
-            return CastOnFocus(t, "cast_fol"); 
+            Log("Filler FoL on " + target + " (" + HealthPct(target) + "%)"); 
+            return CastOnFocus(target, "cast_fol"); 
         }
         Log("Filler FoL on player (fallback)"); 
         return CastOnFocus("player", "cast_fol");
