@@ -11,54 +11,13 @@ private bool RunDungeonGambits(int mapId)
         case MAP_PROVING_GROUNDS:
             return TryDispel("Aqua Bomb");
             
-        case MAP_ALGETHAR_ACADEMY_1:
-        case MAP_ALGETHAR_ACADEMY_2:
-        case MAP_ALGETHAR_ACADEMY_3:
-        case MAP_ALGETHAR_ACADEMY_4:
-        case MAP_ALGETHAR_ACADEMY_5:
-        case MAP_ALGETHAR_ACADEMY_6:
-        case MAP_ALGETHAR_ACADEMY_7:
-            // TODO: Add Algethar Academy specific mechanics
-            return false;
-            
-        case MAP_SKYREACH_1:
-        case MAP_SKYREACH_2:
-            return false;
-            
-        case MAP_PIT_OF_SARON:
-            // Aura Mastery when Forgemaster Garfrost casts Cryostomp at 80%
-            if (UnitCastingAtPercent("boss1", 80))
-            {
-                string bossSpell = Inferno.CastingName("boss1");
-                if (bossSpell == "Cryostomp" && CanCastSpell("Aura Mastery"))
-                {
-                    Log("Forgemaster Garfrost casting Cryostomp - using Aura Mastery");
-                    Inferno.Cast("Aura Mastery");
-                    return true;
-                }
-            }
-            // Try dispel first, then Hand of Freedom if dispel doesn't work
-            if (TryDispel("Cryoshards")) return true;
-            if (TryBof("Cryoshards")) return true;
-            return TryDispelStacks("Rotting Strikes", 3);
-            
-        case MAP_MAISARA_CAVERNS_1:
-        case MAP_MAISARA_CAVERNS_2:
-        case MAP_MAISARA_CAVERNS_3:
-        case MAP_MAISARA_CAVERNS_4:
-        case MAP_MAISARA_CAVERNS_5:
-        case MAP_MAISARA_CAVERNS_6:
-        case MAP_MAISARA_CAVERNS_7:
-            if (TryDispel("Poison Spray")) return true;
-            if (TryDispel("Soul Torment")) return true;
-            return TryDispel("Poison Blades");
-            
-        case MAP_WINDRUNNER_SPIRE:
-            return TryDispel("Infected Pinions");
-            
         case MAP_MAGISTERS_TERRACE_1:
         case MAP_MAGISTERS_TERRACE_2:
         case MAP_MAGISTERS_TERRACE_3:
+        case MAP_MAGISTERS_TERRACE_4:
+        case MAP_MAGISTERS_TERRACE_5:
+        case MAP_MAGISTERS_TERRACE_6:
+        case MAP_MAGISTERS_TERRACE_7:
             // Dispel Ethereal Shackles
             if (TryDispel("Ethereal Shackles")) return true;
             
@@ -85,6 +44,47 @@ private bool RunDungeonGambits(int mapId)
                 } 
             }
             return false;
+            
+        case MAP_ALGETHAR_ACADEMY_1:
+        case MAP_ALGETHAR_ACADEMY_2:
+        case MAP_ALGETHAR_ACADEMY_3:
+            // TODO: Add Algethar Academy specific mechanics
+            return false;
+            
+        case MAP_SKYREACH_1:
+        case MAP_SKYREACH_2:
+            return false;
+            
+        case MAP_PIT_OF_SARON:
+            // Aura Mastery when Forgemaster Garfrost casts Cryostomp at 80%
+            if (UnitCastingAtPercent("boss1", 80))
+            {
+                string bossSpell = Inferno.CastingName("boss1");
+                if (bossSpell == "Cryostomp" && CanCastSpell("Aura Mastery"))
+                {
+                    Log("Forgemaster Garfrost casting Cryostomp - using Aura Mastery");
+                    Inferno.Cast("Aura Mastery");
+                    return true;
+                }
+            }
+            // Try dispel first, then Hand of Freedom if dispel doesn't work
+            if (TryDispel("Cryoshards")) return true;
+            if (TryBof("Cryoshards")) return true;
+            return TryDispelStacks("Rotting Strikes", 3);
+            
+        case MAP_WINDRUNNER_SPIRE_1:
+        case MAP_WINDRUNNER_SPIRE_2:
+        case MAP_WINDRUNNER_SPIRE_3:
+        case MAP_WINDRUNNER_SPIRE_4:
+        case MAP_WINDRUNNER_SPIRE_5:
+        case MAP_WINDRUNNER_SPIRE_6:
+        case MAP_WINDRUNNER_SPIRE_7:
+            return TryDispel("Infected Pinions");
+            
+        case MAP_MAISARA_CAVERNS:
+            if (TryDispel("Poison Spray")) return true;
+            if (TryDispel("Soul Torment")) return true;
+            return TryDispel("Poison Blades");
             
         default: 
             return false;

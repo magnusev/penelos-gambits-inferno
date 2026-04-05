@@ -56,27 +56,27 @@ private void Log(string msg)
 }
 
 private const int MAP_PROVING_GROUNDS = 480;
-private const int MAP_ALGETHAR_ACADEMY_1 = 2511;
-private const int MAP_ALGETHAR_ACADEMY_2 = 2515;
-private const int MAP_ALGETHAR_ACADEMY_3 = 2516;
-private const int MAP_ALGETHAR_ACADEMY_4 = 2517;
-private const int MAP_ALGETHAR_ACADEMY_5 = 2518;
-private const int MAP_ALGETHAR_ACADEMY_6 = 2519;
-private const int MAP_ALGETHAR_ACADEMY_7 = 2520;
+private const int MAP_MAGISTERS_TERRACE_1 = 2511;
+private const int MAP_MAGISTERS_TERRACE_2 = 2515;
+private const int MAP_MAGISTERS_TERRACE_3 = 2516;
+private const int MAP_MAGISTERS_TERRACE_4 = 2517;
+private const int MAP_MAGISTERS_TERRACE_5 = 2518;
+private const int MAP_MAGISTERS_TERRACE_6 = 2519;
+private const int MAP_MAGISTERS_TERRACE_7 = 2520;
 private const int MAP_SKYREACH_1 = 601;
 private const int MAP_SKYREACH_2 = 602;
 private const int MAP_PIT_OF_SARON = 823;
-private const int MAP_MAISARA_CAVERNS_1 = 2492;
-private const int MAP_MAISARA_CAVERNS_2 = 2493;
-private const int MAP_MAISARA_CAVERNS_3 = 2494;
-private const int MAP_MAISARA_CAVERNS_4 = 2496;
-private const int MAP_MAISARA_CAVERNS_5 = 2497;
-private const int MAP_MAISARA_CAVERNS_6 = 2498;
-private const int MAP_MAISARA_CAVERNS_7 = 2499;
-private const int MAP_WINDRUNNER_SPIRE = 2501;
-private const int MAP_MAGISTERS_TERRACE_1 = 2097;
-private const int MAP_MAGISTERS_TERRACE_2 = 2098;
-private const int MAP_MAGISTERS_TERRACE_3 = 2099;
+private const int MAP_WINDRUNNER_SPIRE_1 = 2492;
+private const int MAP_WINDRUNNER_SPIRE_2 = 2493;
+private const int MAP_WINDRUNNER_SPIRE_3 = 2494;
+private const int MAP_WINDRUNNER_SPIRE_4 = 2496;
+private const int MAP_WINDRUNNER_SPIRE_5 = 2497;
+private const int MAP_WINDRUNNER_SPIRE_6 = 2498;
+private const int MAP_WINDRUNNER_SPIRE_7 = 2499;
+private const int MAP_MAISARA_CAVERNS = 2501;
+private const int MAP_ALGETHAR_ACADEMY_1 = 2097;
+private const int MAP_ALGETHAR_ACADEMY_2 = 2098;
+private const int MAP_ALGETHAR_ACADEMY_3 = 2099;
 
 private const int MANA = 0;
 private const int HEALTHSTONE_ID = 5512;
@@ -701,13 +701,31 @@ private bool RunDungeonGambits(int mapId)
     {
         case MAP_PROVING_GROUNDS:
             return TryDispel("Aqua Bomb");
+        case MAP_MAGISTERS_TERRACE_1:
+        case MAP_MAGISTERS_TERRACE_2:
+        case MAP_MAGISTERS_TERRACE_3:
+        case MAP_MAGISTERS_TERRACE_4:
+        case MAP_MAGISTERS_TERRACE_5:
+        case MAP_MAGISTERS_TERRACE_6:
+        case MAP_MAGISTERS_TERRACE_7:
+            if (TryDispel("Ethereal Shackles")) return true;
+            if (TryBof("Ethereal Shackles")) return true;
+            if (TryDispel("Consuming Void")) return true;
+            if (TryDispel("Holy Fire")) return true;
+            if (TryDispel("Polymorph")) return true;
+            if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
+            { 
+                string target = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); 
+                if (target != null) 
+                { 
+                    CastOnFocus(target, "cast_cleanse"); 
+                    return true; 
+                } 
+            }
+            return false;
         case MAP_ALGETHAR_ACADEMY_1:
         case MAP_ALGETHAR_ACADEMY_2:
         case MAP_ALGETHAR_ACADEMY_3:
-        case MAP_ALGETHAR_ACADEMY_4:
-        case MAP_ALGETHAR_ACADEMY_5:
-        case MAP_ALGETHAR_ACADEMY_6:
-        case MAP_ALGETHAR_ACADEMY_7:
             return false;
         case MAP_SKYREACH_1:
         case MAP_SKYREACH_2:
@@ -726,36 +744,18 @@ private bool RunDungeonGambits(int mapId)
             if (TryDispel("Cryoshards")) return true;
             if (TryBof("Cryoshards")) return true;
             return TryDispelStacks("Rotting Strikes", 3);
-        case MAP_MAISARA_CAVERNS_1:
-        case MAP_MAISARA_CAVERNS_2:
-        case MAP_MAISARA_CAVERNS_3:
-        case MAP_MAISARA_CAVERNS_4:
-        case MAP_MAISARA_CAVERNS_5:
-        case MAP_MAISARA_CAVERNS_6:
-        case MAP_MAISARA_CAVERNS_7:
+        case MAP_WINDRUNNER_SPIRE_1:
+        case MAP_WINDRUNNER_SPIRE_2:
+        case MAP_WINDRUNNER_SPIRE_3:
+        case MAP_WINDRUNNER_SPIRE_4:
+        case MAP_WINDRUNNER_SPIRE_5:
+        case MAP_WINDRUNNER_SPIRE_6:
+        case MAP_WINDRUNNER_SPIRE_7:
+            return TryDispel("Infected Pinions");
+        case MAP_MAISARA_CAVERNS:
             if (TryDispel("Poison Spray")) return true;
             if (TryDispel("Soul Torment")) return true;
             return TryDispel("Poison Blades");
-        case MAP_WINDRUNNER_SPIRE:
-            return TryDispel("Infected Pinions");
-        case MAP_MAGISTERS_TERRACE_1:
-        case MAP_MAGISTERS_TERRACE_2:
-        case MAP_MAGISTERS_TERRACE_3:
-            if (TryDispel("Ethereal Shackles")) return true;
-            if (TryBof("Ethereal Shackles")) return true;
-            if (TryDispel("Consuming Void")) return true;
-            if (TryDispel("Holy Fire")) return true;
-            if (TryDispel("Polymorph")) return true;
-            if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
-            { 
-                string target = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); 
-                if (target != null) 
-                { 
-                    CastOnFocus(target, "cast_cleanse"); 
-                    return true; 
-                } 
-            }
-            return false;
         default: 
             return false;
     }
