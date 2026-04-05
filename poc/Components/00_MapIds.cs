@@ -39,6 +39,26 @@ private const string MAP_EREDATH_NAME = "Eredath";
 private const int MAP_ARCANTINA = 2541;
 private const string MAP_ARCANTINA_NAME = "Arcantina";
 
+// Twin Peaks (Battleground)
+private const int MAP_TWIN_PEAKS = 206;
+private const string MAP_TWIN_PEAKS_NAME = "Twin Peaks (BG)";
+
+// Deephaul Ravine (Battleground)
+private const int MAP_DEEPHAUL_RAVINE = 2345;
+private const string MAP_DEEPHAUL_RAVINE_NAME = "Deephaul Ravine (BG)";
+
+// Alterac Valley (Battleground)
+private const int MAP_ALTERAC_VALLEY = 91;
+private const string MAP_ALTERAC_VALLEY_NAME = "Alterac Valley (BG)";
+
+// Orgrimmar
+private const int MAP_ORGRIMMAR = 85;
+private const string MAP_ORGRIMMAR_NAME = "Orgrimmar";
+
+// Dornogal
+private const int MAP_DORNOGAL = 2339;
+private const string MAP_DORNOGAL_NAME = "Dornogal";
+
 // Proving Grounds
 private const int MAP_PROVING_GROUNDS = 480;
 private const string MAP_PROVING_GROUNDS_NAME = "Proving Grounds";
@@ -95,6 +115,11 @@ private Dictionary<int, string> _mapNames = new Dictionary<int, string>
     { MAP_MILLENIAS_THRESHOLD, MAP_MILLENIAS_THRESHOLD_NAME },
     { MAP_EREDATH, MAP_EREDATH_NAME },
     { MAP_ARCANTINA, MAP_ARCANTINA_NAME },
+    { MAP_TWIN_PEAKS, MAP_TWIN_PEAKS_NAME },
+    { MAP_DEEPHAUL_RAVINE, MAP_DEEPHAUL_RAVINE_NAME },
+    { MAP_ALTERAC_VALLEY, MAP_ALTERAC_VALLEY_NAME },
+    { MAP_ORGRIMMAR, MAP_ORGRIMMAR_NAME },
+    { MAP_DORNOGAL, MAP_DORNOGAL_NAME },
     
     // Proving Grounds
     { MAP_PROVING_GROUNDS, MAP_PROVING_GROUNDS_NAME },
