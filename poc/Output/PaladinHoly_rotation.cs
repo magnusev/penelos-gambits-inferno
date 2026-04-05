@@ -69,6 +69,10 @@ private const int MAP_THE_DEN = 2576;
 private const string MAP_THE_DEN_NAME = "The Den";
 private const int MAP_MILLENIAS_THRESHOLD = 2266;
 private const string MAP_MILLENIAS_THRESHOLD_NAME = "Millenia's Threshold";
+private const int MAP_EREDATH = 882;
+private const string MAP_EREDATH_NAME = "Eredath";
+private const int MAP_ARCANTINA = 2541;
+private const string MAP_ARCANTINA_NAME = "Arcantina";
 private const int MAP_PROVING_GROUNDS = 480;
 private const string MAP_PROVING_GROUNDS_NAME = "Proving Grounds";
 private const int MAP_MAGISTERS_TERRACE_1 = 2511;
@@ -107,6 +111,8 @@ private Dictionary<int, string> _mapNames = new Dictionary<int, string>
     { MAP_VOIDSTORM, MAP_VOIDSTORM_NAME },
     { MAP_THE_DEN, MAP_THE_DEN_NAME },
     { MAP_MILLENIAS_THRESHOLD, MAP_MILLENIAS_THRESHOLD_NAME },
+    { MAP_EREDATH, MAP_EREDATH_NAME },
+    { MAP_ARCANTINA, MAP_ARCANTINA_NAME },
     { MAP_PROVING_GROUNDS, MAP_PROVING_GROUNDS_NAME },
     { MAP_MAGISTERS_TERRACE_1, MAP_MAGISTERS_TERRACE_NAME },
     { MAP_MAGISTERS_TERRACE_2, MAP_MAGISTERS_TERRACE_NAME },
