@@ -4,11 +4,21 @@
 // Map change and boss information logging
 // Requires: _lastMapId variable in class config
 
+private string GetMapName(int mapId)
+{
+    string name;
+    if (_mapNames.TryGetValue(mapId, out name))
+        return name;
+    return "UNKNOWN_MAP";
+}
+
 private void LogMapChange(int currentMapId)
 {
     if (_lastMapId != 0 && _lastMapId != currentMapId)
     {
-        Log("Map changed: " + _lastMapId + " -> " + currentMapId);
+        string oldMapName = GetMapName(_lastMapId);
+        string newMapName = GetMapName(currentMapId);
+        Log("Map changed: " + oldMapName + " (" + _lastMapId + ") -> " + newMapName + " (" + currentMapId + ")");
     }
     _lastMapId = currentMapId;
 }
