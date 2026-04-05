@@ -444,9 +444,57 @@ private bool HandleRacials()
     return false;
 }
 
+private void LogMapChange(int currentMapId)
+{
+    if (_lastMapId != 0 && _lastMapId != currentMapId)
+    {
+        Log("Map changed: " + _lastMapId + " -> " + currentMapId);
+    }
+    _lastMapId = currentMapId;
+}
+private void LogBossInformation()
+{
+    for (int i = 1; i <= 4; i++)
+    {
+        string boss = "boss" + i;
+        int bossHealth = Inferno.Health(boss);
+        if (bossHealth > 0)
+        {
+            string bossName = "Unknown";
+            try
+            {
+                bossName = Inferno.UnitName(boss);
+            }
+            catch { }
+            int castingId = Inferno.CastingID(boss);
+            string logMsg = "Boss" + i + ": " + bossName + " Health: " + bossHealth + "%";
+            if (castingId != 0)
+            {
+                string castName = "Unknown";
+                try
+                {
+                    castName = Inferno.CastingName(boss);
+                }
+                catch { }
+                bool interruptable = Inferno.IsInterruptable(boss);
+                bool channeling = Inferno.IsChanneling(boss);
+                int elapsed = Inferno.CastingElapsed(boss);
+                int remaining = Inferno.CastingRemaining(boss);
+                logMsg += " | CASTING: " + castName + " (ID:" + castingId + ")";
+                logMsg += " Interruptable:" + interruptable;
+                logMsg += " Channeling:" + channeling;
+                logMsg += " Elapsed:" + elapsed + "ms";
+                logMsg += " Remaining:" + remaining + "ms";
+            }
+            Log(logMsg);
+        }
+    }
+}
+
 private const int HOLY_POWER = 9;
 private const string INTERRUPT_SPELL = "Rebuke";
 private Random _rng = new Random();
+private int _lastMapId = 0;
 public override void LoadSettings()
 {
     Settings.Add(new Setting("=== Protection Paladin ==="));
@@ -561,6 +609,13 @@ public override bool CombatTick()
 {
     if (Inferno.IsDead("player") || Inferno.IsGhost("player")) return false;
     if (GCD() != 0) return true;
+    int mapId = Inferno.GetMapID();
+    LogMapChange(mapId);
+    if (ThrottleIsOpen("boss_log", DIAGNOSTIC_LOG_INTERVAL_MS))
+    {
+        ThrottleRestart("boss_log");
+        LogBossInformation();
+    }
     if (HandleDefensives()) return true;
     if (HandleInterrupt()) return true;
     if (!TargetIsEnemy()) return false;

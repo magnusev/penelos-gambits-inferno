@@ -26,10 +26,16 @@ public override bool CombatTick()
         if (groupMembers.Count > 5)
             info += "... (" + (groupMembers.Count - 5) + " more)";
         Log("Tick: combat=" + Inferno.InCombat("player") + " group=" + groupMembers.Count + " | " + info);
+        
+        // Log boss information
+        LogBossInformation();
     }
 
     // Execute rotation priorities
     int mapId = Inferno.GetMapID();
+    
+    // Log map changes
+    LogMapChange(mapId);
     if (RunDungeonGambits(mapId)) return true;
     if (RunHealGambits()) return true;
     if (RunDmgGambits()) return true;

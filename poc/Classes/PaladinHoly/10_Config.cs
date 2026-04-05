@@ -15,6 +15,8 @@ private const int HS_RECHARGE_MS = 5000;
 private Random _rng = new Random();
 private const string INTERRUPT_SPELL = ""; // Healers don't interrupt
 
+// Map tracking for zone change logging
+private int _lastMapId = 0;
 
 public override void LoadSettings()
 {

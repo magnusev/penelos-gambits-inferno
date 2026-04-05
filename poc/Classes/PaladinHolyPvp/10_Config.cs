@@ -9,6 +9,9 @@ private const string INTERRUPT_SPELL = "Hammer of Justice";
 // Interrupt tracking
 private Random _rng = new Random();
 
+// Map tracking for zone change logging
+private int _lastMapId = 0;
+
 public override void LoadSettings()
 {
     Settings.Add(new Setting("=== Holy Paladin PVP Arena ==="));

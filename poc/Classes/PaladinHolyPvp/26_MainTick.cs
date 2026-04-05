@@ -7,6 +7,15 @@ public override bool CombatTick()
     // Skip if player is dead
     if (Inferno.IsDead("player") || Inferno.IsGhost("player")) return false;
     
+    // Map change and boss logging
+    int mapId = Inferno.GetMapID();
+    LogMapChange(mapId);
+    if (ThrottleIsOpen("boss_log", DIAGNOSTIC_LOG_INTERVAL_MS))
+    {
+        ThrottleRestart("boss_log");
+        LogBossInformation();
+    }
+    
     // Priority 1: Defensives (emergency saves)
     if (HandleDefensives()) return true;
     
