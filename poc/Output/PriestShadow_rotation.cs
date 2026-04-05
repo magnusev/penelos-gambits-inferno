@@ -498,9 +498,10 @@ private void LogBossInformation()
     for (int i = 1; i <= 4; i++)
     {
         string boss = "boss" + i;
-        int bossHealth = Inferno.Health(boss);
-        if (bossHealth > 0)
+        int bossMaxHealth = Inferno.MaxHealth(boss);
+        if (bossMaxHealth > 0)
         {
+            int bossHealthPct = HealthPct(boss);
             string bossName = "Unknown";
             try
             {
@@ -508,7 +509,7 @@ private void LogBossInformation()
             }
             catch { }
             int castingId = Inferno.CastingID(boss);
-            string logMsg = "Boss" + i + ": " + bossName + " Health: " + bossHealth + "%";
+            string logMsg = "Boss" + i + ": " + bossName + " Health: " + bossHealthPct + "%";
             if (castingId != 0)
             {
                 string castName = "Unknown";

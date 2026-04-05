@@ -30,9 +30,12 @@ private void LogBossInformation()
         string boss = "boss" + i;
         
         // Check if boss exists (has health > 0)
-        int bossHealth = Inferno.Health(boss);
-        if (bossHealth > 0)
+        int bossMaxHealth = Inferno.MaxHealth(boss);
+        if (bossMaxHealth > 0)
         {
+            // Calculate proper health percentage
+            int bossHealthPct = HealthPct(boss);
+            
             // Get boss name (Retail only, so wrap in try-catch for safety)
             string bossName = "Unknown";
             try
@@ -45,7 +48,7 @@ private void LogBossInformation()
             int castingId = Inferno.CastingID(boss);
             
             // Build log message
-            string logMsg = "Boss" + i + ": " + bossName + " Health: " + bossHealth + "%";
+            string logMsg = "Boss" + i + ": " + bossName + " Health: " + bossHealthPct + "%";
             
             // If boss is casting, add casting information
             if (castingId != 0)
