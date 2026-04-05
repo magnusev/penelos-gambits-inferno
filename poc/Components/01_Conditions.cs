@@ -189,4 +189,25 @@ private int EnemiesNearPlayer()
     return Inferno.EnemiesNearUnit(8f, "player");
 }
 
+// Returns true if unit is casting an interruptible spell at or past the specified cast percentage
+private bool UnitCastingAtPercent(string unit, int minPct, int maxPct = 100)
+{
+    // Check if unit is casting and interruptible
+    if (Inferno.CastingID(unit) == 0 || !Inferno.IsInterruptable(unit))
+        return false;
+    
+    // Calculate cast progress percentage
+    int elapsed = Inferno.CastingElapsed(unit);
+    int remaining = Inferno.CastingRemaining(unit);
+    int total = elapsed + remaining;
+    
+    if (total <= 0) 
+        return false;
+    
+    int castPct = (elapsed * 100) / total;
+    
+    // Check if cast is within the percentage range
+    return castPct >= minPct && castPct <= maxPct;
+}
+
 

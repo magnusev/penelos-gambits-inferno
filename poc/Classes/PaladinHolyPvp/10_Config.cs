@@ -8,8 +8,6 @@ private const string INTERRUPT_SPELL = "Hammer of Justice";
 
 // Interrupt tracking
 private Random _rng = new Random();
-private int _lastCastingID = 0;
-private int _interruptTargetPct = 0;
 
 public override void LoadSettings()
 {

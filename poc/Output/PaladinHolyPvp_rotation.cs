@@ -238,6 +238,18 @@ private int EnemiesNearPlayer()
 {
     return Inferno.EnemiesNearUnit(8f, "player");
 }
+private bool UnitCastingAtPercent(string unit, int minPct, int maxPct = 100)
+{
+    if (Inferno.CastingID(unit) == 0 || !Inferno.IsInterruptable(unit))
+        return false;
+    int elapsed = Inferno.CastingElapsed(unit);
+    int remaining = Inferno.CastingRemaining(unit);
+    int total = elapsed + remaining;
+    if (total <= 0) 
+        return false;
+    int castPct = (elapsed * 100) / total;
+    return castPct >= minPct && castPct <= maxPct;
+}
 
 private List<string> GetGroupMembers()
 {
@@ -342,7 +354,13 @@ private int SpellCooldown(string spellName)
     return Inferno.SpellCooldown(spellName);
 }
 
+private Dictionary<string, int> _interruptCastID = new Dictionary<string, int>();
+private Dictionary<string, int> _interruptTargetPct = new Dictionary<string, int>();
 private bool HandleInterrupt()
+{
+    return HandleInterruptOnUnit("target", INTERRUPT_SPELL);
+}
+private bool HandleInterruptOnUnit(string unit, string spell)
 {
     try 
     {
@@ -352,33 +370,43 @@ private bool HandleInterrupt()
     {
         return false;
     }
-    int castingID = TargetCastingID();
-    if (!TargetIsCasting())
+    int castingID = Inferno.CastingID(unit);
+    if (!Inferno.IsInterruptable(unit) || castingID == 0)
     {
-        _lastCastingID = 0;
+        if (_interruptCastID.ContainsKey(unit))
+        {
+            _interruptCastID.Remove(unit);
+            _interruptTargetPct.Remove(unit);
+        }
         return false;
     }
-    if (castingID != _lastCastingID)
+    if (!_interruptCastID.ContainsKey(unit) || _interruptCastID[unit] != castingID)
     {
-        _lastCastingID = castingID;
         int minPct = GetSlider("Interrupt at cast % (min)");
         int maxPct = GetSlider("Interrupt at cast % (max)");
         if (maxPct < minPct) maxPct = minPct;
-        _interruptTargetPct = _rng.Next(minPct, maxPct + 1);
+        int targetPct = _rng.Next(minPct, maxPct + 1);
+        _interruptCastID[unit] = castingID;
+        _interruptTargetPct[unit] = targetPct;
     }
-    int elapsed = CastingElapsed();
-    int remaining = CastingRemaining();
-    int total = elapsed + remaining;
-    if (total <= 0) return false;
-    int castPct = (elapsed * 100) / total;
-    if (castPct >= _interruptTargetPct && Inferno.CanCast(INTERRUPT_SPELL, IgnoreGCD: true))
+    int interruptPct = _interruptTargetPct[unit];
+    if (UnitCastingAtPercent(unit, interruptPct) && Inferno.CanCast(spell, IgnoreGCD: true))
     {
-        Log("Interrupting at " + castPct + "% (target: " + _interruptTargetPct + "%)");
-        Inferno.Cast(INTERRUPT_SPELL, QuickDelay: true);
-        _lastCastingID = 0;
+        int elapsed = Inferno.CastingElapsed(unit);
+        int remaining = Inferno.CastingRemaining(unit);
+        int total = elapsed + remaining;
+        int castPct = total > 0 ? (elapsed * 100) / total : 0;
+        Log("Interrupting " + unit + " at " + castPct + "% (target: " + interruptPct + "%)");
+        Inferno.Cast(spell, QuickDelay: true);
+        _interruptCastID.Remove(unit);
+        _interruptTargetPct.Remove(unit);
         return true;
     }
     return false;
+}
+private bool ShouldInterruptCast(string unit, int minPct, int maxPct = 100)
+{
+    return UnitCastingAtPercent(unit, minPct, maxPct);
 }
 
 private bool HandleRacials()
@@ -488,8 +516,6 @@ private int GetUnitHealthPct(string unit)
 private const int HOLY_POWER = 9;
 private const string INTERRUPT_SPELL = "Hammer of Justice";
 private Random _rng = new Random();
-private int _lastCastingID = 0;
-private int _interruptTargetPct = 0;
 public override void LoadSettings()
 {
     Settings.Add(new Setting("=== Holy Paladin PVP Arena ==="));

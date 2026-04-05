@@ -1,0 +1,150 @@
+﻿========================================
+INTERRUPT CONDITION - USAGE EXAMPLES
+========================================
+
+NOTE: These are EXAMPLE CODE SNIPPETS for reference only.
+They show patterns and ideas, not production-ready code.
+Always verify API calls against the actual Inferno API documentation.
+
+========================================
+EXAMPLE 1: Basic Boss Defensive
+========================================
+
+// Use Aura Mastery when boss1 is 30% into casting
+if (UnitCastingAtPercent("boss1", 30) && CanCastSpell("Aura Mastery"))
+{
+    Log("Boss1 casting detected - using Aura Mastery");
+    Inferno.Cast("Aura Mastery");
+    return true;
+}
+
+========================================
+EXAMPLE 2: Multiple Boss Checks
+========================================
+
+// Check multiple boss units for dangerous casts
+for (int i = 1; i <= 5; i++)
+{
+    string boss = "boss" + i;
+    
+    // React early to dangerous casts (10-30%)
+    if (UnitCastingAtPercent(boss, 10, 30))
+    {
+        if (CanCastSpell("Aura Mastery"))
+        {
+            Log("Detected dangerous cast from " + boss + " - using Aura Mastery");
+            Inferno.Cast("Aura Mastery");
+            return true;
+        }
+    }
+}
+
+========================================
+EXAMPLE 3: Percentage Range Window
+========================================
+
+// Use defensive only between 20-40% of boss cast
+if (UnitCastingAtPercent("boss1", 20, 40) && CanCastSpell("Divine Shield"))
+{
+    Log("Boss dangerous cast detected early - using Divine Shield");
+    Inferno.Cast("Divine Shield");
+    return true;
+}
+
+========================================
+EXAMPLE 4: Interrupt with Custom Spell
+========================================
+
+// Interrupt boss2 with a specific spell
+if (HandleInterruptOnUnit("boss2", "Rebuke"))
+    return true;
+
+========================================
+EXAMPLE 5: Conditional Based on Cast Name
+========================================
+
+// Only react to specific spells
+string spellName = Inferno.CastingName("boss1");
+if (spellName == "Pyroblast" && UnitCastingAtPercent("boss1", 70))
+{
+    if (CanCastSpell("Spell Reflect"))
+    {
+        Log("Reflecting Pyroblast");
+        Inferno.Cast("Spell Reflect");
+        return true;
+    }
+}
+
+========================================
+EXAMPLE 6: Arena PvP Interrupts
+========================================
+
+// Interrupt arena1, arena2, arena3 at different percentages
+for (int i = 1; i <= 3; i++)
+{
+    string arena = "arena" + i;
+    if (UnitCastingAtPercent(arena, 35, 85))
+    {
+        if (CanCast("Kick", arena))
+        {
+            Inferno.Cast("Kick");
+            return true;
+        }
+    }
+}
+
+========================================
+EXAMPLE 7: Emergency Defensives
+========================================
+
+// Low health + boss casting = emergency defensive
+if (HealthPct("player") < 40)
+{
+    for (int i = 1; i <= 5; i++)
+    {
+        string boss = "boss" + i;
+        
+        // Boss is 15-35% into cast and we're low
+        if (UnitCastingAtPercent(boss, 15, 35))
+        {
+            // Use strongest defensive available
+            if (CanCastSpell("Divine Shield"))
+            {
+                Log("Emergency: Boss casting while low HP - Divine Shield");
+                Inferno.Cast("Divine Shield");
+                return true;
+            }
+        }
+    }
+}
+
+========================================
+KEY FUNCTIONS AVAILABLE
+========================================
+
+1. UnitCastingAtPercent(string unit, int minPct, int maxPct = 100)
+   - Returns true if unit is casting and progress is between minPct and maxPct
+   - Works with: "target", "boss1", "boss2", "focus", "arena1", etc.
+
+2. HandleInterruptOnUnit(string unit, string spell)
+   - Interrupts unit with specified spell using randomized timing from settings
+   - Automatically tracks state per unit
+
+3. ShouldInterruptCast(string unit, int minPct, int maxPct = 100)
+   - Alias for UnitCastingAtPercent - more semantic for defensive use
+
+4. HandleInterrupt()
+   - Default interrupt handler for "target" using INTERRUPT_SPELL constant
+
+========================================
+IMPORTANT NOTES
+========================================
+
+- Always verify unit exists before using (implementation-dependent)
+- Cast percentage is calculated as: (elapsed / total) * 100
+- Only interruptible casts trigger these conditions
+- State is automatically cleaned up when casts finish
+- Multiple units can be tracked simultaneously
+
+========================================
+

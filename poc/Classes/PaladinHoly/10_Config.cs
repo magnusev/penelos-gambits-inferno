@@ -13,8 +13,6 @@ private const int HS_RECHARGE_MS = 5000;
 
 // Interrupt tracking (defined for universal component, but not actively used by healers)
 private Random _rng = new Random();
-private int _lastCastingID = 0;
-private int _interruptTargetPct = 0;
 private const string INTERRUPT_SPELL = ""; // Healers don't interrupt
 
 
