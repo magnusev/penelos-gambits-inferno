@@ -18,18 +18,28 @@ private bool RunDungeonGambits(int mapId)
         case MAP_ALGETHAR_ACADEMY_5:
         case MAP_ALGETHAR_ACADEMY_6:
         case MAP_ALGETHAR_ACADEMY_7:
-            if (TryDispel("Ethereal Shackles")) return true;
-            if (TryDispel("Consuming Void")) return true;
-            if (TryBof("Ethereal Shackles")) return true;
-            if (TryDispel("Holy Fire")) return true;
-            return TryDispel("Polymorph");
+            // TODO: Add Algethar Academy specific mechanics
+            return false;
             
         case MAP_SKYREACH_1:
         case MAP_SKYREACH_2:
             return false;
             
         case MAP_PIT_OF_SARON:
+            // Aura Mastery when Forgemaster Garfrost casts Cryostomp at 80%
+            if (UnitCastingAtPercent("boss1", 80))
+            {
+                string bossSpell = Inferno.CastingName("boss1");
+                if (bossSpell == "Cryostomp" && CanCastSpell("Aura Mastery"))
+                {
+                    Log("Forgemaster Garfrost casting Cryostomp - using Aura Mastery");
+                    Inferno.Cast("Aura Mastery");
+                    return true;
+                }
+            }
+            // Try dispel first, then Hand of Freedom if dispel doesn't work
             if (TryDispel("Cryoshards")) return true;
+            if (TryBof("Cryoshards")) return true;
             return TryDispelStacks("Rotting Strikes", 3);
             
         case MAP_MAISARA_CAVERNS_1:
@@ -49,6 +59,22 @@ private bool RunDungeonGambits(int mapId)
         case MAP_MAGISTERS_TERRACE_1:
         case MAP_MAGISTERS_TERRACE_2:
         case MAP_MAGISTERS_TERRACE_3:
+            // Dispel Ethereal Shackles
+            if (TryDispel("Ethereal Shackles")) return true;
+            
+            // Blessing of Freedom on Ethereal Shackles (if dispel didn't work)
+            if (TryBof("Ethereal Shackles")) return true;
+            
+            // Dispel Consuming Void
+            if (TryDispel("Consuming Void")) return true;
+            
+            // Dispel Holy Fire
+            if (TryDispel("Holy Fire")) return true;
+            
+            // Dispel Polymorph
+            if (TryDispel("Polymorph")) return true;
+            
+            // Lasher Toxin with stack check
             if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
             { 
                 string target = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); 

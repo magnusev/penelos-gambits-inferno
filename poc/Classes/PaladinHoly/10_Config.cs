@@ -26,6 +26,7 @@ public override void LoadSettings()
 
 public override void Initialize()
 {
+    Spellbook.Add("Aura Mastery");
     Spellbook.Add("Avenging Wrath"); 
     Spellbook.Add("Blessing of Freedom");
     Spellbook.Add("Cleanse"); 

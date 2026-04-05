@@ -460,6 +460,7 @@ public override void LoadSettings()
 }
 public override void Initialize()
 {
+    Spellbook.Add("Aura Mastery");
     Spellbook.Add("Avenging Wrath"); 
     Spellbook.Add("Blessing of Freedom");
     Spellbook.Add("Cleanse"); 
@@ -657,16 +658,23 @@ private bool RunDungeonGambits(int mapId)
         case MAP_ALGETHAR_ACADEMY_5:
         case MAP_ALGETHAR_ACADEMY_6:
         case MAP_ALGETHAR_ACADEMY_7:
-            if (TryDispel("Ethereal Shackles")) return true;
-            if (TryDispel("Consuming Void")) return true;
-            if (TryBof("Ethereal Shackles")) return true;
-            if (TryDispel("Holy Fire")) return true;
-            return TryDispel("Polymorph");
+            return false;
         case MAP_SKYREACH_1:
         case MAP_SKYREACH_2:
             return false;
         case MAP_PIT_OF_SARON:
+            if (UnitCastingAtPercent("boss1", 80))
+            {
+                string bossSpell = Inferno.CastingName("boss1");
+                if (bossSpell == "Cryostomp" && CanCastSpell("Aura Mastery"))
+                {
+                    Log("Forgemaster Garfrost casting Cryostomp - using Aura Mastery");
+                    Inferno.Cast("Aura Mastery");
+                    return true;
+                }
+            }
             if (TryDispel("Cryoshards")) return true;
+            if (TryBof("Cryoshards")) return true;
             return TryDispelStacks("Rotting Strikes", 3);
         case MAP_MAISARA_CAVERNS_1:
         case MAP_MAISARA_CAVERNS_2:
@@ -683,6 +691,11 @@ private bool RunDungeonGambits(int mapId)
         case MAP_MAGISTERS_TERRACE_1:
         case MAP_MAGISTERS_TERRACE_2:
         case MAP_MAGISTERS_TERRACE_3:
+            if (TryDispel("Ethereal Shackles")) return true;
+            if (TryBof("Ethereal Shackles")) return true;
+            if (TryDispel("Consuming Void")) return true;
+            if (TryDispel("Holy Fire")) return true;
+            if (TryDispel("Polymorph")) return true;
             if (IsSpellReady("Cleanse") && AnyAllyHasDebuff("Lasher Toxin", 2))
             { 
                 string target = GetAllyWithMostStacks("Lasher Toxin", "Cleanse"); 
