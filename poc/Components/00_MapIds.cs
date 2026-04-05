@@ -3,6 +3,34 @@
 // ========================================
 // Dungeon and zone identifiers used for mechanics
 
+// Eversong Woods
+private const int MAP_EVERSONG_WOODS = 2395;
+private const string MAP_EVERSONG_WOODS_NAME = "Eversong Woods";
+
+// Silvermoon City
+private const int MAP_SILVERMOON_CITY = 2393;
+private const string MAP_SILVERMOON_CITY_NAME = "Silvermoon City";
+
+// Quel'Thalas
+private const int MAP_QUELTHALAS = 2537;
+private const string MAP_QUELTHALAS_NAME = "Quel'Thalas";
+
+// Isle of Quel'Thalas
+private const int MAP_ISLE_OF_QUELTHALAS = 2424;
+private const string MAP_ISLE_OF_QUELTHALAS_NAME = "Isle of Quel'Thalas";
+
+// Voidstorm
+private const int MAP_VOIDSTORM = 2405;
+private const string MAP_VOIDSTORM_NAME = "Voidstorm";
+
+// The Den
+private const int MAP_THE_DEN = 2576;
+private const string MAP_THE_DEN_NAME = "The Den";
+
+// Millenia's Threshold
+private const int MAP_MILLENIAS_THRESHOLD = 2266;
+private const string MAP_MILLENIAS_THRESHOLD_NAME = "Millenia's Threshold";
+
 // Proving Grounds
 private const int MAP_PROVING_GROUNDS = 480;
 private const string MAP_PROVING_GROUNDS_NAME = "Proving Grounds";
@@ -49,6 +77,15 @@ private const string MAP_ALGETHAR_ACADEMY_NAME = "Algeth'ar Academy";
 // Map ID to Name lookup dictionary
 private Dictionary<int, string> _mapNames = new Dictionary<int, string>
 {
+    // New zones
+    { MAP_EVERSONG_WOODS, MAP_EVERSONG_WOODS_NAME },
+    { MAP_SILVERMOON_CITY, MAP_SILVERMOON_CITY_NAME },
+    { MAP_QUELTHALAS, MAP_QUELTHALAS_NAME },
+    { MAP_ISLE_OF_QUELTHALAS, MAP_ISLE_OF_QUELTHALAS_NAME },
+    { MAP_VOIDSTORM, MAP_VOIDSTORM_NAME },
+    { MAP_THE_DEN, MAP_THE_DEN_NAME },
+    { MAP_MILLENIAS_THRESHOLD, MAP_MILLENIAS_THRESHOLD_NAME },
+    
     // Proving Grounds
     { MAP_PROVING_GROUNDS, MAP_PROVING_GROUNDS_NAME },
     

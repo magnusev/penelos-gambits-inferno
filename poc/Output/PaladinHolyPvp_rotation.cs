@@ -55,6 +55,20 @@ private void Log(string msg)
     }
 }
 
+private const int MAP_EVERSONG_WOODS = 2395;
+private const string MAP_EVERSONG_WOODS_NAME = "Eversong Woods";
+private const int MAP_SILVERMOON_CITY = 2393;
+private const string MAP_SILVERMOON_CITY_NAME = "Silvermoon City";
+private const int MAP_QUELTHALAS = 2537;
+private const string MAP_QUELTHALAS_NAME = "Quel'Thalas";
+private const int MAP_ISLE_OF_QUELTHALAS = 2424;
+private const string MAP_ISLE_OF_QUELTHALAS_NAME = "Isle of Quel'Thalas";
+private const int MAP_VOIDSTORM = 2405;
+private const string MAP_VOIDSTORM_NAME = "Voidstorm";
+private const int MAP_THE_DEN = 2576;
+private const string MAP_THE_DEN_NAME = "The Den";
+private const int MAP_MILLENIAS_THRESHOLD = 2266;
+private const string MAP_MILLENIAS_THRESHOLD_NAME = "Millenia's Threshold";
 private const int MAP_PROVING_GROUNDS = 480;
 private const string MAP_PROVING_GROUNDS_NAME = "Proving Grounds";
 private const int MAP_MAGISTERS_TERRACE_1 = 2511;
@@ -86,6 +100,13 @@ private const int MAP_ALGETHAR_ACADEMY_3 = 2099;
 private const string MAP_ALGETHAR_ACADEMY_NAME = "Algeth'ar Academy";
 private Dictionary<int, string> _mapNames = new Dictionary<int, string>
 {
+    { MAP_EVERSONG_WOODS, MAP_EVERSONG_WOODS_NAME },
+    { MAP_SILVERMOON_CITY, MAP_SILVERMOON_CITY_NAME },
+    { MAP_QUELTHALAS, MAP_QUELTHALAS_NAME },
+    { MAP_ISLE_OF_QUELTHALAS, MAP_ISLE_OF_QUELTHALAS_NAME },
+    { MAP_VOIDSTORM, MAP_VOIDSTORM_NAME },
+    { MAP_THE_DEN, MAP_THE_DEN_NAME },
+    { MAP_MILLENIAS_THRESHOLD, MAP_MILLENIAS_THRESHOLD_NAME },
     { MAP_PROVING_GROUNDS, MAP_PROVING_GROUNDS_NAME },
     { MAP_MAGISTERS_TERRACE_1, MAP_MAGISTERS_TERRACE_NAME },
     { MAP_MAGISTERS_TERRACE_2, MAP_MAGISTERS_TERRACE_NAME },
