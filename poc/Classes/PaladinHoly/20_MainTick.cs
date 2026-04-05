@@ -50,6 +50,13 @@ public override bool OutOfCombatTick()
     return CombatTick(); 
 }
 
+// Runs after every tick - check for map changes
+public override void CleanUp()
+{
+    int mapId = Inferno.GetMapID();
+    LogMapChange(mapId);
+}
+
 // Cleanup when rotation stops
 public override void OnStop() 
 { 

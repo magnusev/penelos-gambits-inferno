@@ -485,13 +485,13 @@ private string GetMapName(int mapId)
 }
 private void LogMapChange(int currentMapId)
 {
-    if (_lastMapId != 0 && _lastMapId != currentMapId)
+    if (_lastMapId != currentMapId)
     {
         string oldMapName = GetMapName(_lastMapId);
         string newMapName = GetMapName(currentMapId);
         Log("Map changed: " + oldMapName + " (" + _lastMapId + ") -> " + newMapName + " (" + currentMapId + ")");
+        _lastMapId = currentMapId;
     }
-    _lastMapId = currentMapId;
 }
 private void LogBossInformation()
 {
@@ -668,6 +668,11 @@ public override bool CombatTick()
         return false;
     if (RunRotation()) return true;
     return false;
+}
+public override void CleanUp()
+{
+    int mapId = Inferno.GetMapID();
+    LogMapChange(mapId);
 }
 public override void OnStop() 
 { 
